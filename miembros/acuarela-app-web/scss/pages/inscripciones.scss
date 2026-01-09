@@ -1,0 +1,243 @@
+.inscripcionesList {
+  main {
+    padding: 0;
+
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+
+      &>ul {
+        max-width: 943px;
+        margin: 0 auto;
+
+        &>li {
+          position: relative;
+          border-radius: 8px;
+          background: var(--Fondos-Blanco, #fbfcfe);
+          box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.2);
+          padding: 10px 20px;
+          margin-bottom: 16px;
+
+          h3 {
+            color: var(--gris1, #140a4c);
+            font-style: normal;
+            font-weight: 700;
+          }
+
+          small {
+            color: var(--gris2, #55637e);
+            font-style: normal;
+            font-weight: 400;
+          }
+
+          .progress {}
+
+          small {
+            strong {
+              color: var(--gris1, #140a4c);
+              font-style: normal;
+              font-weight: 700;
+            }
+
+            span {
+              color: var(--gris1, #140a4c);
+              font-style: normal;
+              font-weight: 400;
+            }
+          }
+
+          .bar {
+            background: #e1e4e9;
+            width: 134px;
+            height: 4px;
+
+            .barpro {
+              background: #140a4c;
+              height: 100%;
+            }
+          }
+
+          #options {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            width: 21px;
+            height: 21px;
+            z-index: 2;
+
+            i {
+              color: var(--gris3);
+              font-size: 16px;
+            }
+
+            ul {
+              border-radius: 8px;
+              overflow: hidden;
+              width: 120px;
+              position: absolute;
+              top: 100%;
+              right: 0;
+              display: none;
+
+              li {
+
+                button,
+                a {
+                  padding: 5px 10px;
+                  width: 100%;
+                  display: block;
+
+                  &#profile {
+                    color: var(--cielo);
+                    background-color: var(--fondo1);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 20px;
+                    text-align: left;
+
+                    &:hover {
+                      background-color: var(--fondo2);
+                    }
+                  }
+
+                  &#deleteinscripcion {
+                    color: #fff;
+                    background-color: var(--sandia);
+                    font-size: 12px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 20px;
+                    text-align: left;
+
+                    &:hover {
+                      background-color: var(--sandia_hover);
+                    }
+                  }
+                }
+              }
+            }
+
+            &:hover {
+              ul {
+                display: block;
+              }
+            }
+          }
+
+          &.complete {
+            small strong {
+              color: var(--cielo);
+            }
+
+            .bar .barpro {
+              background-color: var(--cielo);
+              width: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.inscripcion {
+  .mainHeader {
+    box-shadow: none;
+  }
+
+  main {
+    padding: 0;
+
+    .navtabs:has(.navtab.active[data-target="resumen"])+.content button[id="next"] {
+      display: none;
+    }
+
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+
+      .percentage {
+        margin: 0 8px;
+        font-weight: bold;
+      }
+
+      h5 {
+        color: var(--gris1, #140A4C);
+        font-size: 11px;
+        font-style: normal;
+        font-weight: 700;
+        margin-bottom: 16px;
+        line-height: 16px;
+      }
+
+      span.name {
+        margin: 0 8px;
+      }
+
+      .splide__arrow {
+        background: transparent;
+
+        i {
+          font-size: 32px;
+          color: var(--cielo);
+        }
+      }
+
+
+      form {
+        .responsables {
+          display: flex;
+          flex-wrap: wrap;
+        }
+
+        #family {
+          fieldset {
+            padding: 30px;
+            box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.25);
+            background-color: #fff;
+            max-width: 768px;
+            width: 100%;
+            border-radius: 16px;
+            margin: 20px auto;
+
+            h4 {
+              margin-bottom: 16px;
+            }
+          }
+        }
+
+        #responsables-list {
+          fieldset {
+            padding: 30px;
+            box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.25);
+            background-color: #fff;
+            max-width: 420px;
+            width: 90%;
+            border-radius: 16px;
+            margin: 20px auto;
+
+            h4 {
+              margin-bottom: 16px;
+            }
+          }
+        }
+
+        #resumen {
+          h4 {
+            margin-bottom: 16px;
+          }
+
+          p {
+            flex: 1;
+            margin-bottom: 16px;
+            gap: 8px;
+            display: flex;
+          }
+
+          i {
+            color: var(--cielo);
+          }
+        }
+      }
+    }
+  }
+}

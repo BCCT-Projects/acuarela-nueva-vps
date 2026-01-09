@@ -1,0 +1,35 @@
+.inspeccion {
+  main {
+    padding: 0;
+
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+
+      .date-filter {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .date-filter,
+      .report-content {
+        margin-bottom: 20px;
+      }
+
+      .date-filter label,
+      .report-content label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .report-content {
+        margin-top: 20px;
+      }
+
+      .report-content input {
+        margin-right: 10px;
+      }
+    }
+  }
+}

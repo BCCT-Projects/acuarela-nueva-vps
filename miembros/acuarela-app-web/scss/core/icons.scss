@@ -1,0 +1,849 @@
+@use 'sass:string';
+
+/*--------------------------------
+
+acuarela Web Font
+Generated using nucleoapp.com
+
+-------------------------------- */
+@font-face {
+  font-family: "acuarela";
+  src: url("../fonts/acuarela.eot");
+  src: url("../fonts/acuarela.eot") format("embedded-opentype"),
+    url("../fonts/acuarela.woff2") format("woff2"),
+    url("../fonts/acuarela.woff") format("woff"),
+    url("../fonts/acuarela.ttf") format("truetype"),
+    url("../fonts/acuarela.svg") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* --------------------------------
+  
+  icons
+  
+  -------------------------------- */
+.acuarela {
+  display: inline-block;
+  font: normal normal normal 32px/1 "acuarela";
+  speak: none;
+  text-transform: none;
+  /* Better Font Rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*------------------------
+    font icons
+  -------------------------*/
+
+.acuarela-Aceptar::before {
+  content: "\ea01";
+}
+
+.acuarela-Actividades::before {
+  content: "\ea02";
+}
+
+.acuarela-Add_on::before {
+  content: "\ea03";
+}
+
+.acuarela-Adjuntar::before {
+  content: "\ea04";
+}
+
+.acuarela-Administracion::before {
+  content: "\ea05";
+}
+
+.acuarela-Advertencia::before {
+  content: "\ea06";
+}
+
+.acuarela-Agregar::before {
+  content: "\ea07";
+}
+
+.acuarela-Alergia::before {
+  content: "\ea08";
+}
+
+.acuarela-Alimentacion::before {
+  content: "\ea09";
+}
+
+.acuarela-Alinear_centro::before {
+  content: "\ea0a";
+}
+
+.acuarela-Alinear_derecha::before {
+  content: "\ea0b";
+}
+
+.acuarela-Alinear_izquierda::before {
+  content: "\ea0c";
+}
+
+.acuarela-Almuerzo::before {
+  content: "\ea0d";
+}
+
+.acuarela-Ambos::before {
+  content: "\ea0e";
+}
+
+.acuarela-Anadir_reaccion::before {
+  content: "\ea0f";
+}
+
+.acuarela-Archivo::before {
+  content: "\ea10";
+}
+
+.acuarela-Arte::before {
+  content: "\ea11";
+}
+
+.acuarela-Asistencia::before {
+  content: "\ea12";
+}
+
+.acuarela-Asistente::before {
+  content: "\ea13";
+}
+
+.acuarela-Autestima::before {
+  content: "\ea14";
+}
+
+.acuarela-Ayuda::before {
+  content: "\ea15";
+}
+
+.acuarela-Balance::before {
+  content: "\ea16";
+}
+
+.acuarela-Bano::before {
+  content: "\ea17";
+}
+
+.acuarela-Bilingue::before {
+  content: "\ea18";
+}
+
+.acuarela-Blog::before {
+  content: "\ea19";
+}
+
+.acuarela-Bold::before {
+  content: "\ea1a";
+}
+
+.acuarela-Buscar::before {
+  content: "\ea1b";
+}
+
+.acuarela-Calendario::before {
+  content: "\ea1c";
+}
+
+.acuarela-Camara::before {
+  content: "\ea1d";
+}
+
+.acuarela-Cancelar::before {
+  content: "\ea1e";
+}
+
+.acuarela-Candado::before {
+  content: "\ea1f";
+}
+
+.acuarela-Casa::before {
+  content: "\ea20";
+}
+
+.acuarela-Cena::before {
+  content: "\ea21";
+}
+
+.acuarela-Cerrar_sesion::before {
+  content: "\ea22";
+}
+
+.acuarela-Checklist::before {
+  content: "\ea23";
+}
+
+.acuarela-Cloud::before {
+  content: "\ea24";
+}
+
+.acuarela-Compartir::before {
+  content: "\ea25";
+}
+
+.acuarela-Confianza::before {
+  content: "\ea26";
+}
+
+.acuarela-Configuracion::before {
+  content: "\ea27";
+}
+
+.acuarela-Desayuno::before {
+  content: "\ea28";
+}
+
+.acuarela-Deshacer::before {
+  content: "\ea29";
+}
+
+.acuarela-Diligenciable::before {
+  content: "\ea2a";
+}
+
+.acuarela-Disciplina::before {
+  content: "\ea2b";
+}
+
+.acuarela-Drag::before {
+  content: "\ea2c";
+}
+
+.acuarela-Editar::before {
+  content: "\ea2d";
+}
+
+.acuarela-Eliminar::before {
+  content: "\ea2e";
+}
+
+.acuarela-Enviar::before {
+  content: "\ea2f";
+}
+
+.acuarela-Escudo::before {
+  content: "\ea30";
+}
+
+.acuarela-Estatura::before {
+  content: "\ea31";
+}
+
+.acuarela-Estrella::before {
+  content: "\ea32";
+}
+
+.acuarela-Evento::before {
+  content: "\ea33";
+}
+
+.acuarela-Excel::before {
+  content: "\ea34";
+}
+
+.acuarela-Expandir::before {
+  content: "\ea35";
+}
+
+.acuarela-Exportar::before {
+  content: "\ea36";
+}
+
+.acuarela-Facilidad_trato::before {
+  content: "\ea37";
+}
+
+.acuarela-Familia::before {
+  content: "\ea38";
+}
+
+.acuarela-Filtrar::before {
+  content: "\ea39";
+}
+
+.acuarela-Finanzas::before {
+  content: "\ea3a";
+}
+
+.acuarela-Flash::before {
+  content: "\ea3b";
+}
+
+.acuarela-Flecha::before {
+  content: "\ea3c";
+}
+
+.acuarela-Flecha_abajo::before {
+  content: "\ea3d";
+}
+
+.acuarela-Flecha_arriba::before {
+  content: "\ea3e";
+}
+
+.acuarela-Flecha_circ_abajo::before {
+  content: "\ea3f";
+}
+
+.acuarela-Flecha_circ_arriba::before {
+  content: "\ea40";
+}
+
+.acuarela-Flecha_circ_derecha::before {
+  content: "\ea41";
+}
+
+.acuarela-Flecha_circ_izquierda::before {
+  content: "\ea42";
+}
+
+.acuarela-Flecha_derecha::before {
+  content: "\ea43";
+}
+
+.acuarela-Flecha_doble_derecha::before {
+  content: "\ea44";
+}
+
+.acuarela-Flecha_doble_izquierda::before {
+  content: "\ea45";
+}
+
+.acuarela-Flecha_izquierda::before {
+  content: "\ea46";
+}
+
+.acuarela-Formulario::before {
+  content: "\ea47";
+}
+
+.acuarela-Gastos::before {
+  content: "\ea48";
+}
+
+.acuarela-Gestion_daycares::before {
+  content: "\ea49";
+}
+
+.acuarela-Grupo::before {
+  content: "\ea4a";
+}
+
+.acuarela-Guardar::before {
+  content: "\ea4b";
+}
+
+.acuarela-Habilidades::before {
+  content: "\ea4c";
+}
+
+.acuarela-Habla::before {
+  content: "\ea4d";
+}
+
+.acuarela-Horario::before {
+  content: "\ea4e";
+}
+
+.acuarela-Hoy::before {
+  content: "\ea4f";
+}
+
+.acuarela-Imagen::before {
+  content: "\ea50";
+}
+
+.acuarela-Importar::before {
+  content: "\ea51";
+}
+
+.acuarela-Imprimir::before {
+  content: "\ea52";
+}
+
+.acuarela-Informacion::before {
+  content: "\ea53";
+}
+
+.acuarela-Ingresos::before {
+  content: "\ea54";
+}
+
+.acuarela-Italica::before {
+  content: "\ea55";
+}
+
+.acuarela-Juego::before {
+  content: "\ea56";
+}
+
+.acuarela-Jugar_con_otros::before {
+  content: "\ea57";
+}
+
+.acuarela-Jugar_solo::before {
+  content: "\ea58";
+}
+
+.acuarela-Justificar::before {
+  content: "\ea59";
+}
+
+.acuarela-Leer::before {
+  content: "\ea5a";
+}
+
+.acuarela-Leido::before {
+  content: "\ea5b";
+}
+
+.acuarela-Limpieza::before {
+  content: "\ea5c";
+}
+
+.acuarela-Link::before {
+  content: "\ea5d";
+}
+
+.acuarela-Lista_numerada::before {
+  content: "\ea5e";
+}
+
+.acuarela-Lista_vinetas::before {
+  content: "\ea5f";
+}
+
+.acuarela-Localizacion::before {
+  content: "\ea60";
+}
+
+.acuarela-Madre::before {
+  content: "\ea61";
+}
+
+.acuarela-Manual::before {
+  content: "\ea62";
+}
+
+.acuarela-Mapa::before {
+  content: "\ea63";
+}
+
+.acuarela-Mensajes::before {
+  content: "\ea64";
+}
+
+.acuarela-Menu::before {
+  content: "\ea65";
+}
+
+.acuarela-Merienda::before {
+  content: "\ea66";
+}
+
+.acuarela-Metodo_pago::before {
+  content: "\ea67";
+}
+
+.acuarela-Minimizar::before {
+  content: "\ea68";
+}
+
+.acuarela-Musica::before {
+  content: "\ea69";
+}
+
+.acuarela-Nino::before {
+  content: "\ea6a";
+}
+
+.acuarela-Nivel_educativo::before {
+  content: "\ea6b";
+}
+
+.acuarela-Nota::before {
+  content: "\ea6c";
+}
+
+.acuarela-Notificaciones::before {
+  content: "\ea6d";
+}
+
+.acuarela-Numeros::before {
+  content: "\ea6e";
+}
+
+.acuarela-Opciones::before {
+  content: "\ea6f";
+}
+
+.acuarela-Ordenar::before {
+  content: "\ea70";
+}
+
+.acuarela-Padre::before {
+  content: "\ea71";
+}
+
+.acuarela-Pago::before {
+  content: "\ea72";
+}
+
+.acuarela-Panales::before {
+  content: "\ea73";
+}
+
+.acuarela-Pdf::before {
+  content: "\ea74";
+}
+
+.acuarela-Pendiente::before {
+  content: "\ea75";
+}
+
+.acuarela-Peso::before {
+  content: "\ea76";
+}
+
+.acuarela-Planeacion::before {
+  content: "\ea77";
+}
+
+.acuarela-Precio::before {
+  content: "\ea78";
+}
+
+.acuarela-Prioridad::before {
+  content: "\ea79";
+}
+
+.acuarela-Qr::before {
+  content: "\ea7a";
+}
+
+.acuarela-Quitar::before {
+  content: "\ea7b";
+}
+
+.acuarela-Rehacer::before {
+  content: "\ea7c";
+}
+
+.acuarela-Rh::before {
+  content: "\ea7d";
+}
+
+.acuarela-Salud::before {
+  content: "\ea7e";
+}
+
+.acuarela-Seccion::before {
+  content: "\ea7f";
+}
+
+.acuarela-Siesta::before {
+  content: "\ea80";
+}
+
+.acuarela-Software::before {
+  content: "\ea81";
+}
+
+.acuarela-Soporte::before {
+  content: "\ea82";
+}
+
+.acuarela-Subrayar::before {
+  content: "\ea83";
+}
+
+.acuarela-Tachar::before {
+  content: "\ea84";
+}
+
+.acuarela-Telefono::before {
+  content: "\ea85";
+}
+
+.acuarela-Template::before {
+  content: "\ea86";
+}
+
+.acuarela-Texto::before {
+  content: "\ea87";
+}
+
+.acuarela-Trabajo::before {
+  content: "\ea88";
+}
+
+.acuarela-Transporte::before {
+  content: "\ea89";
+}
+
+.acuarela-Usuario::before {
+  content: "\ea8a";
+}
+
+.acuarela-Variable::before {
+  content: "\ea8b";
+}
+
+.acuarela-Ver::before {
+  content: "\ea8c";
+}
+
+.acuarela-Video::before {
+  content: "\ea8d";
+}
+
+.acuarela-Web::before {
+  content: "\ea8e";
+}
+
+/*--------------------------------
+  
+  acuarela icon font
+  Generated using nucleoapp.com
+  
+  -------------------------------- */
+
+$acuarela-font-path: "../fonts" !default;
+
+@font-face {
+  font-family: "acuarela";
+  src: url("#{$acuarela-font-path}/acuarela.eot");
+  src: url("#{$acuarela-font-path}/acuarela.eot") format("embedded-opentype"),
+  url("#{$acuarela-font-path}/acuarela.woff2") format("woff2"),
+  url("#{$acuarela-font-path}/acuarela.woff") format("woff"),
+  url("#{$acuarela-font-path}/acuarela.ttf") format("truetype"),
+  url("#{$acuarela-font-path}/acuarela.svg") format("svg");
+}
+
+/* base class */
+.acuarela {
+  display: inline-block;
+  font: normal normal normal 1em/1 "acuarela";
+  color: inherit;
+  flex-shrink: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* size examples - relative units */
+.acuarela-sm {
+  font-size: 0.8em;
+}
+
+.acuarela-lg {
+  font-size: 1.2em;
+}
+
+/* size examples - absolute units */
+.acuarela-16 {
+  font-size: 16px;
+}
+
+.acuarela-24 {
+  font-size: 24px;
+}
+
+.acuarela-32 {
+  font-size: 32px;
+}
+
+/* rotate the icon infinitely */
+.acuarela-is-spinning {
+  animation: acuarela-spin 1s infinite linear;
+}
+
+@keyframes acuarela-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* transform */
+.acuarela-rotate-90 {
+  transform: rotate(90deg);
+}
+
+.acuarela-rotate-180 {
+  transform: rotate(180deg);
+}
+
+.acuarela-rotate-270 {
+  transform: rotate(270deg);
+}
+
+.acuarela-flip-y {
+  transform: scaleY(-1);
+}
+
+.acuarela-flip-x {
+  transform: scaleX(-1);
+}
+
+/* icons */
+$icons: (
+  "Aceptar": "ea01",
+  "Actividades": "ea02",
+  "Add_on": "ea03",
+  "Adjuntar": "ea04",
+  "Administracion": "ea05",
+  "Advertencia": "ea06",
+  "Agregar": "ea07",
+  "Alergia": "ea08",
+  "Alimentacion": "ea09",
+  "Alinear_centro": "ea0a",
+  "Alinear_derecha": "ea0b",
+  "Alinear_izquierda": "ea0c",
+  "Almuerzo": "ea0d",
+  "Ambos": "ea0e",
+  "Anadir_reaccion": "ea0f",
+  "Archivo": "ea10",
+  "Arte": "ea11",
+  "Asistencia": "ea12",
+  "Asistente": "ea13",
+  "Autestima": "ea14",
+  "Ayuda": "ea15",
+  "Balance": "ea16",
+  "Bano": "ea17",
+  "Bilingue": "ea18",
+  "Blog": "ea19",
+  "Bold": "ea1a",
+  "Buscar": "ea1b",
+  "Calendario": "ea1c",
+  "Camara": "ea1d",
+  "Cancelar": "ea1e",
+  "Candado": "ea1f",
+  "Casa": "ea20",
+  "Cena": "ea21",
+  "Cerrar_sesion": "ea22",
+  "Checklist": "ea23",
+  "Cloud": "ea24",
+  "Compartir": "ea25",
+  "Confianza": "ea26",
+  "Configuracion": "ea27",
+  "Desayuno": "ea28",
+  "Deshacer": "ea29",
+  "Diligenciable": "ea2a",
+  "Disciplina": "ea2b",
+  "Drag": "ea2c",
+  "Editar": "ea2d",
+  "Eliminar": "ea2e",
+  "Enviar": "ea2f",
+  "Escudo": "ea30",
+  "Estatura": "ea31",
+  "Estrella": "ea32",
+  "Evento": "ea33",
+  "Excel": "ea34",
+  "Expandir": "ea35",
+  "Exportar": "ea36",
+  "Facilidad_trato": "ea37",
+  "Familia": "ea38",
+  "Filtrar": "ea39",
+  "Finanzas": "ea3a",
+  "Flash": "ea3b",
+  "Flecha": "ea3c",
+  "Flecha_abajo": "ea3d",
+  "Flecha_arriba": "ea3e",
+  "Flecha_circ_abajo": "ea3f",
+  "Flecha_circ_arriba": "ea40",
+  "Flecha_circ_derecha": "ea41",
+  "Flecha_circ_izquierda": "ea42",
+  "Flecha_derecha": "ea43",
+  "Flecha_doble_derecha": "ea44",
+  "Flecha_doble_izquierda": "ea45",
+  "Flecha_izquierda": "ea46",
+  "Formulario": "ea47",
+  "Gastos": "ea48",
+  "Gestion_daycares": "ea49",
+  "Grupo": "ea4a",
+  "Guardar": "ea4b",
+  "Habilidades": "ea4c",
+  "Habla": "ea4d",
+  "Horario": "ea4e",
+  "Hoy": "ea4f",
+  "Imagen": "ea50",
+  "Importar": "ea51",
+  "Imprimir": "ea52",
+  "Informacion": "ea53",
+  "Ingresos": "ea54",
+  "Italica": "ea55",
+  "Juego": "ea56",
+  "Jugar_con_otros": "ea57",
+  "Jugar_solo": "ea58",
+  "Justificar": "ea59",
+  "Leer": "ea5a",
+  "Leido": "ea5b",
+  "Limpieza": "ea5c",
+  "Link": "ea5d",
+  "Lista_numerada": "ea5e",
+  "Lista_vinetas": "ea5f",
+  "Localizacion": "ea60",
+  "Madre": "ea61",
+  "Manual": "ea62",
+  "Mapa": "ea63",
+  "Mensajes": "ea64",
+  "Menu": "ea65",
+  "Merienda": "ea66",
+  "Metodo_pago": "ea67",
+  "Minimizar": "ea68",
+  "Musica": "ea69",
+  "Nino": "ea6a",
+  "Nivel_educativo": "ea6b",
+  "Nota": "ea6c",
+  "Notificaciones": "ea6d",
+  "Numeros": "ea6e",
+  "Opciones": "ea6f",
+  "Ordenar": "ea70",
+  "Padre": "ea71",
+  "Pago": "ea72",
+  "Panales": "ea73",
+  "Pdf": "ea74",
+  "Pendiente": "ea75",
+  "Peso": "ea76",
+  "Planeacion": "ea77",
+  "Precio": "ea78",
+  "Prioridad": "ea79",
+  "Qr": "ea7a",
+  "Quitar": "ea7b",
+  "Rehacer": "ea7c",
+  "Rh": "ea7d",
+  "Salud": "ea7e",
+  "Seccion": "ea7f",
+  "Siesta": "ea80",
+  "Software": "ea81",
+  "Soporte": "ea82",
+  "Subrayar": "ea83",
+  "Tachar": "ea84",
+  "Telefono": "ea85",
+  "Template": "ea86",
+  "Texto": "ea87",
+  "Trabajo": "ea88",
+  "Transporte": "ea89",
+  "Usuario": "ea8a",
+  "Variable": "ea8b",
+  "Ver": "ea8c",
+  "Video": "ea8d",
+  "Web": "ea8e",
+);
+
+@function unicode($str) {
+  @return string.unquote('"\\#{$str}"');
+}
+
+@each $name, $code in $icons {
+  .acuarela-#{"" + $name}::before {
+    content: unicode($code);
+  }
+}

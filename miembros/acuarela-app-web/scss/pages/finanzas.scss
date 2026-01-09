@@ -1,0 +1,154 @@
+.finanzas {
+  #filterReporte {
+    display: flex;
+    gap: 16px;
+    max-width: 1200px;
+    margin: 10px auto;
+
+    span {
+      max-width: 220px;
+      width: 100%;
+
+      label {
+        font-size: 12px;
+        line-height: 12px;
+      }
+
+      input {
+        font-size: 12px;
+        line-height: 12px;
+      }
+    }
+  }
+
+  main {
+    padding: 0;
+
+    .mainHeader {
+      box-shadow: none;
+    }
+
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+
+
+
+      .cardsFinanza {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 30px;
+
+        .cardFinanza {
+          border-radius: 8px;
+          background: var(--White, #fbfcfe);
+          box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.2);
+          padding: 10px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          justify-content: space-between;
+
+          i {
+            color: #b6b6b6;
+            font-size: 21px;
+          }
+
+          .txt {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+
+            small {
+              color: var(--gris1, #140a4c);
+
+              font-size: 11px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: 16px;
+              /* 145.455% */
+            }
+
+            strong {
+              color: var(--gris2, #55637e);
+              font-size: 18px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+          }
+        }
+      }
+
+
+
+      table {
+        border-radius: 8px;
+        background: var(--White, #fbfcfe);
+        box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.25);
+        width: 100%;
+
+        tr {
+          margin-bottom: 30px;
+
+          td {
+            padding: 20px;
+
+            i {
+              color: var(--cielo);
+              font-size: 32px;
+              margin-right: 12px;
+            }
+
+            h4 {
+              color: var(--gris1, #140A4C);
+              font-size: 21px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: 27px;
+            }
+
+            .status {
+              font-size: 15px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: 20px;
+            }
+
+            .date {
+              color: var(--gris2, #55637E);
+              text-align: right;
+              font-size: 15px;
+              font-style: normal;
+              font-weight: 400;
+              line-height: 20px;
+            }
+
+            .amount {
+              color: var(--gris1, #140A4C);
+              text-align: right;
+              font-size: 18px;
+              font-style: normal;
+              font-weight: 700;
+              line-height: normal;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .flex-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    gap: 40px;
+  }
+
+  .advert {
+    span {
+      display: inline-flex;
+    }
+  }
+}

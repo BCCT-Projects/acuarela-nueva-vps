@@ -1,0 +1,160 @@
+name: 🚀 Deploy to PRODUCTION (acuarela-app-web)
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REPO_NAME: "acuarela-app-web"
+  PROD_PATH: "/home/oldmacdonald/public_html/miembros/acuarela-app-web"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout con historial
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # 2. Detectar si composer.json existe
+      - name: 🔍 Check if composer.json exists
+        id: composer-check
+        run: |
+          if [ -f "composer.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "📦 composer.json encontrado"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⏭️ No hay composer.json"
+          fi
+
+      # 3. Instalar sshpass para usar password con rsync
+      - name: 🔧 Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      # 4. Agregar host a known_hosts
+      - name: 🔐 Setup known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      # 5. Sync archivos con rsync a PRODUCCIÓN
+      # .env contiene credenciales y se sube manualmente al servidor
+      - name: 🔄 Rsync source files to PRODUCTION
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" rsync -avz --delete \
+            --omit-dir-times \
+            --no-perms \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.well-known/' \
+            --exclude='vendor/' \
+            --exclude='cache/' \
+            --exclude='marketplace/stripe/' \
+            --exclude='marketplaceapp/stripe/' \
+            --exclude='videos/' \
+            --exclude='error_log' \
+            --exclude='*.log' \
+            --exclude='DEPLOY_VERSION.txt' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.PROD_PATH }}/
+
+      # 6. Composer install EN EL SERVIDOR
+      - name: 📦 Composer install on server
+        if: steps.composer-check.outputs.exists == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd ${{ env.PROD_PATH }}
+            
+            if [ ! -d "vendor" ] || [ ! -f "composer.lock" ]; then
+              echo "📦 Instalando dependencias..."
+              composer install --no-dev --optimize-autoloader --no-interaction
+              echo "✅ Dependencies installed"
+            else
+              echo "✅ Verificando dependencias..."
+              composer install --no-dev --optimize-autoloader --no-interaction
+              echo "✅ Dependencies verified/updated"
+            fi
+
+      # 6.1. Verificar que composer install funcionó
+      - name: ✅ Verify composer install
+        if: steps.composer-check.outputs.exists == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd ${{ env.PROD_PATH }}
+            echo "🔍 Verificando instalación de Composer..."
+            
+            if [ ! -d "vendor" ]; then
+              echo "❌ ERROR: Directorio vendor/ no existe"
+              exit 1
+            fi
+            echo "✅ Directorio vendor/ existe"
+            
+            if [ ! -f "vendor/autoload.php" ]; then
+              echo "❌ ERROR: vendor/autoload.php no existe"
+              exit 1
+            fi
+            echo "✅ Autoloader existe"
+            
+            if [ ! -d "vendor/stripe" ]; then
+              echo "❌ ERROR: stripe/stripe-php no está instalado"
+              exit 1
+            fi
+            echo "✅ stripe/stripe-php está instalado"
+            
+            # Test con PHP
+            php -r "require 'vendor/autoload.php'; echo class_exists('Stripe\Stripe') ? '✅ Stripe OK' : '❌ Stripe FAIL'; echo PHP_EOL;" 2>/dev/null || true
+            
+            echo "✅ Verificación completada"
+
+      # 7. Corregir permisos (archivos desplegados quedan como peekaroot)
+      - name: 🔐 Fix file ownership
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            echo "🔐 Corrigiendo permisos de archivos desplegados..."
+            cd ${{ env.PROD_PATH }}
+            # Cambiar owner de archivos que quedaron como peekaroot
+            find . -user peekaroot -exec chown oldmacdonald:oldmacdonald {} \; 2>/dev/null || true
+            echo "✅ Permisos corregidos"
+
+      # 8. Crear DEPLOY_VERSION.txt
+      - name: 📝 Create DEPLOY_VERSION.txt
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cat > ${{ env.PROD_PATH }}/DEPLOY_VERSION.txt << EOF
+            =====================================
+            DEPLOY INFO - PRODUCTION
+            =====================================
+            Repository: ${{ env.REPO_NAME }}
+            Environment: PROD
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Date: $(TZ='America/New_York' date '+%Y-%m-%d %H:%M:%S')
+            Composer: ${{ steps.composer-check.outputs.exists == 'true' && 'verified' || 'skipped' }}
+            =====================================
+            EOF
+

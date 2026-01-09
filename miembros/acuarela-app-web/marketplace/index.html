@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Connect Onboarding Quickstart</title>
+    <meta name="description" content="This is a sample app for Stripe-hosted Connect onboarding.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="public.7b7684ea.css">
+    <script type="module" src="public.ba335b02.js" defer></script>
+</head>
+
+<body>
+    <div id="container">
+        <div class="container">
+            <div class="banner">
+                <h2>Acuarela MarketPlace</h2> <img
+                    src="https://bilingualchildcaretraining.com/design-system-acuarela/img/logos/logotipo_invertido.svg"
+                    alt="logotipo_invertido">
+            </div>
+            <div class="content">
+                <h2 id="add-information-title">Agrega tu información para comenzar a recibir pagos</h2>
+                <p id="subtitle">En Acuarela, puedes recibir pagos de forma fácil y segura gracias a nuestra integración
+                    con Stripe. Esta plataforma nos permite proteger tus datos personales y bancarios mientras gestionas
+                    tus cobros de manera eficiente.</p>
+                <div> <button id="sign-up-button"> Crear cuenta </button> </div>
+                <div> <button id="add-information-button" class="hidden"> Agregar información </button> </div>
+                <h2 id="details-submitted-title" class="hidden">Información enviada</h2>
+                <p id="details-submitted-subtitle" class="hidden">¡Ya casi todo está listo para recibir pagos!</p>
+                <p id="error" class="error hidden">¡Algo salió mal! Intenta de nuevo.</p>
+                <div id="dev-callout" class="dev-callout hidden">
+                    <p id="connected-account-id" class="hidden"></p>
+                    <p id="creating-connected-account" class="hidden">Creando tu cuenta conectada con Stripe...</p>
+                    <p id="adding-onboarding-information" class="hidden">Agregando información para la activación...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="error" hidden>Something went wrong!</div>
+</body>
+
+</html>

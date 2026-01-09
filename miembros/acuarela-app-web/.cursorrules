@@ -1,0 +1,47 @@
+# Reglas del Proyecto - Acuarela App Web
+
+## General
+- Responder siempre en español
+- PHP 8.1.34 | SCSS | JavaScript vanilla
+- Servidor: VPS GoDaddy con cPanel
+
+## Estructura
+- `/includes/` → Configuración, SDK, Mandrill
+- `/get/` → Endpoints GET (lectura de datos)
+- `/set/` → Endpoints POST (escritura de datos)
+- `/scss/` → Estilos SCSS (compilar a /css/)
+- `/marketplace/` → Mini-app Stripe Connect
+
+## Convenciones
+- camelCase para variables/funciones PHP
+- BEM para clases CSS
+- 4 espacios de indentación
+- Respuestas JSON: {"success": bool, "data/error": ...}
+
+## CI/CD
+- Branch `dev` → Deploy automático a DEV
+- Branch `main` → Deploy automático a PROD (vía PR)
+- Workflow: .github/workflows/deploy-dev.yml y deploy-prod.yml
+
+## Dependencias
+- Stripe SDK via Composer (vendor/)
+- Mandrill SDK incluido en includes/src/Mandrill/
+
+## NO Modificar Manualmente
+- vendor/ (gestionado por Composer)
+- DEPLOY_VERSION.txt (generado en deploy)
+- *.css.map (generado por SCSS compiler)
+- marketplace/*.js (builds)
+
+## Contexto
+Este repo está anidado en:
+`public_html/miembros/acuarela-app-web/`
+
+Repos hermanos:
+- portal-miembros (padre)
+- nueva-web-BCCT (raíz)
+- checkout
+
+## Documentación
+Ver carpeta `docs/` para arquitectura y API.
+

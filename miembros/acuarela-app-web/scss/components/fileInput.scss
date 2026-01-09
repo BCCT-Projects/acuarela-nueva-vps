@@ -1,0 +1,85 @@
+@use "sass:color";
+
+.wrapper {
+  margin: 0 auto 8px;
+  width: 100%;
+
+  [type="file"] {
+    height: 0;
+    overflow: hidden;
+    width: 0;
+    padding: 0;
+  }
+
+  [type="file"]+label {
+    align-items: center;
+    background: var(--White, #fbfcfe);
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.2);
+    color: var(--cielo);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 700;
+    gap: 8px;
+    height: 52px;
+    padding: 0 32px;
+    line-height: normal;
+    outline: none;
+    position: relative;
+    transition: all 0.3s;
+    vertical-align: middle;
+    width: 100%;
+
+    i {
+      font-size: 18px;
+    }
+
+    &:hover {
+      background-color: color.adjust($color: #fbfcfe, $lightness: -5%);
+    }
+  }
+
+  [type="file"].selected+label {
+    background: var(--cielo);
+    color: #FFF;
+
+    &:hover {
+      color: var(--cielo);
+      background-color: color.adjust($color: #fbfcfe, $lightness: -5%);
+    }
+  }
+
+  &.photo {
+    display: flex;
+
+    justify-content: center;
+    width: 183px;
+    height: 183px;
+
+    [type="file"]+label {
+      width: 183px;
+      height: 183px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background-color: var(--Fondo-Fondo-1, #f0feff);
+      background-size: cover;
+      background-position: center;
+      border-radius: 8px;
+      border: 2px solid var(--Cielo-Cielo_Default, #0cb5c3);
+      box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.2);
+
+      i {
+        font-size: 18px;
+      }
+
+      &:hover {
+        background-color: color.adjust($color: #fbfcfe, $lightness: -5%);
+      }
+    }
+  }
+}

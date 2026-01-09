@@ -1,0 +1,8 @@
+.visitas {
+  main {
+    padding: 0;
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+    }
+  }
+}

@@ -1,0 +1,92 @@
+#tour-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(20, 10, 76, 0.50);
+    background-blend-mode: multiply;
+    display: flex;
+
+    &.hidden {
+        display: none;
+    }
+
+
+    .tour-step {
+        background-color: var(--White, #FBFCFE);
+        box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.20);
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        position: relative;
+        border-radius: 16px;
+        background-image: url(../img/manchas/superior_izquierda.svg);
+        background-size: 240px;
+        background-position: 107% 100%;
+        background-repeat: no-repeat;
+
+        #endTour {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+
+        }
+
+        video {
+            margin: 0 auto 30px;
+            display: block;
+        }
+
+        h2 {
+            color: var(--Gris-Gris-1, #140A4C);
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: normal;
+        }
+
+        p {
+            color: var(--Grises-Gris-2, #55637E);
+            font-size: 15px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 20px;
+            margin-bottom: 16px;
+        }
+    }
+
+    #tour-video img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .tour-actions {
+        margin-top: 20px;
+    }
+
+    .steps-dots {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .steps-dots li {
+        width: 10px;
+        height: 10px;
+        background-color: var(--cielo_desactivado);
+        border-radius: 50%;
+        margin: 0 5px;
+    }
+
+    .steps-dots li.active {
+        background-color: var(--cielo);
+    }
+}

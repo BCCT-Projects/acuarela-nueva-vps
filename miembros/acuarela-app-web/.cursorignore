@@ -1,0 +1,47 @@
+# Dependencias (Composer en servidor)
+vendor/
+
+# Stripe SDK duplicado (migrado a Composer)
+marketplace/stripe/
+marketplaceapp/stripe/
+
+# Archivos generados
+*.css.map
+css/*.css
+DEPLOY_VERSION.txt
+error_log
+*.log
+
+# Builds de apps
+marketplace/*.js
+marketplace/*.js.map
+marketplaceapp/*.js
+marketplaceapp/*.js.map
+
+# Media (no necesitan contexto IA)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+*.webp
+*.mp4
+*.pdf
+
+# Fuentes
+*.woff
+*.woff2
+*.eot
+*.ttf
+
+# Sistema
+.git/
+node_modules/
+cache/
+.well-known/
+
+# Archivos de ejemplo/test
+test.html
+env.example.txt
+

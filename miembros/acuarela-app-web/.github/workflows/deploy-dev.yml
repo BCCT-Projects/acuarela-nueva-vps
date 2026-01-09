@@ -1,0 +1,230 @@
+name: 🚀 Deploy to DEV (acuarela-app-web)
+
+on:
+  push:
+    branches: [dev]
+
+env:
+  REPO_NAME: "acuarela-app-web"
+  DEV_PATH: "/home/oldmacdonald/public_html/dev2/miembros/acuarela-app-web"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout con historial para detectar cambios en composer
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # 2. Detectar si composer.json existe (se verificará vendor/ en servidor)
+      - name: 🔍 Check if composer.json exists
+        id: composer-check
+        run: |
+          if [ -f "composer.json" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "📦 composer.json encontrado - verificará vendor/ en servidor"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⏭️ No hay composer.json - skipping"
+          fi
+
+      # 3. Instalar sshpass para usar password con rsync
+      - name: 🔧 Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      # 4. Agregar host a known_hosts
+      - name: 🔐 Setup known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      # 5. Sync archivos con rsync
+      # NOTA: Exclusiones basadas en DRIFT_acuarela-app-web_2024-12-22.md
+      # .env contiene credenciales y se sube manualmente al servidor
+      - name: 🔄 Rsync source files
+        run: |
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" rsync -avz --delete \
+            --omit-dir-times \
+            --no-perms \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.well-known/' \
+            --exclude='vendor/' \
+            --exclude='cache/' \
+            --exclude='marketplace/stripe/' \
+            --exclude='marketplaceapp/stripe/' \
+            --exclude='videos/' \
+            --exclude='error_log' \
+            --exclude='*.log' \
+            --exclude='DEPLOY_VERSION.txt' \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.DEV_PATH }}/
+
+      # 6. Composer install EN EL SERVIDOR (si falta vendor/ o composer.lock)
+      - name: 📦 Composer install on server
+        if: steps.composer-check.outputs.exists == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd ${{ env.DEV_PATH }}
+            
+            # Solo ejecutar si falta vendor/ o composer.lock
+            if [ ! -d "vendor" ] || [ ! -f "composer.lock" ]; then
+              echo "📦 vendor/ o composer.lock no existe - instalando dependencias..."
+              composer install --no-dev --optimize-autoloader --no-interaction
+              echo "✅ Dependencies installed"
+            else
+              echo "✅ vendor/ ya existe - verificando actualización..."
+              composer install --no-dev --optimize-autoloader --no-interaction
+              echo "✅ Dependencies verified/updated"
+            fi
+
+      # 6.1. Verificar que composer install funcionó correctamente
+      - name: ✅ Verify composer install
+        if: steps.composer-check.outputs.exists == 'true'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd ${{ env.DEV_PATH }}
+            echo "🔍 Verificando instalación de Composer..."
+            
+            # Verificar que vendor existe
+            if [ ! -d "vendor" ]; then
+              echo "❌ ERROR: Directorio vendor/ no existe"
+              exit 1
+            fi
+            echo "✅ Directorio vendor/ existe"
+            
+            # Verificar que el autoloader existe
+            if [ ! -f "vendor/autoload.php" ]; then
+              echo "❌ ERROR: vendor/autoload.php no existe"
+              exit 1
+            fi
+            echo "✅ Autoloader (vendor/autoload.php) existe"
+            
+            # Verificar que stripe está instalado
+            if [ ! -d "vendor/stripe" ]; then
+              echo "❌ ERROR: stripe/stripe-php no está instalado"
+              exit 1
+            fi
+            echo "✅ stripe/stripe-php está instalado"
+            
+            # Verificar con composer show
+            echo "📦 Dependencias instaladas:"
+            composer show --installed || echo "⚠️ composer show falló, pero las dependencias parecen estar instaladas"
+            
+            # Test real: cargar autoloader con PHP
+            echo "🧪 Probando autoloader con PHP..."
+            php -r "require 'vendor/autoload.php'; echo class_exists('Stripe\Stripe') ? '✅ Stripe\Stripe carga correctamente' : '❌ ERROR: Stripe no se puede cargar'; echo PHP_EOL;"
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ ERROR: El autoloader de PHP falló"
+              exit 1
+            fi
+            
+            echo "✅ Verificación completada - Composer install funcionó correctamente"
+
+      # 7. Corregir permisos (archivos desplegados quedan como peekaroot)
+      - name: 🔐 Fix file ownership
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            echo "🔐 Corrigiendo permisos de archivos desplegados..."
+            cd ${{ env.DEV_PATH }}
+            # Cambiar owner de archivos que quedaron como peekaroot
+            find . -user peekaroot -exec chown oldmacdonald:oldmacdonald {} \; 2>/dev/null || true
+            echo "✅ Permisos corregidos"
+
+      # 8. Crear DEPLOY_VERSION.txt en el servidor
+      - name: 📝 Create DEPLOY_VERSION.txt
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cat > ${{ env.DEV_PATH }}/DEPLOY_VERSION.txt << EOF
+            =====================================
+            DEPLOY INFO
+            =====================================
+            Repository: ${{ env.REPO_NAME }}
+            Environment: DEV
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Date: $(TZ='America/New_York' date '+%Y-%m-%d %H:%M:%S')
+            Composer: ${{ steps.composer-check.outputs.exists == 'true' && 'verified' || 'skipped' }}
+            =====================================
+            EOF
+
+  # Crear PR automático a main (usando GitHub CLI)
+  create-pr:
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 Create or Update Pull Request
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_AUTHOR: ${{ github.actor }}
+        run: |
+          PR_BODY="## Cambios listos para producción
+
+          **Repositorio:** acuarela-app-web
+          **Commit:** ${COMMIT_SHA}
+          **Autor:** @${COMMIT_AUTHOR}
+
+          ### Checklist:
+          - [ ] Probado en DEV
+          - [ ] Sin errores en consola
+          - [ ] Funcionalidad verificada"
+          
+          # Verificar si ya existe un PR abierto
+          EXISTING_PR=$(gh pr list --base main --head dev --state open --json number -q '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "✅ PR #${EXISTING_PR} ya existe - los nuevos commits se agregaron automáticamente"
+            # Intentar asignar reviewer si no tiene
+            gh pr edit "$EXISTING_PR" --add-reviewer tecnologia-afma 2>/dev/null || true
+            gh pr edit "$EXISTING_PR" --add-assignee tecnologia-afma 2>/dev/null || true
+          else
+            echo "📋 Creando nuevo PR..."
+            # Crear PR sin reviewer (evita error de permisos)
+            gh pr create --base main --head dev --title "🚀 Deploy: ${COMMIT_MSG}" --body "$PR_BODY" || echo "⚠️ No se pudo crear PR automáticamente."
+            
+            # Asignar reviewer y assignee por separado
+            sleep 2
+            NEW_PR=$(gh pr list --base main --head dev --state open --json number -q '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$NEW_PR" ]; then
+              echo "📌 Asignando reviewer a PR #${NEW_PR}..."
+              gh pr edit "$NEW_PR" --add-reviewer tecnologia-afma 2>/dev/null || echo "⚠️ No se pudo asignar reviewer"
+              gh pr edit "$NEW_PR" --add-assignee tecnologia-afma 2>/dev/null || echo "⚠️ No se pudo asignar assignee"
+            fi
+          fi
+

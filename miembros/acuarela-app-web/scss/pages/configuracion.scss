@@ -1,0 +1,128 @@
+.configuracion {
+  main {
+    padding: 0;
+
+    .mainHeader {
+      box-shadow: none;
+    }
+
+    .content {
+      padding: 40px clamp(20px, 3vw, 80px) 120px;
+
+      .basicinfo {
+        align-items: flex-start;
+
+        @media only screen and (max-width: 768px) {
+          flex-direction: column;
+        }
+
+        .txt,
+        a {
+          flex: 1;
+        }
+      }
+    }
+  }
+
+  .container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  strong.text {
+    color: var(--Gris-Gris-1, #140a4c);
+
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+  }
+
+  p.text {
+    color: var(--Gris-Gris-1, #140a4c);
+    /* Texto */
+
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 16px;
+  }
+
+  .button {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--Cielo-Cielo_Default, #0cb5c3);
+    color: #fff;
+    text-align: center;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .button:hover {
+    background-color: #0e0838;
+  }
+
+  .icon-container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .icon-container svg {
+    margin-right: 10px;
+  }
+}
+
+.stripe-ready {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  max-width: 600px;
+  margin: auto;
+
+  .stripe-logo {
+    background-color: #0cb5c3;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+  }
+
+  .stripe-text {
+    flex-grow: 1;
+
+    .status {
+      margin: 0;
+    }
+
+    .description {
+      margin: 0.25rem 0 1rem;
+    }
+
+    .go-to-finances {
+      background-color: #0cb5c3;
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #009999;
+      }
+    }
+  }
+}

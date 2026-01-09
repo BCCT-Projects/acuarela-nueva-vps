@@ -1,0 +1,206 @@
+a {
+  color: inherit;
+}
+
+.container {
+  margin: 0 auto;
+  max-width: 1366px;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.splide__list {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+hr {
+  border-color: #e1e4e9;
+  margin: 40px auto;
+}
+
+.hidden {
+  display: none;
+}
+
+body {
+  display: grid;
+  background: var(--Fondos-Fondo-1, #f0feff);
+  grid-template-columns: 257px 1fr;
+
+  // Cuando no hay sidebar (clase no-sidebar)
+  &.no-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  @media only screen and (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    position: relative;
+    background-image: url(../img/manchas/inferior_derecha.svg);
+    background-size: 640px;
+    background-position: 107% 100%;
+    background-repeat: no-repeat;
+
+    @media only screen and (max-width: 1023px) {
+      grid-column: span 2;
+      background-image: none;
+    }
+
+    .content {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+  }
+
+  header {
+    i {
+      &.acuarela-Menu {
+        display: block;
+      }
+
+      &.acuarela-Cancelar {
+        display: none;
+      }
+    }
+  }
+
+  &.activeMenu {
+    header {
+      i {
+        &.acuarela-Menu {
+          display: none;
+        }
+
+        &.acuarela-Cancelar {
+          display: block;
+        }
+      }
+    }
+
+    aside {}
+  }
+
+  .video-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+
+    &-content {
+      display: flex;
+      justify-content: center;
+      position: relative;
+      width: 80%;
+      max-width: 700px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+      video {
+        @media only screen and (max-width: 768px) {
+          width: 100%;
+        }
+      }
+
+      .close-modal {
+        position: absolute;
+        top: 10px;
+        right: 20px;
+        font-size: 32px;
+        cursor: pointer;
+
+        @media only screen and (max-width: 768px) {
+          display: none;
+        }
+      }
+    }
+  }
+}
+
+i {
+  &.acuarela-Alimentacion {
+    color: var(--sandia);
+  }
+
+  &.acuarela-Siesta {
+    color: var(--cielo);
+  }
+
+  &.acuarela-Bano {
+    color: var(--secundario2);
+  }
+
+  &.acuarela-Salud {
+    color: var(--secundario1);
+  }
+
+  &.acuarela-Actividades {
+    color: var(--morita);
+  }
+}
+
+.emptyElement {
+  display: none;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+
+  h2,
+  p {
+    margin-bottom: 16px;
+  }
+}
+
+.loading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    display: none;
+  }
+
+  &::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba($color: #0cb5c3, $alpha: 0.2);
+  }
+
+  &::after {
+    content: "";
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-image: url(../img/preloader.gif);
+    background-size: contain;
+    background-repeat: no-repeat;
+    z-index: 2;
+    background-position: center;
+  }
+}
+
+label span.required {
+  display: inline;
+  color: red;
+}

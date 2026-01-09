@@ -1,0 +1,50 @@
+# =================================
+# DEPENDENCIAS (Composer)
+# =================================
+/vendor/
+
+# SDK Stripe manual (MIGRADO A COMPOSER)
+# Estas carpetas ya no son necesarias
+marketplace/stripe/
+marketplaceapp/stripe/
+
+# =================================
+# CACHE (generado por PHP/WordPress)
+# =================================
+/cache/
+
+# =================================
+# ARCHIVOS GRANDES
+# =================================
+# Videos tutoriales (usar CDN)
+/videos/
+
+# =================================
+# LOGS
+# =================================
+error_log
+*.log
+
+# =================================
+# SECRETS Y VARIABLES DE ENTORNO
+# =================================
+# Archivo .env con credenciales (NUNCA subir)
+.env
+.env.*
+!env.example.txt
+
+# Archivos secrets.php obsoletos
+**/secrets.php
+
+# =================================
+# DEPLOY
+# =================================
+DEPLOY_VERSION.txt
+
+# =================================
+# IDE / SISTEMA
+# =================================
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
