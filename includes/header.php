@@ -12,7 +12,7 @@
       <nav class="header__menu">
         <a class="header__menu-item" href="/#top">Home</a>
         <!-- <a class="header__menu-item" href="sobre-nosotros">Nosotros</a> -->
-        <a class="header__menu-item" href="sobre-nosotros">Nosotros</a>
+        <a class="header__menu-item" href="/#nosotros">Nosotros</a>
         <a class="header__menu-item" href="planes-precios">Planes y Precios</a>
         <a class="header__menu-item" href="/#faq">Preguntas Frecuentes</a>
       </nav>

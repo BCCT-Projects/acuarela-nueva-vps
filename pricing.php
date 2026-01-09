@@ -28,7 +28,7 @@ $prices = $a->getPrices();
   <section class="acuarela-services" id="acuarela-services">
     <div id="curriculums-slide-planes-acuarela">
       <div class="desc">
-        <?= $service->acf->{$template}->desc_plan ?>
+        <!-- <?= $service->acf->{$template}->desc_plan ?> -->
       </div>
       <!-- <div class="switch-container">
         <label class="switch">
@@ -157,7 +157,7 @@ $prices = $a->getPrices();
   <section class="acuarela-services2" id="acuarela-services">
     <div id="curriculums-slide-planes-acuarela">
       <div class="desc">
-        <?= $service->acf->{$template}->desc_plan ?>
+        <!-- <?= $service->acf->{$template}->desc_plan ?> -->
       </div>
       <!-- <div class="switch-container">
         <label class="switch">

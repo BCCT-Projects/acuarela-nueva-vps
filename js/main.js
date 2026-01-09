@@ -538,12 +538,9 @@ function updateAcuarelaServices() {
             <button class="buttonth ${buttonClassExtra}" ${disabledAttr} ${onclickAttr} target="_blank">
               ${buttonText}
             </button>
-            <a href="https://wa.me/17184155207?text=%2AHola%20visite%20su%20pagina%20web%2C%20estoy%20interesado%20en%20el%20servicio%20de%20acuarela%2C%20necesito%20mas%20informacion." 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="${asesorButtonClass}">
+            <button class="${asesorButtonClass}" target="_blank">
               Hablar con asesor
-            </a>
+            </button>
           </th>
         `;
       });
@@ -709,12 +706,9 @@ function updateAcuarelaServices2() {
             <button class="buttonth ${buttonClassExtra}" ${disabledAttr} ${onclickAttr}>
               ${buttonText}
             </button>
-            <a href="https://wa.me/17184155207?text=%2AHola%20visite%20su%20pagina%20web%2C%20estoy%20interesado%20en%20el%20servicio%20de%20acuarela%2C%20necesito%20mas%20informacion." 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="buttonth-white btn-invisible">
+            <button class="buttonth-white btn-invisible">
               Hablar con asesor
-            </a>
+            </button>
           </div>
         `;
       });
@@ -854,12 +848,9 @@ function updateAcuarelaServicesPro() {
             <button class="buttonth ${buttonClassExtra}" ${disabledAttr} ${onclickAttr}>
               ${buttonText}
             </button>
-            <a href="https://wa.me/17184155207?text=%2AHola%20visite%20su%20pagina%20web%2C%20estoy%20interesado%20en%20el%20servicio%20de%20acuarela%2C%20necesito%20mas%20informacion." 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="buttonth-white btn-invisible">
+            <button class="buttonth-white btn-invisible">
               Hablar con asesor
-            </a>
+            </button>
           </div>
         `;
       });

@@ -36,13 +36,8 @@
         <div class="footer__info">
           <h4>Acuarela</h4>
           <ul class="footer__address">
-            <?php if (!empty($a->generalInfo->acf->email)): ?>
-              <li><?= htmlspecialchars($a->generalInfo->acf->email) ?></li>
-            <?php endif; ?>
-
-            <?php if (!empty($a->generalInfo->acf->phone)): ?>
-              <li><?= htmlspecialchars($a->generalInfo->acf->phone) ?></li>
-            <?php endif; ?>
+            <li><?= $a->generalInfo->acf->email ?></li>
+            <li><?= $a->generalInfo->acf->phone ?></li>
           </ul>
         </div>
       </div>

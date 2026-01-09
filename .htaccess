@@ -1,98 +1,28 @@
-# Habilitar el motor de reescritura
 RewriteEngine On
+RewriteBase /
 
-# Redirigir URLs amigables a sus archivos PHP correspondientes
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{SCRIPT_FILENAME} !-d
+RewriteCond %{SCRIPT_FILENAME} !-f
 
-# Rutas principales
-RewriteRule ^sobre-nosotros/?$ about.php [L,QSA]
-RewriteRule ^planes-precios/?$ pricing.php [L,QSA]
-RewriteRule ^preguntas-frecuentes/?$ faq.php [L,QSA]
-RewriteRule ^contacto/?$ contact.php [L,QSA]
-RewriteRule ^contacto-faq/?$ contact-faq.php [L,QSA]
-RewriteRule ^politicas/?$ politics.php [L,QSA]
-RewriteRule ^daycares/?$ daycares.php [L,QSA]
-RewriteRule ^daycare-detail/?$ daycare-detail.php [L,QSA]
-RewriteRule ^invitacion/?$ invitation.php [L,QSA]
-RewriteRule ^delete-request/?$ delete-request.php [L,QSA]
-RewriteRule ^pagos/?$ payments.php [L,QSA]
-RewriteRule ^pago-pendiente/?$ pagopendiente.php [L,QSA]
-RewriteRule ^acuarela/?$ acuarela.php [L,QSA]
 
-# Rutas de API (get)
-RewriteRule ^g/getAcuarelaServices/?$ get/getAcuarelaServices.php [L,QSA]
-RewriteRule ^g/getFaqs/?$ get/getFaqs.php [L,QSA]
-RewriteRule ^g/getHomeSections/?$ get/getHomeSections.php [L,QSA]
-RewriteRule ^g/getTestimonios/?$ get/getTestimonios.php [L,QSA]
+RewriteRule ^s/([^/]*)/$ set/$1.php?lang=es [L,QSA]
+RewriteRule ^g/([^/]*)/$ get/$1.php?lang=es [L,QSA]
 
-# Rutas de API (set)
-RewriteRule ^s/activate/?$ set/activate.php [L,QSA]
-RewriteRule ^s/activateAsistente/?$ set/activateAsistente.php [L,QSA]
-RewriteRule ^s/activateCheckout/?$ set/activateCheckout.php [L,QSA]
-RewriteRule ^s/changeStatus/?$ set/changeStatus.php [L,QSA]
-RewriteRule ^s/demo/?$ set/demo.php [L,QSA]
-RewriteRule ^s/validatedemo/?$ set/validatedemo.php [L,QSA]
-RewriteRule ^s/invitation/?$ set/invitation.php [L,QSA]
-RewriteRule ^s/sendCheckIn/?$ set/sendCheckIn.php [L,QSA]
-RewriteRule ^s/sendCheckOut/?$ set/sendCheckOut.php [L,QSA]
-RewriteRule ^s/delete-request/?$ set/delete-request.php [L,QSA]
+RewriteRule ^/$ index.php [L,QSA]
+RewriteRule ^sobre-nosotros$ about.php [L,QSA]
+RewriteRule ^planes-precios$ pricing.php [L,QSA]
+RewriteRule ^preguntas-frecuentes$ faq.php [L,QSA]
+RewriteRule ^free-demo$ contact.php [L,QSA]
+RewriteRule ^politicas$ politics.php [L,QSA]
+RewriteRule ^invitaciones$ invitation.php [L,QSA]
+RewriteRule ^([0-9]+)$ bluecard/index.php?id=$1 [L,QSA]
+RewriteRule ^pagos$ payments.php [L,QSA]
+RewriteRule ^paypal/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)/([a-zA-Z0-9_-]+)$ paypal.php?idParent=$1&merchantID=$2&movement=$3 [L,QSA]
+RewriteRule ^pagos-electronicos/activar-([a-zA-Z0-9_-]+)$ automaticPayments.php?id=$1 [L,QSA]
+RewriteRule ^pago-pendiente-([a-zA-Z0-9_-]+)$ pagopendiente.php?id=$1 [L,QSA]
+RewriteRule ^eliminar-datos$ delete-request.php [L,QSA]
+RewriteRule ^validatedemo$ validatedemo.php [L,QSA]
 
-# Configuración de seguridad
-<FilesMatch "^\.">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
 
-# Bloquear acceso a archivos sensibles
-<FilesMatch "\.(log|ini|sh|inc|bak|sql)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Configurar tipos MIME
-AddType application/javascript .js
-AddType text/css .css
-AddType image/svg+xml .svg
-AddType font/woff .woff
-AddType font/woff2 .woff2
-AddType font/ttf .ttf
-AddType font/eot .eot
-
-# Configurar headers para asegurar que el navegador respete los tipos MIME
-<IfModule mod_headers.c>
-    # Asegurar que el navegador respete el Content-Type
-    Header set X-Content-Type-Options "nosniff"
-    
-    # Permitir acceso a fuentes desde el mismo origen
-    <FilesMatch "\.(ttf|otf|eot|woff|woff2)$">
-        Header set Access-Control-Allow-Origin "*"
-    </FilesMatch>
-    
-    # Asegurar que CSS se cargue correctamente
-    <FilesMatch "\.css$">
-        Header set Content-Type "text/css"
-    </FilesMatch>
-    
-    # Asegurar que JS se cargue correctamente
-    <FilesMatch "\.js$">
-        Header set Content-Type "application/javascript"
-    </FilesMatch>
-</IfModule>
-
-# Habilitar compresión GZIP
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
-</IfModule>
-
-# Cache para archivos estáticos
-<IfModule mod_expires.c>
-    ExpiresActive On
-    ExpiresByType image/jpg "access plus 1 month"
-    ExpiresByType image/jpeg "access plus 1 month"
-    ExpiresByType image/gif "access plus 1 month"
-    ExpiresByType image/png "access plus 1 month"
-    ExpiresByType image/svg+xml "access plus 1 month"
-    ExpiresByType text/css "access plus 1 week"
-    ExpiresByType application/javascript "access plus 1 week"
-</IfModule>
+RewriteCond %{HTTP_HOST} ^acuarela\.app$ [NC]
+RewriteRule ^invitaciones-new-york/?$ /invitaciones [R=301,L]

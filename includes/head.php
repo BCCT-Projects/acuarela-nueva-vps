@@ -1,7 +1,7 @@
 <?php include 'config.php'; ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -13,11 +13,11 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css"
     />
-    <link rel="stylesheet" href="/css/normalize.css" />
-    <link rel="stylesheet" href="/css/fonts.css" />
-    <link rel="stylesheet" href="/fonts/acuarelaicon/style.css" />
-    <link rel="stylesheet" href="/css/styles.css?v=<?=time()?>" />
-    <link rel="stylesheet" type="text/css" href="/css/glider.css">
+    <link rel="stylesheet" href="css/normalize.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="fonts/acuarelaicon/style.css" />
+    <link rel="stylesheet" href="css/styles.css?v=<?=time()?>" />
+    <link rel="stylesheet" type="text/css" href="./css/glider.css">
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-SD09S4QRP5"></script>
