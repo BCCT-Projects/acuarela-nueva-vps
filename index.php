@@ -10,13 +10,13 @@
     <div class="banner__content">
       <div class="banner__media">
         <div class="video-container">
-          <button type="button" onclick="unMutedVideo()" id="unmutedBtn"><img src="img/volOff.svg" alt="unmuted" /></button>
-          <video id="video1" src="<?=$a->generalInfo->acf->video_home?>" playsinline preload="auto" autoplay muted loop>
+          <button type="button" onclick="unMutedVideo()" id="unmutedBtn"><img src="img/volOff.svg" alt="unmuted" loading="lazy" /></button>
+          <video id="video1" src="<?=$a->generalInfo->acf->video_home?>" playsinline preload="metadata" autoplay muted loop>
             <source src="<?=$a->generalInfo->acf->video_home?>" type="video/mp4">  
           </video>
         </div>
         <div class="pink-square">
-          <img class="video__logo" src="img/Logo_AC.png" alt="Acuarela" />
+          <img class="video__logo" src="img/Logo_AC.png" alt="Acuarela" loading="lazy" />
         </div>
       </div>
 
@@ -26,7 +26,7 @@
           familia de herramientas digitales Acuarela.
         </h2>
         <div class="banner__buttons">
-          <a class="btn btn--primarywhite" href="https://acuarela.app/planes-precios">
+          <a class="btn btn--primarywhite" href="/planes-precios">
             Crea una cuenta gratis
           </a>
           <button class="btn btn--secondary openModalBtn" >
@@ -34,7 +34,7 @@
           </button>
           <div id="modalOverlay" class="modal-overlay hidden">
             <div class="modal-box">
-              <img src="img/Cerrar.svg" alt="Cerrar" id="closeModalBtn" class="close-btn" />
+              <img src="img/Cerrar.svg" alt="Cerrar" id="closeModalBtn" class="close-btn" loading="lazy" />
               <div class="modal-inner">
                 <div class="modal-left">
                   <h3>¡Empieza ahora!</h3>
@@ -58,7 +58,7 @@
                 <div class="modal-right">
                   <div>
                     <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.</p>
-                    <img src="img/logo_w.svg" alt="Logo Acuarela" />
+                    <img src="img/logo_w.svg" alt="Logo Acuarela" loading="lazy" />
                   </div>          
                 </div>
               </div>
@@ -96,7 +96,7 @@
       <div class="features-cont">
         <div class="features-cont__feature-feature subs1">
           <div class="feature__image img1">
-            <img class="img-feature" src="img/feature-1white.svg" alt="Comunicarse fácilmente con personal y padres de familia" />
+            <img class="img-feature" src="img/feature-1white.svg" alt="Comunicarse fácilmente con personal y padres de familia" loading="lazy" />
           </div>
           <h3 class="feature-titleinfo">Comunicarse fácilmente con personal y padres de familia...</h3>
           <p class="feature-textinfo">
@@ -107,7 +107,7 @@
         </div>
         <div class="features-cont__feature-feature subs2">
           <div class="feature__image img2">
-            <img class="img-feature" src="img/feature-2white.svg" alt="Conseguir nuevos clientes" />
+            <img class="img-feature" src="img/feature-2white.svg" alt="Conseguir nuevos clientes" loading="lazy" />
           </div>
           <h3 class="feature-titleinfo">Conseguir nuevos clientes</h3>
           <p class="feature-textinfo">
@@ -118,7 +118,7 @@
         </div>
         <div class="features-cont__feature-feature subs3">
           <div class="feature__image img3">
-            <img class="img-feature" src="img/feature-3white.svg" alt="Usar nuevas formas de brindar seguridad" />
+            <img class="img-feature" src="img/feature-3white.svg" alt="Usar nuevas formas de brindar seguridad" loading="lazy" />
           </div>
           <h3 class="feature-titleinfo">Usar nuevas formas de brindar seguridad</h3>
           <p class="feature-textinfo">
@@ -130,7 +130,7 @@
         </div>
         <div class="features-cont__feature-feature subs4">
           <div class="feature__image img4">
-            <img class="img-feature" src="img/feature-4white.svg" alt="Gestionar sus finanzas en tiempo récord" />
+            <img class="img-feature" src="img/feature-4white.svg" alt="Gestionar sus finanzas en tiempo récord" loading="lazy" />
           </div>
           <h3 class="feature-titleinfo">Gestionar sus finanzas en tiempo récord</h3>
           <p class="feature-textinfo">
@@ -147,7 +147,7 @@
   <!-- ADD-ONS -->
   <section class="add__ons" id="nosotros">
     <div class="add__ons__content">
-      <img class="adds-image" src="img/add-on1.png" alt="Cobros automáticos y Payrolls fáciles" />
+      <img class="adds-image" src="img/add-on1.png" alt="Cobros automáticos y Payrolls fáciles" loading="lazy" />
      
       <div class="adds-content">
         <div class="adds-content-page type1">
@@ -156,7 +156,7 @@
           </div>
           <div class="page-line tipe1"></div>
           <div class="page-imagebox box1">
-            <img src="img/feature-4white.svg" alt="Gestionar sus finanzas en tiempo récord" />
+            <img src="img/feature-4white.svg" alt="Gestionar sus finanzas en tiempo récord" loading="lazy" />
           </div>
         </div>
 
@@ -170,7 +170,7 @@
           </p>
           <button
             class="btn btn--secondary"
-            onclick="window.location.href='https://acuarela.app/planes-precios'"
+            onclick="window.location.href='/planes-precios'"
           >
             Ver planes y precios
           </button>
@@ -182,7 +182,7 @@
       <div class="adds-content">
         <div class="adds-content-page type2">
           <div class="page-imagebox box2">
-            <img src="img/feature-2white.svg" alt="Conseguir nuevos clientes" />
+            <img src="img/feature-2white.svg" alt="Conseguir nuevos clientes" loading="lazy" />
           </div>
           <div class="page-line tipe2"></div>
           <div class="page-title">
@@ -200,18 +200,18 @@
           </p>
           <button
             class="btn btn--secondary"
-            onclick="window.location.href='https://acuarela.app/planes-precios'"
+            onclick="window.location.href='/planes-precios'"
           >
             Ver planes y precios
           </button>
         </div>
       </div>
 
-      <img class="adds-image" src="img/add-on2.png" alt="Llega a más clientes sin más esfuerzo" />
+      <img class="adds-image" src="img/add-on2.png" alt="Llega a más clientes sin más esfuerzo" loading="lazy" />
     </div>
 
     <div class="add__ons__content">
-      <img class="adds-image" src="img/add-on3.png" alt="Funciones que te permiten dedicar más tiempo a cuidar y menos a administrar…" />
+      <img class="adds-image" src="img/add-on3.png" alt="Funciones que te permiten dedicar más tiempo a cuidar y menos a administrar…" loading="lazy" />
      
       <div class="adds-content">
         <div class="adds-content-page type1">
@@ -235,7 +235,7 @@
           </p>
           <button
             class="btn btn--secondary"
-            onclick="window.location.href='https://acuarela.app/planes-precios'"
+            onclick="window.location.href='/planes-precios'"
           >
             Ver planes y precios
           </button>
@@ -250,34 +250,16 @@
     <div class="testimonial">
       <h2>Testimonios</h2>
       <div class="testimonial__content">
-        <img src="img\Flecha_izquierda.png" alt="Desplazar testimonios a la izquierda" />
+        <img src="img\Flecha_izquierda.png" alt="Desplazar testimonios a la izquierda" loading="lazy" />
 
         <div class="testimonial__content-view">
-          <div class="testimonial__slider-track">
-            <?php 
-              $testimonios = $a->getTestimonios();
-              for ($i = 0; $i < count($testimonios); $i++) { 
-                  $testimonio = $testimonios[$i];
-            ?>
-            <div class="testimonial__slide">
-              <div class="testimonial__content-video">
-                <img class="testimonials-cont__avatar" src="<?=$testimonio->acf->imagen?>"/>
-              </div>
-
-              <div class="testimonial__content-info">
-                <div class="imgbox">
-                  <img src="img\Heart.svg" alt="Like" />
-                </div>
-                <h3><?=$testimonio->title->rendered?></h3>
-                <h4><?=$testimonio->acf->cargo?></h4>
-                <p><?=$testimonio->content->rendered?></p>
-              </div>
-            </div>
-            <?php } ?>
+          <div class="testimonial__slider-track" id="testimonials-container">
+            <!-- Los testimonios se cargarán de forma asíncrona -->
+            <div class="loading-testimonials">Cargando testimonios...</div>
           </div>
         </div>
 
-        <img src="img\Flecha_derecha.png" alt="Desplazar testimonios a la derecha" />
+        <img src="img\Flecha_derecha.png" alt="Desplazar testimonios a la derecha" loading="lazy" />
       </div>
     </div>
   </section>
@@ -334,5 +316,61 @@
 </main>
 <?php include 'includes/footer.php'; ?>
 
+<!-- Scripts movidos al final para no bloquear el renderizado -->
+<script>
+  // Cargar video de forma lazy
+  document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video1');
+    if (video) {
+      video.preload = 'auto';
+      video.load();
+    }
+    
+    // Cargar testimonios de forma asíncrona (solo cuando el usuario hace scroll cerca de la sección)
+    const testimonialsSection = document.querySelector('.testimonial__section');
+    if (testimonialsSection) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const container = document.getElementById('testimonials-container');
+            if (container && !container.dataset.loaded) {
+              container.dataset.loaded = 'true';
+              fetch('/g/getTestimonios/')
+                .then(response => response.json())
+                .then(testimonios => {
+                  if (Array.isArray(testimonios) && testimonios.length > 0) {
+                    container.innerHTML = testimonios.map((testimonio, i) => `
+                      <div class="testimonial__slide">
+                        <div class="testimonial__content-video">
+                          <img class="testimonials-cont__avatar" src="${testimonio.acf?.imagen || ''}" loading="lazy" alt="${testimonio.title?.rendered || ''}"/>
+                        </div>
+                        <div class="testimonial__content-info">
+                          <div class="imgbox">
+                            <img src="img/Heart.svg" alt="Like" />
+                          </div>
+                          <h3>${testimonio.title?.rendered || ''}</h3>
+                          <h4>${testimonio.acf?.cargo || ''}</h4>
+                          <p>${testimonio.content?.rendered || ''}</p>
+                        </div>
+                      </div>
+                    `).join('');
+                  } else {
+                    container.innerHTML = '<p>No hay testimonios disponibles.</p>';
+                  }
+                })
+                .catch(error => {
+                  console.error('Error cargando testimonios:', error);
+                  container.innerHTML = '<p>No se pudieron cargar los testimonios.</p>';
+                });
+            }
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { rootMargin: '100px' });
+      
+      observer.observe(testimonialsSection);
+    }
+  });
+</script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>

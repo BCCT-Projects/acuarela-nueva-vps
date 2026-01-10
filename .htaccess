@@ -1,12 +1,59 @@
 RewriteEngine On
 RewriteBase /
 
+# Excluir archivos estáticos de las reglas de rewrite
+RewriteCond %{REQUEST_FILENAME} \.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map)$ [NC,OR]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
 RewriteCond %{SCRIPT_FILENAME} !-d
 RewriteCond %{SCRIPT_FILENAME} !-f
 
 
 RewriteRule ^s/([^/]*)/$ set/$1.php?lang=es [L,QSA]
 RewriteRule ^g/([^/]*)/$ get/$1.php?lang=es [L,QSA]
+
+# Rutas de miembros (login/registro)
+RewriteRule ^miembros/?$ miembros/index.php [L,QSA]
+RewriteRule ^miembros/crear-cuenta/?$ miembros/register.php [L,QSA]
+RewriteRule ^miembros/recuperar-contrasena/?$ miembros/forgot_pass.php [L,QSA]
+RewriteRule ^miembros/cerrar-sesion/?$ miembros/cerrar-sesion.php [L,QSA]
+RewriteRule ^miembros/s/([^/]*)/?$ miembros/set/$1.php?lang=es [L,QSA]
+RewriteRule ^miembros/g/([^/]*)/?$ miembros/get/$1.php?lang=es [L,QSA]
+
+# Rutas de aplicación acuarela-app-web
+RewriteRule ^miembros/acuarela-app-web/cambiar-daycare/?$ miembros/acuarela-app-web/changeDaycare.php?activeTab=8 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/?$ miembros/acuarela-app-web/index.php?activeTab=0&section=muro-social [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/inscripciones/?$ miembros/acuarela-app-web/inscripciones_list.php?activeTab=1&section=inscripciones [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/agregar-ninx/?$ miembros/acuarela-app-web/inscripcion.php?activeTab=1&section=agregar-ninx [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/inscripciones/([^/]*)/?$ miembros/acuarela-app-web/inscripcion.php?activeTab=1&section=agregar-ninx&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/asistencia/?$ miembros/acuarela-app-web/asistencia.php?activeTab=2&section=asistencia [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/asistentes/?$ miembros/acuarela-app-web/asistentes.php?activeTab=3&section=asistentes [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/grupos/?$ miembros/acuarela-app-web/grupos.php?activeTab=4&section=grupos [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/grupos/nuevo-grupo/?$ miembros/acuarela-app-web/new_grupo.php?activeTab=4&section=nuevogrupo [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/finanzas/?$ miembros/acuarela-app-web/finanzas.php?activeTab=5&section=finanzas [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/inspeccion/?$ miembros/acuarela-app-web/inspeccion.php?activeTab=6&section=inspeccion [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/visitas/?$ miembros/acuarela-app-web/visitas.php?activeTab=7&section=visitas [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/configuracion/?$ miembros/acuarela-app-web/configuracion.php?activeTab=8&section=configuracion [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/ninxs/([^/]*)/?$ miembros/acuarela-app-web/kid_profile.php?activeTab=2&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/asistente/([^/]*)/?$ miembros/acuarela-app-web/asistente.php?activeTab=3&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/agregar-asistente/?$ miembros/acuarela-app-web/agregar-asistente.php?activeTab=3 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/cambiar-daycare/?$ miembros/acuarela-app-web/changeDaycare.php?activeTab=8 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/administrador-tareas/?$ miembros/acuarela-app-web/checklist.php?activeTab=9 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/grupo/([^/]*)/?$ miembros/acuarela-app-web/grupo.php?activeTab=4&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/editar-grupo/([^/]*)/?$ miembros/acuarela-app-web/edit_grupo.php?activeTab=4&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/agregar-salud/([^/]*)/?$ miembros/acuarela-app-web/agregar-salud.php?activeTab=2&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/agregar-reporte/([^/]*)/?$ miembros/acuarela-app-web/agregar-reporte.php?activeTab=2&id=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/marketplace/([a-zA-Z0-9_-]+)/?$ miembros/acuarela-app-web/stripeConfig.php?activeTab=8&stripeid=$1 [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/activar-cuenta/?$ miembros/acuarela-app-web/activar_cuenta.php [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/dashboard/?$ miembros/acuarela-app-web/dashboard/index.php [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/dashboard/agregar-widgets/?$ miembros/acuarela-app-web/dashboard/add.php [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/dashboard/mis-widgets/?$ miembros/acuarela-app-web/dashboard/widgets.php [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/s/([^/]*)/?$ miembros/acuarela-app-web/set/$1.php?lang=es [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/g/([^/]*)/?$ miembros/acuarela-app-web/get/$1.php?lang=es [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/c/([^/]*)/?$ miembros/acuarela-app-web/cron/$1.php?lang=es [L,QSA]
+RewriteRule ^miembros/acuarela-app-web/wh/([^/]*)/?$ miembros/acuarela-app-web/webhooks/$1.php?lang=es [L,QSA]
 
 RewriteRule ^/$ index.php [L,QSA]
 RewriteRule ^sobre-nosotros$ about.php [L,QSA]

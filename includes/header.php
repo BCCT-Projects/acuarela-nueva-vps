@@ -25,12 +25,12 @@
         <!-- <a class="header__menu-item invitation" href="https://bilingualchildcaretraining.com/miembros/crear-cuenta">
           <img class="header__logging" src="img/cerrarsesion.svg" alt="Acuarela" />
         </a> -->
-        <a class="btn btn--primarywhite" target="_blank"
-          href="https://bilingualchildcaretraining.com/miembros/?service=acuarela&redirect_url=%2Fmiembros%2Facuarela-app-web%2Fs%2FdaycareActive%2F%3Fdaycare%3D">
+        <a class="btn btn--primarywhite"
+          href="/miembros/">
           Iniciar sesión
         </a>
-        <a class="btn btn--primarywhite" target="_blank"
-          href="https://acuarela.app/planes-precios">
+        <a class="btn btn--primarywhite"
+          href="/planes-precios">
           Crear cuenta
         </a>
         <!-- <a class="header__menu-item invitation" href="https://bilingualchildcaretraining.com/miembros/crear-cuenta">Crea tu cuenta gratis</a>  -->
@@ -80,7 +80,7 @@
           <a class="mobile-menu__menu-item" href="sobre-nosotros">Nosotros</a>
           <a class="mobile-menu__menu-item" href="planes-precios">Planes y Precios</a>
           <a class="mobile-menu__menu-item" href="preguntas-frecuentes">Preguntas Frecuentes</a>
-          <a class="header__menu-item invitation" href="https://bilingualchildcaretraining.com/miembros/?service=acuarela&redirect_url=/miembros/acuarela-app-web/s/daycareActive/?daycare=">Iniciar Sesión</a>
+          <a class="header__menu-item invitation" href="/miembros/">Iniciar Sesión</a>
         </nav>
         <!--<div class="mobile-menu__actions">
           <div class="lang-selector">
