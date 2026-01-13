@@ -104,5 +104,12 @@
       <?php } ?>
     </div>
   </div>
+  <div class="legal-links" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e9ecef; text-align: center;">
+    <p style="color: #6c757d; font-size: 0.9rem;">
+      <a href="/miembros/acuarela-app-web/privacy/coppa" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">
+        Aviso de Privacidad COPPA
+      </a>
+    </p>
+  </div>
 </main>
 <?php include "includes/footer.php" ?>

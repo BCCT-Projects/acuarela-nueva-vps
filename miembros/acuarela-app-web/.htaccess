@@ -32,6 +32,9 @@
 RewriteEngine On
 RewriteBase /miembros/acuarela-app-web/
 
+# PÁGINAS PÚBLICAS DE PRIVACIDAD (COPPA) - Debe ir antes de las condiciones generales
+RewriteRule ^privacy/coppa$ privacy/coppa.php [L,QSA]
+
 RewriteCond %{SCRIPT_FILENAME} !-d
 RewriteCond %{SCRIPT_FILENAME} !-f
 

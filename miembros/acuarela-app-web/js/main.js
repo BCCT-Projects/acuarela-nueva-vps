@@ -242,6 +242,47 @@ const handleInscripcion = async () => {
     }
   }
 
+  // Validar consentimiento COPPA si el formulario está completo
+  if (isComplete) {
+    const coppaConsent = document.getElementById("coppa_consent");
+    const coppaVersion = document.getElementById("coppa_notice_version")?.value;
+    
+    if (!coppaConsent || !coppaConsent.checked) {
+      fadeOut(preloader);
+      Swal.fire({
+        title: "Consentimiento requerido",
+        text: "Debe leer y aceptar el Aviso de Privacidad COPPA para completar la inscripción.",
+        icon: "error",
+        confirmButtonText: "Entendido",
+        background: "#f0feff",
+        color: "#333",
+        confirmButtonColor: "#0cb5c3",
+      }).then(() => {
+        // Ir a la pestaña de consentimiento COPPA
+        const coppaTab = document.querySelector('.navtab[data-target="coppa-consent"]');
+        if (coppaTab) {
+          coppaTab.click();
+          coppaConsent?.focus();
+        }
+      });
+      return;
+    }
+    
+    if (!coppaVersion || coppaVersion.trim() === "") {
+      fadeOut(preloader);
+      Swal.fire({
+        title: "Error de versión",
+        text: "No se pudo verificar la versión del aviso COPPA. Por favor recargue la página.",
+        icon: "error",
+        confirmButtonText: "Entendido",
+        background: "#f0feff",
+        color: "#333",
+        confirmButtonColor: "#0cb5c3",
+      });
+      return;
+    }
+  }
+
   const files = [
     {
       name: "acuerdo-de-registro",
@@ -337,6 +378,8 @@ const handleInscripcion = async () => {
     percentaje: isComplete ? 100 : updatePercentage(),
     status: isComplete ? "Finalizado" : "Borrador",
     inscripcion: formValues.inscripcion ? formValues.inscripcion : "",
+    coppa_notice_version: formValues.coppa_notice_version || "",
+    coppa_consent: isComplete && formValues.coppa_consent ? true : false,
   };
 
   try {

@@ -690,10 +690,45 @@ class Acuarela {
          $String = str_replace(".", "", $String); //Punto
          $String = str_replace("&", "-", $String);
  
-         //Mayusculas
-         $String = strtolower($String);
- 
-         return ($String);
-     }
+        //Mayusculas
+        $String = strtolower($String);
+
+        return ($String);
+    }
+    
+    /**
+     * Obtener aviso COPPA activo
+     * @return object|null
+     */
+    function getCoppaNotice() {
+        // Usar el endpoint correcto: aviso-coppas (plural)
+        $resp = $this->queryStrapi("aviso-coppas?status=active&_sort=notice_published_date:DESC&_limit=1");
+        // Si no encuentra con status=active, buscar cualquier publicado
+        if (!$resp || !isset($resp->response) || empty($resp->response)) {
+            $resp = $this->queryStrapi("aviso-coppas?_sort=notice_published_date:DESC&_limit=1");
+        }
+        return $resp;
+    }
+    
+    /**
+     * Obtener versión específica del aviso COPPA
+     * @param string $version Versión a obtener (ej: "v1.0")
+     * @return object|null
+     */
+    function getCoppaNoticeByVersion($version) {
+        // Usar el endpoint correcto: aviso-coppas (plural)
+        $resp = $this->queryStrapi("aviso-coppas?version=" . urlencode($version) . "&_limit=1");
+        return $resp;
+    }
+    
+    /**
+     * Obtener todas las versiones del aviso COPPA (para historial)
+     * @return object|null
+     */
+    function getAllCoppaNotices() {
+        // Usar el endpoint correcto: aviso-coppas (plural)
+        $resp = $this->queryStrapi("aviso-coppas?_sort=notice_published_date:DESC");
+        return $resp;
+    }
     
 }
