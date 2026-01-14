@@ -2,6 +2,7 @@
 error_reporting(0);
 ob_start();
 include '../includes/config.php';
+require_once '../acuarela-app-web/includes/env.php';
 
 header('Content-Type: application/json');
 
@@ -41,7 +42,7 @@ try {
         $a->transformMergeVars($mergeVars),
         "Tu código de verificación",
         'portal-miembros-2fa',
-        'maRkSStgpCapJoSmwHOZDg',
+        Env::get('MANDRILL_API_KEY', 'maRkSStgpCapJoSmwHOZDg'),
         "Bilingual Childcare Training"
     );
 

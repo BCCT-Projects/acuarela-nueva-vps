@@ -55,7 +55,7 @@ class acuarela
 				'to' => array(
 					array(
 						'email' => $to,
-						'name' =>  $toname,
+						'name' => $toname,
 						'type' => 'to'
 					)
 				),
@@ -220,7 +220,7 @@ class acuarela
 		$resp['a'] = $a;
 		$resp['b'] = $b;
 		$resp['c'] = $c;
-		$resp['d'] = $d;
+
 		return $resp;
 	}
 	function sendEndRegisterDaycareCheckout($name, $pass, $email, $subject = 'Registro finalizado')
@@ -305,7 +305,7 @@ class acuarela
 		$d = $this->send_notification('info@acuarela.app', 'dreinovcorp@gmail.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
 		$resp['a'] = $a;
 		$resp['b'] = $b;
-		$resp['c'] = $c;
+
 		$resp['d'] = $d;
 		return $resp;
 	}
@@ -412,7 +412,9 @@ class acuarela
 		}
 		return $gnrl;
 	}
-	function getHome() {}
+	function getHome()
+	{
+	}
 	function getHomeSections()
 	{
 		$result = $this->query("promo-home");

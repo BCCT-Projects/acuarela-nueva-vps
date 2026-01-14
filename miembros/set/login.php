@@ -2,6 +2,7 @@
 error_reporting(0);
 ob_start();
 include '../includes/config.php';
+require_once '../acuarela-app-web/includes/env.php';
 
 // Normaliza los datos
 $email = strtolower(trim($_POST['email']));
@@ -54,7 +55,7 @@ if (isset($userLogin->id)) {
             $a->transformMergeVars($mergeVars),
             "Tu código de verificación",
             'portal-miembros-2fa', // NOMBRE DEL TEMPLATE A CREAR
-            'maRkSStgpCapJoSmwHOZDg',
+            Env::get('MANDRILL_API_KEY', 'maRkSStgpCapJoSmwHOZDg'),
             "Bilingual Childcare Training"
         );
     } catch (Exception $e) {

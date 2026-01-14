@@ -17,8 +17,12 @@ require_once 'Mandrill/Senders.php';
 require_once 'Mandrill/Metadata.php';
 require_once 'Mandrill/Exceptions.php';
 
-class Mandrill {
-    
+/**
+ * @property Mandrill_Messages $messages
+ */
+class Mandrill
+{
+
     public $apikey;
     public $ch;
     public $root = 'https://mandrillapp.com/api/1.0';
@@ -56,10 +60,14 @@ class Mandrill {
         "Unknown_MetadataField" => "Mandrill_Unknown_MetadataField"
     );
 
-    public function __construct($apikey=null) {
-        if(!$apikey) $apikey = getenv('MANDRILL_APIKEY');
-        if(!$apikey) $apikey = $this->readConfigs();
-        if(!$apikey) throw new Mandrill_Error('You must provide a Mandrill API key');
+    public function __construct($apikey = null)
+    {
+        if (!$apikey)
+            $apikey = getenv('MANDRILL_APIKEY');
+        if (!$apikey)
+            $apikey = $this->readConfigs();
+        if (!$apikey)
+            throw new Mandrill_Error('You must provide a Mandrill API key');
         $this->apikey = $apikey;
 
         $this->ch = curl_init();
@@ -90,11 +98,13 @@ class Mandrill {
         $this->metadata = new Mandrill_Metadata($this);
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         curl_close($this->ch);
     }
 
-    public function call($url, $params) {
+    public function call($url, $params)
+    {
         $params['key'] = $this->apikey;
         $params = json_encode($params);
         $ch = $this->ch;
@@ -106,7 +116,7 @@ class Mandrill {
 
         $start = microtime(true);
         $this->log('Call to ' . $this->root . $url . '.json: ' . $params);
-        if($this->debug) {
+        if ($this->debug) {
             $curl_buffer = fopen('php://memory', 'w+');
             curl_setopt($ch, CURLOPT_STDERR, $curl_buffer);
         }
@@ -114,7 +124,7 @@ class Mandrill {
         $response_body = curl_exec($ch);
         $info = curl_getinfo($ch);
         $time = microtime(true) - $start;
-        if($this->debug) {
+        if ($this->debug) {
             rewind($curl_buffer);
             $this->log(stream_get_contents($curl_buffer));
             fclose($curl_buffer);
@@ -122,39 +132,46 @@ class Mandrill {
         $this->log('Completed in ' . number_format($time * 1000, 2) . 'ms');
         $this->log('Got response: ' . $response_body);
 
-        if(curl_error($ch)) {
+        if (curl_error($ch)) {
             throw new Mandrill_HttpError("API call to $url failed: " . curl_error($ch));
         }
         $result = json_decode($response_body, true);
-        if($result === null) throw new Mandrill_Error('We were unable to decode the JSON response from the Mandrill API: ' . $response_body);
-        
-        if(floor($info['http_code'] / 100) >= 4) {
+        if ($result === null)
+            throw new Mandrill_Error('We were unable to decode the JSON response from the Mandrill API: ' . $response_body);
+
+        if (floor($info['http_code'] / 100) >= 4) {
             throw $this->castError($result);
         }
 
         return $result;
     }
 
-    public function readConfigs() {
+    public function readConfigs()
+    {
         $paths = array('~/.mandrill.key', '/etc/mandrill.key');
-        foreach($paths as $path) {
-            if(file_exists($path)) {
+        foreach ($paths as $path) {
+            if (file_exists($path)) {
                 $apikey = trim(file_get_contents($path));
-                if($apikey) return $apikey;
+                if ($apikey)
+                    return $apikey;
             }
         }
         return false;
     }
 
-    public function castError($result) {
-        if($result['status'] !== 'error' || !$result['name']) throw new Mandrill_Error('We received an unexpected error: ' . json_encode($result));
+    public function castError($result)
+    {
+        if ($result['status'] !== 'error' || !$result['name'])
+            throw new Mandrill_Error('We received an unexpected error: ' . json_encode($result));
 
         $class = (isset(self::$error_map[$result['name']])) ? self::$error_map[$result['name']] : 'Mandrill_Error';
         return new $class($result['message'], $result['code']);
     }
 
-    public function log($msg) {
-        if($this->debug) error_log($msg);
+    public function log($msg)
+    {
+        if ($this->debug)
+            error_log($msg);
     }
 }
 

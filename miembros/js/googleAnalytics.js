@@ -1,11 +1,15 @@
 // Función general para enviar eventos a Google Analytics
-/*function sendAnalyticsEvent(
+function sendAnalyticsEvent(
     category,
     action,
     label,
     additionalData = {},
     eventName
   ) {
+    if (typeof gtag !== 'function') {
+        console.warn('Google Analytics (gtag) is not loaded. Event not sent:', eventName);
+        return;
+    }
     // Utiliza el nombre del evento proporcionado o un valor predeterminado ('custom_event')
     console.log('Evento enviado a Google Analytics');
     const eventToTrack = eventName || "custom_event";
@@ -74,30 +78,30 @@
   
   function trackDaycareUpdate() {
     sendAnalyticsEvent(
-      'update', 
-      'daycare', 
-      'Daycare actualizado', 
+      "update", 
+      "daycare", 
+      "Daycare actualizado", 
       {}, 
-      'update_daycare'
+      "update_daycare"
     );
   }
 
   function trackCurriculumActivity(activity){
     sendAnalyticsEvent(
-      'activity',
-      'pop_up',
-      'Abrir actividad',
+      "activity",
+      "pop_up",
+      "Abrir actividad",
       { activity_category: activity},
-      'open_activity'
+      "open_activity"
     );
   }
 
   function trackCreatedMenus(result){
     sendAnalyticsEvent(
-      'create', 
-      'menus', 
-      'Creación de menú', 
-      { 'Resultado del menú': result }, 
-      'created_menuIA'
+      "create", 
+      "menus", 
+      "Creación de menú", 
+      { "Resultado del menú": result }, 
+      "created_menuIA"
     );
-  }*/
+  }
