@@ -291,6 +291,69 @@ $.validator.methods.email = function (value, element) {
   );
 };
 
+// --- 2FA TIMER LOGIC ---
+let resendTimer;
+function startResendTimer() {
+  let timeLeft = 60;
+  const $link = $("#resendCode");
+
+  // Reset state
+  $link.css({ "pointer-events": "none", "color": "#aaa", "cursor": "default" });
+  $link.text(`Reenviar código en ${timeLeft}s`);
+
+  clearInterval(resendTimer);
+  resendTimer = setInterval(() => {
+    timeLeft--;
+    $link.text(`Reenviar código en ${timeLeft}s`);
+
+    if (timeLeft <= 0) {
+      clearInterval(resendTimer);
+      $link.text("Reenviar código");
+      $link.css({ "pointer-events": "auto", "color": "", "cursor": "pointer" }); // Restore default link style
+    }
+  }, 1000);
+}
+
+// Click handler for Resend (Delegated & Robust)
+$(document).on("click", "#resendCode", function (e) {
+  e.preventDefault();
+  console.log("Click detected on Resend Code");
+
+  const $link = $(this);
+
+  // Logical blocking instead of CSS reliance
+  if ($link.hasClass("disabled") || $link.text().includes("en ")) {
+    console.log("Blocked: Timer active or disabled class present");
+    return;
+  }
+
+  $link.addClass("disabled").text("Enviando...");
+  $("#error2fa").removeClass("active").text("").css("color", "");
+
+  $.ajax({
+    url: "/miembros/s/resend_2fa/",
+    type: "POST",
+    dataType: "json",
+    success: function (data) {
+      if (data.ok) {
+        $("#error2fa").css("color", "green").text(data.message).show();
+        setTimeout(() => {
+          $("#error2fa").text("").css("color", "");
+        }, 5000);
+        startResendTimer();
+      } else {
+        $("#error2fa").css("color", "").text(data.message).addClass("active");
+        $link.removeClass("disabled").text("Reenviar código");
+      }
+    },
+    error: function (xhr, status, error) {
+      console.error("Resend Error:", status, error);
+      $("#error2fa").css("color", "").text("Error de conexión").addClass("active");
+      $link.removeClass("disabled").text("Reenviar código");
+    }
+  });
+});
+
 if (document.querySelector("#loginB")) {
   $("#loginB").validate({
     ignore: "",
@@ -306,8 +369,7 @@ if (document.querySelector("#loginB")) {
       pass: { minlength: "La contraseña debe contener mínimo 6 caracteres!" },
     },
     submitHandler: function (form) {
-      document.querySelector(".preloader h2").innerHTML =
-        "Estamos validando tus datos...";
+      document.querySelector(".preloader h2").innerHTML = "Estamos validando tus datos...";
       $(".preloader").fadeIn();
       $("#loginB button[type='submit']").attr("disabled", true);
       $("#loginB button[type='submit']").text("Enviando");
@@ -315,7 +377,21 @@ if (document.querySelector("#loginB")) {
       $("#loginB").ajaxSubmit({
         dataType: "json",
         success: function (data) {
-          if (data.id) {
+          if (data.require_2fa) {
+            $(".preloader").fadeOut();
+            $("#loginB").hide();
+            $("#form2fa").show();
+            startResendTimer(); // Start countdown when form appears
+          } else if (data.getError) {
+            // ... handling ...
+            document.querySelector(".noAccount").classList.add("active");
+            // trackLoginError(data.message); (opcional)
+            $("#loginB button[type='submit']").text("Reintentar");
+            $("#loginB button[type='submit']").attr("disabled", false);
+            $(".preloader").fadeOut();
+            document.querySelector(".noAccount").innerHTML = data.message;
+          } else if (data.id) {
+            // ...
             document.querySelector(".noAccount").classList.remove("active");
             $("#loginB button[type='submit']").attr("disabled", false);
             // Siempre redirigir a cambiar-daycare después del login
@@ -328,10 +404,45 @@ if (document.querySelector("#loginB")) {
             $(".preloader").fadeOut();
           }
         },
+        error: function (jqXHR, textStatus, errorThrown) {
+          console.error("Error Login:", textStatus, errorThrown, jqXHR.responseText);
+          $(".preloader").fadeOut();
+          alert("Error de conexión. Por favor reintenta.");
+          $("#loginB button[type='submit']").attr("disabled", false).text("Ingresar");
+        }
       });
       /*
        */
     },
+  });
+}
+
+if (document.querySelector("#form2fa")) {
+  $("#form2fa").validate({
+    rules: {
+      code: { required: true, minlength: 6, maxlength: 6 }
+    },
+    messages: {
+      code: { required: "Ingresa el código", minlength: "El código es de 6 dígitos" }
+    },
+    submitHandler: function (form) {
+      $(".preloader h2").text("Verificando código...");
+      $(".preloader").fadeIn();
+      $("#form2fa button[type='submit']").attr("disabled", true);
+
+      $(form).ajaxSubmit({
+        dataType: "json",
+        success: function (data) {
+          if (data.ok) {
+            window.location.href = data.redirect;
+          } else {
+            $(".preloader").fadeOut();
+            $("#error2fa").text(data.message).addClass("active");
+            $("#form2fa button[type='submit']").attr("disabled", false);
+          }
+        }
+      });
+    }
   });
 }
 if (document.querySelector("#recoverpass")) {
@@ -730,15 +841,15 @@ const sendPostRequest = async (endpoint) => {
       body: formdata,
       redirect: "follow",
     };
-    
+
     const response = await fetch("g/getWp/", requestOptions);
-    
+
     // Validar que la respuesta sea exitosa
     if (!response.ok) {
       console.error(`[requestWP] Error HTTP ${response.status} para endpoint: ${endpoint}`);
       return [];
     }
-    
+
     // Validar que el Content-Type sea JSON antes de parsear
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
@@ -749,15 +860,15 @@ const sendPostRequest = async (endpoint) => {
       });
       return [];
     }
-    
+
     const result = await response.json();
-    
+
     // Validar que el resultado sea un array o objeto válido
     if (result === null || result === undefined) {
       console.warn(`[requestWP] Respuesta null/undefined para endpoint: ${endpoint}`);
       return [];
     }
-    
+
     return result;
   } catch (error) {
     console.error(`[requestWP] Error al procesar endpoint: ${endpoint}`, error);
@@ -791,25 +902,25 @@ const requestWPParallel = async (endpoints) => {
     const result = await requestWP(endpoints[0] || endpoints);
     return Array.isArray(result) ? result : [result];
   }
-  
+
   // Crear array asociativo para mantener el orden
   const endpointsMap = {};
   endpoints.forEach((endpoint, index) => {
     endpointsMap[`query_${index}`] = endpoint;
   });
-  
+
   try {
     var formdata = new FormData();
     formdata.append("endpoints", JSON.stringify(endpointsMap));
-    
+
     var requestOptions = {
       method: "POST",
       body: formdata,
       redirect: "follow",
     };
-    
+
     const response = await fetch("g/getWpParallel/", requestOptions);
-    
+
     // Validar que la respuesta sea exitosa
     if (!response.ok) {
       console.error(`[requestWPParallel] Error HTTP ${response.status}`);
@@ -818,7 +929,7 @@ const requestWPParallel = async (endpoints) => {
         endpoints.map(endpoint => requestWP(endpoint))
       ).then(results => results.map(r => r.status === 'fulfilled' ? r.value : []));
     }
-    
+
     // Validar que el Content-Type sea JSON antes de parsear
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
@@ -832,9 +943,9 @@ const requestWPParallel = async (endpoints) => {
         endpoints.map(endpoint => requestWP(endpoint))
       ).then(results => results.map(r => r.status === 'fulfilled' ? r.value : []));
     }
-    
+
     const result = await response.json();
-    
+
     // Validar que el resultado sea un objeto válido
     if (!result || typeof result !== 'object') {
       console.error(`[requestWPParallel] Resultado inválido:`, result);
@@ -843,7 +954,7 @@ const requestWPParallel = async (endpoints) => {
         endpoints.map(endpoint => requestWP(endpoint))
       ).then(results => results.map(r => r.status === 'fulfilled' ? r.value : []));
     }
-    
+
     // Convertir el objeto asociativo de vuelta a un array en el mismo orden
     const resultsArray = [];
     Object.keys(endpointsMap).forEach((key) => {
@@ -856,7 +967,7 @@ const requestWPParallel = async (endpoints) => {
         resultsArray.push([]); // Fallback: array vacío si falta algún resultado
       }
     });
-    
+
     return resultsArray;
   } catch (error) {
     console.error("[requestWPParallel] Error crítico:", error);
@@ -945,7 +1056,7 @@ const updateElementsWithData = async (
       // Guardar el contenido inicial (el span con la imagen/icono)
       const spanInicial = element.querySelector('span:first-child');
       const contenidoInicial = spanInicial ? spanInicial.outerHTML : '';
-      
+
       // Remover todos los spans excepto el inicial (que tiene la imagen/icono)
       const spans = Array.from(element.querySelectorAll('span'));
       spans.forEach((span) => {
@@ -953,15 +1064,15 @@ const updateElementsWithData = async (
           span.remove();
         }
       });
-      
+
       // Restaurar el contenido inicial si se perdió
       if (!element.querySelector('span:first-child') && contenidoInicial) {
         element.innerHTML = contenidoInicial;
       }
-      
+
       // Agregar el nuevo título
       element.innerHTML += `<span>${title}</span>`;
-      
+
       // Agregar el span de gruposDeEdad
       const span = document.createElement("span");
       span.className = "gruposDeEdad";
@@ -1335,7 +1446,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
   // Esto asegura que los data-date estén disponibles cuando se busquen los contenedores
   let firstDayCurrentWeek = null;
   const semanaSelect = document.getElementById('semanaSelect');
-  
+
   if (semanaSelect && semanaSelect.selectedIndex > 0) {
     const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
     // Extraer la fecha de inicio de la semana (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
@@ -1358,7 +1469,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       console.log('Estableciendo data-date desde texto del select, fecha extraída:', startDate, 'primer día (lunes):', firstDayCurrentWeek, 'año:', year);
     }
   }
-  
+
   // Si no se pudo obtener del select, usar getDateFromWeekNumber como fallback
   if (!firstDayCurrentWeek) {
     let targetYear = null;
@@ -1373,7 +1484,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       targetYear = new Date().getFullYear();
     }
     let currentDate = getDateFromWeekNumber(week, targetYear);
-    
+
     // Caso especial: si es la semana 1 del 2026 que cruza al 2027, 
     // getDateFromWeekNumber retorna el 29 de diciembre directamente
     // No ajustar al lunes anterior en este caso
@@ -1384,7 +1495,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     }
     console.log('Estableciendo data-date con getDateFromWeekNumber, primer día:', firstDayCurrentWeek);
   }
-  
+
   // Establecer los data-date en formato DD/MM/YYYY
   if (firstDayCurrentWeek) {
     var daysOfWeek = document.querySelectorAll(".curriculumcontent .week .day, .outter.week.flex .day");
@@ -1408,7 +1519,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
   let fechaInicioSemana = null;
   let fechaFinSemana = null;
   let fechaSemanaArray = null; // Para normalizar semana (formato MM/DD/YYYY)
-  
+
   if (semanaSelect && semanaSelect.selectedIndex > 0) {
     const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
     // Extraer las fechas de inicio y fin (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
@@ -1417,28 +1528,28 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       // Primera fecha es inicio, segunda es fin
       const inicioMatch = fechaMatches[0];
       const finMatch = fechaMatches[1];
-      
+
       // Guardar fechas en formato MM/DD/YYYY para normalizarSemana (igual que consultaWP)
       fechaSemanaArray = [
         `${inicioMatch[1]}/${inicioMatch[2]}/${inicioMatch[3]}`, // MM/DD/YYYY
         `${finMatch[1]}/${finMatch[2]}/${finMatch[3]}` // MM/DD/YYYY
       ];
-      
+
       // Convertir MM/DD/YYYY a DD/MM/YYYY para comparar con dia_especifico
       const mesInicio = inicioMatch[1];
       const diaInicio = inicioMatch[2];
       const añoInicio = inicioMatch[3];
       fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-      
+
       const mesFin = finMatch[1];
       const diaFin = finMatch[2];
       const añoFin = finMatch[3];
       fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-      
+
       console.log('Fechas de la semana para filtrar por dia_especifico:', fechaInicioSemana, 'al', fechaFinSemana);
     }
   }
-  
+
   // Fallback: Si no se pudieron obtener las fechas del select, calcularlas desde firstDayCurrentWeek
   // También verificar si las fechas del select parecen incorrectas (año muy diferente al esperado)
   let usarFechasDesdeFirstDay = false;
@@ -1454,7 +1565,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       usarFechasDesdeFirstDay = true;
     }
   }
-  
+
   if (usarFechasDesdeFirstDay && firstDayCurrentWeek) {
     // Calcular fecha de inicio (lunes)
     const inicioDate = new Date(firstDayCurrentWeek);
@@ -1462,7 +1573,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     const mesInicio = (inicioDate.getMonth() + 1).toString().padStart(2, "0");
     const añoInicio = inicioDate.getFullYear();
     fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-    
+
     // Calcular fecha de fin (viernes = lunes + 4 días)
     const finDate = new Date(firstDayCurrentWeek);
     finDate.setDate(finDate.getDate() + 4);
@@ -1470,20 +1581,20 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     const mesFin = (finDate.getMonth() + 1).toString().padStart(2, "0");
     const añoFin = finDate.getFullYear();
     fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-    
+
     // Crear fechaSemanaArray en formato MM/DD/YYYY
     fechaSemanaArray = [
       `${mesInicio}/${diaInicio}/${añoInicio}`, // MM/DD/YYYY
       `${mesFin}/${diaFin}/${añoFin}` // MM/DD/YYYY
     ];
-    
+
     console.log('Fechas calculadas desde firstDayCurrentWeek (fallback o corrección):', fechaInicioSemana, 'al', fechaFinSemana);
   }
 
   // Función para normalizar semana cuando cruza el año (igual que en curriculum.php)
   function normalizarSemanaJS(semana, fechaSemana) {
     const semanaNum = parseInt(semana, 10);
-    
+
     if (!fechaSemana || fechaSemana.length < 2) {
       console.log('normalizarSemanaJS: fechaSemana inválida', fechaSemana);
       return semanaNum;
@@ -1491,7 +1602,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
 
     const fechaInicioStr = fechaSemana[0].trim();
     const fechaFinStr = fechaSemana[1].trim();
-    
+
     if (!fechaInicioStr || !fechaFinStr) {
       console.log('normalizarSemanaJS: fechas vacías', fechaInicioStr, fechaFinStr);
       return semanaNum;
@@ -1500,7 +1611,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     // Convertir MM/DD/YYYY a Date
     const partesInicio = fechaInicioStr.split('/');
     const partesFin = fechaFinStr.split('/');
-    
+
     if (partesInicio.length !== 3 || partesFin.length !== 3) {
       console.log('normalizarSemanaJS: formato de fecha inválido', partesInicio, partesFin);
       return semanaNum;
@@ -1546,12 +1657,12 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     // Si la semana es 53, verificar si el año tiene semana 53
     if (semanaNum === 53) {
       const añoInicioTieneSemana53 = añoTieneSemana53(añoInicio);
-      
+
       if (añoInicioTieneSemana53) {
         console.log('normalizarSemanaJS: El año', añoInicio, 'tiene semana 53, manteniendo semana 53');
         return 53;
       }
-      
+
       if (añoInicio !== añoFin) {
         console.log('normalizarSemanaJS: Las fechas cruzan el año (' + añoInicio + ' -> ' + añoFin + ') y el año ' + añoInicio + ' no tiene semana 53, convirtiendo a semana 1');
         return 1;
@@ -1564,7 +1675,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     console.log('normalizarSemanaJS: Manteniendo semana', semanaNum);
     return semanaNum;
   }
-  
+
   // Normalizar la semana si cruza el año (igual que consultaWP)
   let semanaNormalizada = week;
   if (fechaSemanaArray && fechaSemanaArray.length === 2) {
@@ -1586,28 +1697,28 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         downloadButton.style.display = "none";
       }
     });
-    
+
     // IMPORTANTE: Cuando la semana es 1 y cruza el año, WordPress puede devolver actividades incorrectas
     // Estrategia: Consultar TODAS las actividades del curriculum y filtrar por semana después (igual que basicPrint.php)
     let usarFiltroSemanaEnQuery = true;
     let afterDateEarly = "2024-01-01T00:00:00";
-    
+
     // Verificar si la semana cruza el año (no solo semana 1, sino cualquier semana que cruce)
     if (fechaSemanaArray && fechaSemanaArray.length === 2) {
       // Parsear fechas MM/DD/YYYY
       const fechaInicioStr = fechaSemanaArray[0].trim();
       const partesInicio = fechaInicioStr.split('/');
-      
+
       if (partesInicio.length === 3) {
         const añoInicio = parseInt(partesInicio[2], 10);
-        
+
         // Parsear fecha de fin
         const fechaFinStr = fechaSemanaArray[1].trim();
         const partesFin = fechaFinStr.split('/');
-        
+
         if (partesFin.length === 3) {
           const añoFin = parseInt(partesFin[2], 10);
-          
+
           // Si la semana cruza el año (ej: 12/29/2025 - 01/02/2026)
           if (añoInicio !== añoFin) {
             // NO filtrar por semana en la consulta - consultar TODAS las actividades y filtrar después
@@ -1617,7 +1728,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         }
       }
     }
-    
+
     // Construir la consulta
     let queryBase;
     if (usarFiltroSemanaEnQuery) {
@@ -1629,9 +1740,9 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       queryBase = `planessemanales?field=language,curriculum&value=${lang},${curriculumID}&pp=500&after=${encodeURIComponent(afterDateEarly)}`;
       console.log(`Consultando TODAS las actividades del curriculum (sin filtro de semana) para filtrar después`);
     }
-    
+
     let queries = [queryBase];
-    
+
     console.log(`Consultando WordPress con semana normalizada: ${semanaNormalizada} (original: ${week}), query: ${queryBase}`);
 
     const promises = queries.map((query) => {
@@ -1655,7 +1766,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       console.log(`Primera actividad aplanada:`, flattenedActivities[0]);
       console.log(`Semanas de primera actividad:`, flattenedActivities[0].acf?.semanas_a_las_que_pertence);
     }
-    
+
     // NO filtrar por dia_especifico aquí - las actividades ya vienen filtradas por semana desde WordPress
     // El dia_especifico solo se usará después para agrupar actividades por día
     // Si WordPress devuelve actividades incorrectas (ej: semana 6 en lugar de semana 1),
@@ -1683,7 +1794,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     console.log('Filtrando actividades para semana:', semanaNormalizada, '(original:', week, ')');
     console.log('Total actividades aplanadas:', flattenedActivities.length);
     console.log('Tipo de semana:', typeof semanaNormalizada, 'Valor:', semanaNormalizada);
-    
+
     // Log de las primeras actividades para debugging
     if (flattenedActivities.length > 0) {
       console.log('Muestra de actividades antes del filtro por semana:');
@@ -1691,11 +1802,11 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         console.log(`  Actividad ${idx + 1}: tipo="${act.acf?.tipo_de_actividad}", semanas=${JSON.stringify(act.acf?.semanas_a_las_que_pertence)}, dia_especifico="${act.acf?.dia_especifico}"`);
       });
     }
-    
+
     // Normalizar semanaNormalizada a string para comparación consistente
     const weekStr = String(semanaNormalizada);
     const weekNum = Number(semanaNormalizada);
-    
+
     // Función para parsear fechas DD/MM/YYYY
     const parseDateDDMMYYYY = (dateStr) => {
       if (!dateStr) return null;
@@ -1705,11 +1816,11 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       }
       return null;
     };
-    
+
     // Determinar si la semana cruza el año
-    const semanaCruzaAno = fechaSemanaArray && fechaSemanaArray.length === 2 && 
-                           fechaInicioSemana && fechaFinSemana;
-    
+    const semanaCruzaAno = fechaSemanaArray && fechaSemanaArray.length === 2 &&
+      fechaInicioSemana && fechaFinSemana;
+
     // Log para depuración
     console.log('Estado de fechas para filtrado:', {
       fechaSemanaArray,
@@ -1720,7 +1831,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       week,
       firstDayCurrentWeek: firstDayCurrentWeek ? firstDayCurrentWeek.toISOString() : null
     });
-    
+
     // Log adicional para semana 1
     if (week === 1 || semanaNormalizada === 1) {
       console.log('🔍 DEBUG SEMANA 1:', {
@@ -1733,20 +1844,20 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         totalActividadesAntesFiltro: flattenedActivities.length
       });
     }
-    
+
     let activities = flattenedActivities.filter(
       (data) => {
         const tieneTipoCorrecto = actividades.includes(data.acf.tipo_de_actividad);
         if (!tieneTipoCorrecto) {
           return false;
         }
-        
+
         // Verificar semanas_a_las_que_pertence
-        const tieneSemana = data.acf.semanas_a_las_que_pertence && 
-                           (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-        
+        const tieneSemana = data.acf.semanas_a_las_que_pertence &&
+          (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
         // Si la semana cruza el año, usar filtro por fecha como principal (similar a basic-79)
         // Esto es crítico para semana 1 que cruza el año, ya que WordPress puede tener actividades
         // con semanas del año anterior o del año nuevo
@@ -1755,13 +1866,13 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
           // 1. Si tiene dia_especifico y está dentro del rango, incluirla
           // 2. Si tiene semana 1 o 53, incluirla (incluso sin dia_especifico)
           // 3. Si tiene la semana correcta, incluirla
-          
+
           // Primero verificar si tiene dia_especifico y está dentro del rango
           if (data.acf?.dia_especifico && fechaInicioSemana && fechaFinSemana) {
             const fechaActividad = parseDateDDMMYYYY(data.acf.dia_especifico);
             const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
             const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-            
+
             if (fechaActividad && fechaInicio && fechaFin) {
               const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
               // Si está dentro del rango de fechas, incluirla (incluso si no tiene la semana exacta)
@@ -1772,32 +1883,32 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
               }
             }
           }
-          
+
           // Para semana 1 que cruza el año, aceptar actividades con semana 1 o semana 53
           // incluso si no tienen dia_especifico o está fuera del rango
           if (semanaNormalizada === 1) {
-            const tieneSemana1 = data.acf.semanas_a_las_que_pertence && 
-                                 (data.acf.semanas_a_las_que_pertence.includes('1') || 
-                                  data.acf.semanas_a_las_que_pertence.includes(1) ||
-                                  data.acf.semanas_a_las_que_pertence.includes('53') ||
-                                  data.acf.semanas_a_las_que_pertence.includes(53));
+            const tieneSemana1 = data.acf.semanas_a_las_que_pertence &&
+              (data.acf.semanas_a_las_que_pertence.includes('1') ||
+                data.acf.semanas_a_las_que_pertence.includes(1) ||
+                data.acf.semanas_a_las_que_pertence.includes('53') ||
+                data.acf.semanas_a_las_que_pertence.includes(53));
             if (tieneSemana1) {
               console.log(`✓ Actividad incluida por semana (cruza año, semana 1): tipo=${data.acf.tipo_de_actividad}, semanas=${JSON.stringify(data.acf.semanas_a_las_que_pertence)}, dia_especifico=${data.acf.dia_especifico || 'N/A'}`);
               return true;
             }
           }
-          
+
           // Si tiene la semana correcta (no solo semana 1), también incluirla
           if (tieneSemana) {
             console.log(`✓ Actividad incluida por semana (cruza año): tipo=${data.acf.tipo_de_actividad}, semanas=${JSON.stringify(data.acf.semanas_a_las_que_pertence)}, dia_especifico=${data.acf.dia_especifico || 'N/A'}`);
             return true;
           }
-          
+
           // Si llegamos aquí y la semana cruza el año, rechazar la actividad
           console.log(`✗ Actividad rechazada (cruza año): tipo=${data.acf.tipo_de_actividad}, semanas=${JSON.stringify(data.acf.semanas_a_las_que_pertence)}, dia_especifico=${data.acf.dia_especifico || 'N/A'}`);
           return false;
         }
-        
+
         // Si no cruza el año o no tiene dia_especifico, usar el filtro normal por semana
         // También verificar dia_especifico si está disponible para asegurar que está en el rango
         if (tieneSemana) {
@@ -1806,7 +1917,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
             const fechaActividad = parseDateDDMMYYYY(data.acf.dia_especifico);
             const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
             const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-            
+
             if (fechaActividad && fechaInicio && fechaFin) {
               const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
               if (!dentroDelRango) {
@@ -1818,11 +1929,11 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
           }
           return true;
         }
-        
+
         return false;
       }
     );
-    
+
     console.log('Actividades filtradas:', activities.length);
     if (activities.length > 0) {
       console.log('Primera actividad:', activities[0]);
@@ -1838,10 +1949,10 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     let literarios = flattenedActivities.filter(
       (data) => {
         const tieneTipoCorrecto = material.includes(data.acf.tipo_de_actividad);
-        const tieneSemana = data.acf.semanas_a_las_que_pertence && 
-                           (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+        const tieneSemana = data.acf.semanas_a_las_que_pertence &&
+          (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
         return tieneTipoCorrecto && tieneSemana;
       }
     );
@@ -1851,7 +1962,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     // Guardar el contenido HTML inicial para restaurarlo después
     const songInitialHTML = '<span data-interfazid="7"><svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 0.5C5.37258 0.5 0 5.87258 0 12.5C0 19.1274 5.37258 24.5 12 24.5C18.6274 24.5 24 19.1274 24 12.5C24 5.87258 18.6274 0.5 12 0.5ZM8.77007 15.5547V15.2475C8.77007 14.55 8.77423 13.8525 8.7784 13.155C8.78673 11.76 8.79507 10.365 8.77007 8.97004C8.75507 8.22004 9.34007 7.31254 10.1201 7.06504C10.4805 6.95201 10.8409 6.83856 11.2015 6.72508C12.9941 6.16085 14.7893 5.5958 16.6001 5.07754C17.4326 4.83754 18.0476 5.14504 18.0476 6.13504C18.0559 7.86416 18.0527 9.59097 18.0494 11.318C18.0468 12.6998 18.0442 14.0817 18.0476 15.465C18.0476 16.4175 17.5676 17.07 16.8251 17.5725C15.9851 18.1425 15.0476 18.3 14.0651 18.0675C12.4976 17.6925 12.0101 16.1175 13.0976 14.91C14.0576 13.845 15.2726 13.5375 16.6526 13.86C16.7351 13.8825 16.8176 13.905 16.9001 13.92V9.25504C16.9001 8.92504 16.6976 8.81254 16.3076 8.91754C15.8051 9.05254 15.3101 9.20254 14.8151 9.36004C13.4351 9.79504 12.0551 10.23 10.6826 10.6725C10.1051 10.86 9.94007 11.0925 9.93257 11.685C9.92507 13.4775 9.91757 15.27 9.90257 17.0625C9.88757 18.5925 8.73257 19.7925 7.20257 19.86C6.76757 19.8825 6.30257 19.8825 5.89007 19.7775C4.64507 19.4625 4.13507 18.2325 4.78007 17.1225C5.38007 16.0875 6.33257 15.5775 7.50257 15.4875C7.77159 15.468 8.04062 15.4931 8.32004 15.5191C8.46668 15.5328 8.61619 15.5468 8.77007 15.5547Z" fill="white" /></svg> Canción semanal</span>';
     const storieInitialHTML = '<span data-interfazid="8"><img src="img/literario.svg" alt="Material Literario" />Material literario</span>';
-    
+
     document.querySelectorAll(".curriculumcontent .week .day .song").forEach((songEl) => {
       // Limpiar solo los data-attributes, pero restaurar el contenido HTML inicial
       Array.from(songEl.attributes).forEach(attr => {
@@ -1863,7 +1974,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       songEl.style.display = "none";
       songEl.style.opacity = "0";
     });
-    
+
     document.querySelectorAll(".curriculumcontent .week .day .storie").forEach((storieEl) => {
       // Limpiar solo los data-attributes, pero restaurar el contenido HTML inicial
       Array.from(storieEl.attributes).forEach(attr => {
@@ -1886,10 +1997,10 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
     let song = flattenedActivities.filter(
       (data) => {
         const tieneTipoCorrecto = data.acf.tipo_de_actividad == "canciones";
-        const tieneSemana = data.acf.semanas_a_las_que_pertence && 
-                           (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+        const tieneSemana = data.acf.semanas_a_las_que_pertence &&
+          (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
         return tieneTipoCorrecto && tieneSemana;
       }
     );
@@ -1900,14 +2011,14 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       document.querySelectorAll(".curriculumcontent .week .day").forEach((dayElement) => {
         const dayDate = dayElement.getAttribute("data-date");
         const songElement = dayElement.querySelector(".song");
-        
+
         if (!songElement) return;
-        
+
         // Asegurar que el contenido HTML inicial esté presente antes de actualizar
         if (!songElement.innerHTML || songElement.innerHTML.trim() === "") {
           songElement.innerHTML = songInitialHTML;
         }
-        
+
         if (dayDate) {
           // Buscar canción para este día específico
           const songForDay = song.find(s => {
@@ -1915,7 +2026,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
             // Comparar fechas en formato DD/MM/YYYY
             return s.acf.dia_especifico === dayDate;
           });
-          
+
           if (songForDay) {
             // Actualizar solo este elemento con la canción del día
             updateElementsWithData(
@@ -1975,16 +2086,16 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         }
       });
     }
-    
+
     // Actualizar materiales literarios: cada día debe tener su propio material si existe
     if (literarios && literarios.length > 0) {
       console.log(`Encontrados ${literarios.length} materiales literarios para semana ${semanaNormalizada} (original: ${week})`);
       document.querySelectorAll(".curriculumcontent .week .day").forEach((dayElement) => {
         const dayDate = dayElement.getAttribute("data-date");
         const storieElement = dayElement.querySelector(".storie");
-        
+
         if (!storieElement) return;
-        
+
         // Asegurar que el contenido HTML inicial esté presente antes de actualizar
         if (!storieElement.innerHTML || storieElement.innerHTML.trim() === "") {
           // Verificar si tiene data-interfazid para usar la versión correcta del HTML
@@ -1995,7 +2106,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
             storieElement.innerHTML = '<span><img src="img/momentos/material_literario.svg" alt="Material literario" /> Material literario</span>';
           }
         }
-        
+
         if (dayDate) {
           // Buscar material literario para este día específico
           const literarioForDay = literarios.find(l => {
@@ -2003,15 +2114,15 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
             // Comparar fechas en formato DD/MM/YYYY
             return l.acf.dia_especifico === dayDate;
           });
-          
+
           if (literarioForDay) {
             // Actualizar solo este elemento con el material del día
             updateElementsWithData(
               [storieElement],
               [literarioForDay],
-      "#e3e8ff",
-      "#5872fd"
-    );
+              "#e3e8ff",
+              "#5872fd"
+            );
             console.log(`Material literario asignado para día ${dayDate}:`, literarioForDay.title?.rendered);
           } else {
             // Si no hay material específico para este día, buscar uno sin día específico o usar el primero disponible
@@ -2054,7 +2165,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
       // Si la semana cruza el año, necesitamos incluir ambos años
       let targetYears = [];
       const semanaSelect = document.getElementById('semanaSelect');
-      
+
       if (semanaSelect && semanaSelect.selectedIndex > 0) {
         const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
         // Extraer los años de las fechas de inicio y fin (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
@@ -2071,7 +2182,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         targetYears = years;
         console.log('Años objetivo obtenidos del select:', targetYears, 'de la semana:', weekText);
       }
-      
+
       // Si no pudimos obtener los años del select, obtenerlos de las actividades
       if (targetYears.length === 0 && activities.length > 0) {
         // Obtener todos los años únicos de las actividades
@@ -2086,20 +2197,20 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
             return null;
           })
           .filter(y => y !== null);
-        
+
         if (years.length > 0) {
           // Usar todos los años únicos encontrados
           targetYears = [...new Set(years)];
           console.log('Años obtenidos de las actividades:', targetYears);
         }
       }
-      
+
       if (targetYears.length === 0) {
         // Fallback: usar el año actual
         targetYears = [new Date().getFullYear()];
         console.log('Usando año actual como fallback:', targetYears);
       }
-      
+
       // Filtrar actividades por años (incluir actividades de todos los años de la semana)
       let filteredActivities = activities;
       if (targetYears.length > 0) {
@@ -2118,7 +2229,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         });
         console.log(`Actividades filtradas por años ${targetYears.join(', ')}:`, filteredActivities.length, 'de', activities.length);
       }
-      
+
       // Función para agrupar los elementos por fecha
       function groupByDate(activities) {
         const groupedActivities = {};
@@ -2137,7 +2248,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
 
       // Obtener el arreglo de actividades agrupadas por fecha (usando las filtradas por año)
       const activitiesByDate = groupByDate(filteredActivities);
-      
+
       console.log('Actividades agrupadas por fecha:', activitiesByDate);
       console.log('Fechas encontradas:', Object.keys(activitiesByDate));
 
@@ -2182,20 +2293,20 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         // dia_especifico también viene en formato DD/MM/YYYY
         // Usar directamente el formato completo sin conversión
         let dateForSelector = date;
-        
+
         if (!date || !date.includes('/')) {
           console.warn(`Fecha inválida: ${date}`);
           return;
         }
-        
+
         const parts = date.split('/').map(p => p.trim());
-        
+
         // Normalizar el formato DD/MM/YYYY asegurando que tenga 2 dígitos en día y mes
         if (parts.length === 3) {
           const day = parts[0].padStart(2, '0');
           const month = parts[1].padStart(2, '0');
           let year = parts[2];
-          
+
           // Si la semana cruza el año, siempre buscar el año correcto en los data-date disponibles
           // Esto es necesario porque las actividades pueden tener fechas del año anterior o siguiente
           // Ejemplo: actividad tiene 29/12/2025 pero data-date es 29/12/2026
@@ -2203,19 +2314,19 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
           if (semanaCruzaAno) {
             // Obtener todos los data-date disponibles
             const allDataDates = Array.from(document.querySelectorAll('.curriculumcontent .week .day, .outter.week.flex .day')).map(day => day.getAttribute('data-date')).filter(d => d);
-            
+
             // Buscar un data-date que coincida con el día y mes de la actividad
             const matchingDataDate = allDataDates.find(d => {
               if (!d) return false;
               const dParts = d.split('/');
               return dParts.length === 3 && dParts[0] === day && dParts[1] === month;
             });
-            
+
             if (matchingDataDate) {
               const matchingParts = matchingDataDate.split('/');
               const añoDataDate = matchingParts[2];
               const añoActividad = parseInt(year, 10);
-              
+
               // Solo ajustar si el año es diferente
               if (añoActividad !== parseInt(añoDataDate, 10)) {
                 year = añoDataDate; // Usar el año del data-date
@@ -2226,7 +2337,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
               if (firstDayCurrentWeek) {
                 const añoEsperado = firstDayCurrentWeek.getFullYear();
                 const mesActividad = parseInt(month, 10);
-                
+
                 // Si el mes es enero (1) y estamos en diciembre, el año debería ser el siguiente
                 if (mesActividad === 1 && firstDayCurrentWeek.getMonth() === 11) {
                   year = (añoEsperado + 1).toString();
@@ -2238,26 +2349,26 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
               }
             }
           }
-          
+
           dateForSelector = `${day}/${month}/${year}`; // DD/MM/YYYY
           console.log(`Buscando contenedor para fecha: "${dateForSelector}" (DD/MM/YYYY, fecha original: "${date}")`);
         } else {
           console.warn(`Formato de fecha inesperado: ${date} (esperado DD/MM/YYYY)`);
           return;
         }
-        
+
         // Verificar todos los data-date disponibles para debug (solo la primera vez)
         if (Object.keys(activitiesByDate).indexOf(date) === 0) {
           const allDataDates = Array.from(document.querySelectorAll('.curriculumcontent .week .day')).map(day => day.getAttribute('data-date'));
           console.log(`Todos los data-date disponibles:`, allDataDates);
         }
-        
+
         // Obtener el contenedor correspondiente a la fecha usando el formato completo DD/MM/YYYY
         // Buscar en ambos lugares: .curriculumcontent .week .day y .outter.week.flex .day
         let container = document.querySelector(
           `.curriculumcontent .week .day[data-date="${dateForSelector}"] .containerActivities`
         );
-        
+
         if (!container) {
           container = document.querySelector(
             `.outter.week.flex .day[data-date="${dateForSelector}"] .containerActivities`
@@ -2476,12 +2587,12 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
           console.log(`HTML a agregar (primeros 200 caracteres):`, activitiesHTML.substring(0, 200));
           console.log(`Contenedor antes de agregar:`, container);
           console.log(`Contenido actual del contenedor:`, container.innerHTML.substring(0, 100));
-          
+
           container.innerHTML += activitiesHTML;
-          
+
           console.log(`Contenido después de agregar:`, container.innerHTML.substring(0, 200));
           console.log(`✓ Actividades agregadas correctamente para fecha: "${dateForSelector}"`);
-          
+
           // Traducir inmediatamente después de agregar al DOM
           translateInDOM(document.getElementById("lang").value);
         } else {
@@ -2743,7 +2854,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
         return;
       }
       activity.setAttribute('data-listener-added', 'true');
-      
+
       activity.addEventListener("click", async () => {
         let activityId;
 
@@ -3013,7 +3124,7 @@ const getWeekDataNew = async (lang = "es", week = weekNumber) => {
 
         addEventListeners(theid);
         const setAdjuntosLink = () => {
-        
+
           if (link_de_cancion !== "" && link_de_cancion !== "false") {
             btnadjuntos.href = link_de_cancion;
             btnadjuntos.style.display = "flex";
@@ -3313,40 +3424,40 @@ const getWeekData3k = async (
     let fechaInicioSemana = null;
     let fechaFinSemana = null;
     const semanaSelect = document.getElementById('semanaSelect');
-    
+
     console.log(`getWeekData3k llamado para ${elements}, semana: ${week}, activityType: ${activityType}`);
-    
+
     // Intentar obtener las fechas del select, con múltiples intentos si es necesario
     let intentos = 0;
     const maxIntentos = 3;
-    
+
     while ((!fechaInicioSemana || !fechaFinSemana) && intentos < maxIntentos) {
       const semanaSelect = document.getElementById('semanaSelect');
-      
+
       if (semanaSelect && semanaSelect.selectedIndex > 0) {
         const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
         console.log(`Texto del select de semana (intento ${intentos + 1}): "${weekText}"`);
-        
+
         // Extraer las fechas de inicio y fin (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
         const fechaMatches = Array.from(weekText.matchAll(/(\d{2})\/(\d{2})\/(\d{4})/g));
         console.log(`Fechas encontradas en el texto:`, fechaMatches.length);
-        
+
         if (fechaMatches.length >= 2) {
           // Primera fecha es inicio, segunda es fin
           const inicioMatch = fechaMatches[0];
           const finMatch = fechaMatches[1];
-          
+
           // Convertir MM/DD/YYYY a DD/MM/YYYY para comparar con dia_especifico
           const mesInicio = inicioMatch[1];
           const diaInicio = inicioMatch[2];
           const añoInicio = inicioMatch[3];
           fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-          
+
           const mesFin = finMatch[1];
           const diaFin = finMatch[2];
           const añoFin = finMatch[3];
           fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-          
+
           console.log(`Fechas de la semana para filtrar por dia_especifico (getWeekData3k): ${fechaInicioSemana} al ${fechaFinSemana}`);
           break; // Salir del bucle si se obtuvieron las fechas
         } else {
@@ -3357,14 +3468,14 @@ const getWeekData3k = async (
           console.warn(`No se pudo obtener el select de semana o no tiene selección válida (selectedIndex: ${semanaSelect?.selectedIndex}), esperando...`);
         }
       }
-      
+
       intentos++;
       if (intentos < maxIntentos && (!fechaInicioSemana || !fechaFinSemana)) {
         // Esperar un poco antes del siguiente intento
         await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-    
+
     if (!fechaInicioSemana || !fechaFinSemana) {
       console.warn(`[getWeekData3k] No se pudieron obtener las fechas después de ${intentos} intentos`);
     }
@@ -3395,7 +3506,7 @@ const getWeekData3k = async (
 
       const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
       const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-      
+
       if (!fechaInicio || !fechaFin) {
         console.warn(`[filterByDateRange] No se pudieron parsear las fechas: ${fechaInicioSemana}, ${fechaFinSemana}`);
         return activities; // Si no se pueden parsear las fechas, devolver todas
@@ -3403,7 +3514,7 @@ const getWeekData3k = async (
 
       const añoInicio = fechaInicio.getFullYear();
       const añoFin = fechaFin.getFullYear();
-      
+
       console.log(`[filterByDateRange] Filtrando ${activities.length} actividades por rango: ${fechaInicioSemana} (año ${añoInicio}) al ${fechaFinSemana} (año ${añoFin})`);
 
       const filtered = activities.filter((activity) => {
@@ -3411,32 +3522,32 @@ const getWeekData3k = async (
         if (!activity.acf?.dia_especifico) {
           return false;
         }
-        
+
         const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
         if (!fechaActividad) {
           return false;
         }
-        
+
         const añoActividad = fechaActividad.getFullYear();
-        
+
         // Verificar primero que el año sea válido (dentro del rango de años de la semana)
         const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
-                         (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
-        
+          (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
+
         if (!añoValido) {
           console.log(`[filterByDateRange] Excluyendo actividad ${activity.id}: año ${añoActividad} no válido (esperado ${añoInicio}${añoInicio !== añoFin ? ' o ' + añoFin : ''}), dia_especifico: ${activity.acf.dia_especifico}`);
           return false;
         }
-        
+
         // Verificar que la fecha de la actividad esté dentro del rango de la semana
         // La comparación de fechas ya incluye el año implícitamente
         const fechaValida = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
-        
+
         if (!fechaValida) {
           console.log(`[filterByDateRange] Excluyendo actividad ${activity.id}: fecha ${activity.acf.dia_especifico} (año ${añoActividad}) fuera de rango (${fechaInicioSemana} al ${fechaFinSemana})`);
           return false;
         }
-        
+
         return true;
       });
 
@@ -3445,17 +3556,17 @@ const getWeekData3k = async (
     };
 
     // Determinar si es una actividad especial que se filtra por semanas_a_las_que_pertence
-    const esActividadEspecial = elements == ".almuerzo-container" || 
-                                elements == ".snack-container" || 
-                                elements == ".lavado-container";
-    
+    const esActividadEspecial = elements == ".almuerzo-container" ||
+      elements == ".snack-container" ||
+      elements == ".lavado-container";
+
     // Para la semana 1, WordPress no devuelve actividades correctamente cuando se filtra por semana
     // Por lo tanto, filtrar por momento_de_aprendizaje pero NO por semana, y filtrar por fecha client-side
     const esSemana1 = week === 1 || week === "1";
-    
+
     // Optimización: reducir pp a 30 para evitar consultas muy pesadas
     let queries = [];
-    
+
     // Para semana 1 que cruza el año (29 dic - 2 ene), WordPress NO respeta correctamente el filtro semanas_a_las_que_pertence=1
     // Estrategia: NO filtrar por semana en WordPress, solo por momento_de_aprendizaje, language, curriculum
     // Aumentar pp a 100 para asegurar que traigamos todas las actividades necesarias
@@ -3478,22 +3589,22 @@ const getWeekData3k = async (
         queries.push(query);
       });
     }
-    
+
     console.log(`[${elements}] 📋 Se realizarán ${queries.length} consulta(s) a WordPress para ${activityType.split(",").length} momento(s) de aprendizaje`);
 
     // Usar requestWPParallel para hacer todas las consultas en una sola petición PHP
     // Esto reduce significativamente el tiempo de respuesta y evita errores 524
     const responses = await requestWPParallel(queries);
-    
+
     // Log: Respuesta cruda del fetch de WordPress
     console.log(`[${elements}] RESPUESTA CRUDA DE WORDPRESS:`, responses);
-    
+
     // Validar que responses sea un array válido
     if (!Array.isArray(responses)) {
       console.error(`[getWeekData3k] Respuestas inválidas para ${elements}:`, responses);
       return [];
     }
-    
+
     // Normalizar respuestas PRIMERO: convertir objetos individuales a arrays
     const normalizedResponses = responses.map(response => {
       if (!response) return [];
@@ -3501,7 +3612,7 @@ const getWeekData3k = async (
       // Si es un objeto individual, convertirlo a array
       return [response];
     });
-    
+
     // Filtrar por dia_especifico INMEDIATAMENTE después de recibir las respuestas
     // PERO: Para actividades especiales, NO filtrar por dia_especifico, solo por año
     const totalRecibidas = normalizedResponses.reduce((sum, r) => {
@@ -3509,16 +3620,16 @@ const getWeekData3k = async (
       return sum + r.length;
     }, 0);
     console.log(`Para ${elements}: Total actividades recibidas de WordPress: ${totalRecibidas}${esActividadEspecial ? ' (actividad especial - filtrando por semanas_a_las_que_pertence)' : ''}`);
-    
+
     // Para semana 1, verificar si hay actividades con dia_especifico dentro del rango ANTES de filtrar
     if (esSemana1 && fechaInicioSemana && fechaFinSemana && totalRecibidas > 0) {
       const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
       const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-      
+
       if (fechaInicio && fechaFin) {
         let actividadesEnRango = 0;
         let actividadesConSemana1 = 0;
-        
+
         normalizedResponses.forEach((responseArray) => {
           if (Array.isArray(responseArray)) {
             responseArray.forEach((act) => {
@@ -3530,7 +3641,7 @@ const getWeekData3k = async (
                   console.log(`[${elements}] ✅ ACTIVIDAD EN RANGO encontrada ANTES de filtrar: ID ${act.id} "${act.title?.rendered}", dia_especifico=${act.acf.dia_especifico}`);
                 }
               }
-              
+
               // Verificar si tiene semanas_a_las_que_pertence con semana 1
               const semanas = act.acf?.semanas_a_las_que_pertence;
               if (semanas && (semanas.includes("1") || semanas.includes(1) || semanas.some(s => String(s) === "1" || Number(s) === 1))) {
@@ -3540,240 +3651,240 @@ const getWeekData3k = async (
             });
           }
         });
-        
+
         console.log(`[${elements}] 📊 RESUMEN ANTES DE FILTRAR: ${actividadesEnRango} actividades con dia_especifico en rango (${fechaInicioSemana} - ${fechaFinSemana}), ${actividadesConSemana1} actividades con semanas_a_las_que_pertence=["1"]`);
       }
     }
-    
+
     // Normalizar week a string y number para comparación consistente
     const weekStr = String(week);
     const weekNum = Number(week);
-    
+
     // Validar que responses sea un array antes de hacer reduce
     if (!Array.isArray(responses)) {
       console.error(`[getWeekData3k] responses no es un array para ${elements}:`, responses);
       return [];
     }
-    
+
     const allObjects = normalizedResponses.reduce((acc, responseArray) => {
       // Validar que responseArray sea válido y sea un array (ya está normalizado)
       if (!responseArray || !Array.isArray(responseArray)) return acc;
-      
+
       // Para semana 1, WordPress ya filtró por momento_de_aprendizaje en la consulta
       // No necesitamos filtrar client-side por momento_de_aprendizaje
       let activitiesToProcess = responseArray;
-      
+
       if (esActividadEspecial) {
-          // Para actividades especiales, filtrar solo por año (usando dia_especifico si está disponible)
-          // y por semanas_a_las_que_pertence
-          const filtered = activitiesToProcess.filter((activity) => {
-            // Verificar que tenga semanas_a_las_que_pertence y que incluya la semana actual
-            const tieneSemana = activity.acf?.semanas_a_las_que_pertence && 
-                               (activity.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                                activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                                activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-            
-            if (!tieneSemana) {
+        // Para actividades especiales, filtrar solo por año (usando dia_especifico si está disponible)
+        // y por semanas_a_las_que_pertence
+        const filtered = activitiesToProcess.filter((activity) => {
+          // Verificar que tenga semanas_a_las_que_pertence y que incluya la semana actual
+          const tieneSemana = activity.acf?.semanas_a_las_que_pertence &&
+            (activity.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
+          if (!tieneSemana) {
+            return false;
+          }
+
+          // Si tiene dia_especifico, verificar el año
+          // Intentar obtener las fechas del select si no están disponibles
+          let fechasDisponibles = fechaInicioSemana && fechaFinSemana;
+          let fechaInicioLocal = fechaInicioSemana;
+          let fechaFinLocal = fechaFinSemana;
+
+          if (!fechasDisponibles) {
+            const semanaSelect = document.getElementById('semanaSelect');
+            if (semanaSelect && semanaSelect.selectedIndex > 0) {
+              const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
+              const fechaMatches = Array.from(weekText.matchAll(/(\d{2})\/(\d{2})\/(\d{4})/g));
+              if (fechaMatches.length >= 2) {
+                const inicioMatch = fechaMatches[0];
+                const finMatch = fechaMatches[1];
+
+                const mesInicio = inicioMatch[1];
+                const diaInicio = inicioMatch[2];
+                const añoInicio = inicioMatch[3];
+                fechaInicioLocal = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
+
+                const mesFin = finMatch[1];
+                const diaFin = finMatch[2];
+                const añoFin = finMatch[3];
+                fechaFinLocal = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
+
+                fechasDisponibles = true;
+              }
+            }
+          }
+
+          if (activity.acf?.dia_especifico && fechasDisponibles) {
+            const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
+            if (fechaActividad) {
+              const añoActividad = fechaActividad.getFullYear();
+              const fechaInicio = parseDateDDMMYYYY(fechaInicioLocal);
+              const fechaFin = parseDateDDMMYYYY(fechaFinLocal);
+
+              if (fechaInicio && fechaFin) {
+                const añoInicio = fechaInicio.getFullYear();
+                const añoFin = fechaFin.getFullYear();
+
+                const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
+                  (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
+
+                if (!añoValido) {
+                  console.log(`[${elements}] Excluyendo actividad ${activity.id} en filtrado inicial: año ${añoActividad} no válido (esperado ${añoInicio}${añoInicio !== añoFin ? ' o ' + añoFin : ''}), dia_especifico: ${activity.acf.dia_especifico}`);
+                  return false;
+                }
+              }
+            }
+          }
+
+          return true;
+        });
+        acc.push(...filtered);
+      } else {
+        // Para actividades normales, verificar semanas_a_las_que_pertence Y dia_especifico
+        // Si tiene la semana correcta, verificar también que dia_especifico (si existe) corresponda a la semana correcta del año correcto
+        const filtered = activitiesToProcess.filter((activity) => {
+          // Primero verificar si tiene la semana correcta en semanas_a_las_que_pertence
+          const tieneSemana = activity.acf?.semanas_a_las_que_pertence &&
+            (activity.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
+          // Para semana 1, WordPress NO respeta el filtro semanas_a_las_que_pertence=1 cuando cruza el año
+          // Por lo tanto, filtrar ESTRICTAMENTE por dia_especifico dentro del rango de fechas (29/12/2025 - 02/01/2026)
+          // Solo incluir actividades que tengan dia_especifico dentro del rango O que tengan semanas_a_las_que_pertence=["1"] Y dia_especifico dentro del rango
+          if (esSemana1) {
+            // Para semana 1, el filtro principal es por dia_especifico dentro del rango de fechas
+            // Esto excluye actividades de otras semanas (5, 6, 7) que tienen fechas en febrero 2026
+            if (!activity.acf?.dia_especifico) {
+              // Si no tiene dia_especifico, solo incluirla si tiene semanas_a_las_que_pertence=["1"]
+              if (tieneSemana) {
+                console.log(`[${elements}] Semana 1 - Incluyendo actividad ${activity.id}: tiene semana 1 pero sin dia_especifico`);
+                return true;
+              }
+              console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: no tiene dia_especifico ni semana 1`);
               return false;
             }
-            
-            // Si tiene dia_especifico, verificar el año
-            // Intentar obtener las fechas del select si no están disponibles
-            let fechasDisponibles = fechaInicioSemana && fechaFinSemana;
-            let fechaInicioLocal = fechaInicioSemana;
-            let fechaFinLocal = fechaFinSemana;
-            
-            if (!fechasDisponibles) {
-              const semanaSelect = document.getElementById('semanaSelect');
-              if (semanaSelect && semanaSelect.selectedIndex > 0) {
-                const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
-                const fechaMatches = Array.from(weekText.matchAll(/(\d{2})\/(\d{2})\/(\d{4})/g));
-                if (fechaMatches.length >= 2) {
-                  const inicioMatch = fechaMatches[0];
-                  const finMatch = fechaMatches[1];
-                  
-                  const mesInicio = inicioMatch[1];
-                  const diaInicio = inicioMatch[2];
-                  const añoInicio = inicioMatch[3];
-                  fechaInicioLocal = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-                  
-                  const mesFin = finMatch[1];
-                  const diaFin = finMatch[2];
-                  const añoFin = finMatch[3];
-                  fechaFinLocal = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-                  
-                  fechasDisponibles = true;
-                }
-              }
+
+            // Verificar que dia_especifico esté dentro del rango de fechas de la semana 1
+            if (!fechaInicioSemana || !fechaFinSemana) {
+              console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: fechas de semana no disponibles`);
+              return false;
             }
-            
-            if (activity.acf?.dia_especifico && fechasDisponibles) {
-              const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
-              if (fechaActividad) {
-                const añoActividad = fechaActividad.getFullYear();
-                const fechaInicio = parseDateDDMMYYYY(fechaInicioLocal);
-                const fechaFin = parseDateDDMMYYYY(fechaFinLocal);
-                
-                if (fechaInicio && fechaFin) {
-                  const añoInicio = fechaInicio.getFullYear();
-                  const añoFin = fechaFin.getFullYear();
-                  
-                  const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
-                                   (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
-                  
-                  if (!añoValido) {
-                    console.log(`[${elements}] Excluyendo actividad ${activity.id} en filtrado inicial: año ${añoActividad} no válido (esperado ${añoInicio}${añoInicio !== añoFin ? ' o ' + añoFin : ''}), dia_especifico: ${activity.acf.dia_especifico}`);
-                    return false;
-                  }
-                }
-              }
+
+            const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
+            const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
+            const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
+
+            if (!fechaActividad || !fechaInicio || !fechaFin) {
+              console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: no se pudieron parsear fechas, dia_especifico=${activity.acf.dia_especifico}, fechaInicioSemana=${fechaInicioSemana}, fechaFinSemana=${fechaFinSemana}`);
+              return false;
             }
-            
+
+            const añoActividad = fechaActividad.getFullYear();
+            const añoInicio = fechaInicio.getFullYear();
+            const añoFin = fechaFin.getFullYear();
+
+            // Verificar que el año sea válido (2025 o 2026 para semana 1)
+            const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
+              (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
+
+            if (!añoValido) {
+              console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: año ${añoActividad} no válido (esperado ${añoInicio} o ${añoFin}), dia_especifico=${activity.acf.dia_especifico}`);
+              return false;
+            }
+
+            // Verificar que la fecha esté dentro del rango (29/12/2025 - 02/01/2026)
+            const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
+
+            if (dentroDelRango) {
+              console.log(`[${elements}] Semana 1 - ✅ Incluyendo actividad ${activity.id}: dia_especifico=${activity.acf.dia_especifico} está dentro del rango ${fechaInicioSemana} al ${fechaFinSemana}`);
+              return true;
+            } else {
+              console.log(`[${elements}] Semana 1 - ❌ Excluyendo actividad ${activity.id}: dia_especifico=${activity.acf.dia_especifico} está FUERA del rango ${fechaInicioSemana} al ${fechaFinSemana} (año ${añoActividad})`);
+              return false;
+            }
+          }
+
+          // Para otras semanas, usar la lógica normal
+          // Si tiene la semana correcta, incluirla siempre (incluso si dia_especifico está fuera del rango)
+          // Esto es importante porque algunas actividades pueden tener semanas_a_las_que_pertence correcta
+          // pero dia_especifico ligeramente fuera del rango debido a problemas de datos
+          if (tieneSemana) {
             return true;
-          });
-          acc.push(...filtered);
-        } else {
-          // Para actividades normales, verificar semanas_a_las_que_pertence Y dia_especifico
-          // Si tiene la semana correcta, verificar también que dia_especifico (si existe) corresponda a la semana correcta del año correcto
-          const filtered = activitiesToProcess.filter((activity) => {
-            // Primero verificar si tiene la semana correcta en semanas_a_las_que_pertence
-            const tieneSemana = activity.acf?.semanas_a_las_que_pertence && 
-                               (activity.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                                activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                                activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-            
-            // Para semana 1, WordPress NO respeta el filtro semanas_a_las_que_pertence=1 cuando cruza el año
-            // Por lo tanto, filtrar ESTRICTAMENTE por dia_especifico dentro del rango de fechas (29/12/2025 - 02/01/2026)
-            // Solo incluir actividades que tengan dia_especifico dentro del rango O que tengan semanas_a_las_que_pertence=["1"] Y dia_especifico dentro del rango
-            if (esSemana1) {
-              // Para semana 1, el filtro principal es por dia_especifico dentro del rango de fechas
-              // Esto excluye actividades de otras semanas (5, 6, 7) que tienen fechas en febrero 2026
-              if (!activity.acf?.dia_especifico) {
-                // Si no tiene dia_especifico, solo incluirla si tiene semanas_a_las_que_pertence=["1"]
-                if (tieneSemana) {
-                  console.log(`[${elements}] Semana 1 - Incluyendo actividad ${activity.id}: tiene semana 1 pero sin dia_especifico`);
-                  return true;
-                }
-                console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: no tiene dia_especifico ni semana 1`);
-                return false;
-              }
-              
-              // Verificar que dia_especifico esté dentro del rango de fechas de la semana 1
-              if (!fechaInicioSemana || !fechaFinSemana) {
-                console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: fechas de semana no disponibles`);
-                return false;
-              }
-              
-              const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
+          }
+
+          // Si no tiene la semana correcta, usar dia_especifico como filtro secundario
+          if (activity.acf?.dia_especifico && fechaInicioSemana && fechaFinSemana) {
+            const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
+            if (fechaActividad) {
               const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
               const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-              
-              if (!fechaActividad || !fechaInicio || !fechaFin) {
-                console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: no se pudieron parsear fechas, dia_especifico=${activity.acf.dia_especifico}, fechaInicioSemana=${fechaInicioSemana}, fechaFinSemana=${fechaFinSemana}`);
-                return false;
-              }
-              
-              const añoActividad = fechaActividad.getFullYear();
-              const añoInicio = fechaInicio.getFullYear();
-              const añoFin = fechaFin.getFullYear();
-              
-              // Verificar que el año sea válido (2025 o 2026 para semana 1)
-              const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
-                               (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
-              
-              if (!añoValido) {
-                console.log(`[${elements}] Semana 1 - Excluyendo actividad ${activity.id}: año ${añoActividad} no válido (esperado ${añoInicio} o ${añoFin}), dia_especifico=${activity.acf.dia_especifico}`);
-                return false;
-              }
-              
-              // Verificar que la fecha esté dentro del rango (29/12/2025 - 02/01/2026)
-              const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
-              
-              if (dentroDelRango) {
-                console.log(`[${elements}] Semana 1 - ✅ Incluyendo actividad ${activity.id}: dia_especifico=${activity.acf.dia_especifico} está dentro del rango ${fechaInicioSemana} al ${fechaFinSemana}`);
-                return true;
-              } else {
-                console.log(`[${elements}] Semana 1 - ❌ Excluyendo actividad ${activity.id}: dia_especifico=${activity.acf.dia_especifico} está FUERA del rango ${fechaInicioSemana} al ${fechaFinSemana} (año ${añoActividad})`);
-                return false;
+
+              if (fechaInicio && fechaFin) {
+                const añoActividad = fechaActividad.getFullYear();
+                const añoInicio = fechaInicio.getFullYear();
+                const añoFin = fechaFin.getFullYear();
+
+                // Verificar que el año sea válido
+                const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
+                  (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
+
+                // Verificar que la fecha esté dentro del rango
+                const fechaValida = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
+
+                // Solo incluirla si el dia_especifico está en el rango y el año es válido
+                return añoValido && fechaValida;
               }
             }
-            
-            // Para otras semanas, usar la lógica normal
-            // Si tiene la semana correcta, incluirla siempre (incluso si dia_especifico está fuera del rango)
-            // Esto es importante porque algunas actividades pueden tener semanas_a_las_que_pertence correcta
-            // pero dia_especifico ligeramente fuera del rango debido a problemas de datos
-            if (tieneSemana) {
-              return true;
+          }
+
+          // Si no tiene la semana correcta y no tiene dia_especifico válido, excluirla
+          return false;
+        });
+
+        // Log detallado del filtrado para semana 1
+        if (esSemana1 && filtered.length > 0) {
+          console.log(`[${elements}] Semana 1 - Después de filtrar respuesta ${activitiesToProcess.length} actividades (ya filtradas por momento_de_aprendizaje): ${filtered.length} pasaron el filtro`);
+          filtered.forEach(act => {
+            const momentos = act.acf?.momento_de_aprendizaje;
+            const momentosIDs = momentos ? momentos.map(m => m.ID || m).join(', ') : 'sin momento';
+            console.log(`  ✅ Actividad ${act.id} "${act.title?.rendered || 'sin título'}" PASÓ el filtro: dia_especifico=${act.acf?.dia_especifico}, momento_IDs=[${momentosIDs}]`);
+
+            // Destacar si es la actividad "Celebrando en comunidad"
+            if (act.id === 216627) {
+              console.log(`  ⭐⭐ ACTIVIDAD "Celebrando en comunidad" PASÓ EL FILTRO`);
             }
-            
-            // Si no tiene la semana correcta, usar dia_especifico como filtro secundario
-            if (activity.acf?.dia_especifico && fechaInicioSemana && fechaFinSemana) {
-              const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
-              if (fechaActividad) {
-                const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
-                const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-                
-                if (fechaInicio && fechaFin) {
-                  const añoActividad = fechaActividad.getFullYear();
-                  const añoInicio = fechaInicio.getFullYear();
-                  const añoFin = fechaFin.getFullYear();
-                  
-                  // Verificar que el año sea válido
-                  const añoValido = (añoInicio === añoFin && añoActividad === añoInicio) ||
-                                   (añoInicio !== añoFin && (añoActividad === añoInicio || añoActividad === añoFin));
-                  
-                  // Verificar que la fecha esté dentro del rango
-                  const fechaValida = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
-                  
-                  // Solo incluirla si el dia_especifico está en el rango y el año es válido
-                  return añoValido && fechaValida;
-                }
-              }
-            }
-            
-            // Si no tiene la semana correcta y no tiene dia_especifico válido, excluirla
-            return false;
           });
-          
-          // Log detallado del filtrado para semana 1
-          if (esSemana1 && filtered.length > 0) {
-            console.log(`[${elements}] Semana 1 - Después de filtrar respuesta ${activitiesToProcess.length} actividades (ya filtradas por momento_de_aprendizaje): ${filtered.length} pasaron el filtro`);
-            filtered.forEach(act => {
-              const momentos = act.acf?.momento_de_aprendizaje;
-              const momentosIDs = momentos ? momentos.map(m => m.ID || m).join(', ') : 'sin momento';
-              console.log(`  ✅ Actividad ${act.id} "${act.title?.rendered || 'sin título'}" PASÓ el filtro: dia_especifico=${act.acf?.dia_especifico}, momento_IDs=[${momentosIDs}]`);
-              
-              // Destacar si es la actividad "Celebrando en comunidad"
-              if (act.id === 216627) {
-                console.log(`  ⭐⭐ ACTIVIDAD "Celebrando en comunidad" PASÓ EL FILTRO`);
-              }
-            });
-          }
-          
-          // Log de actividades que NO pasaron el filtro para semana 1
-          if (esSemana1 && filtered.length < activitiesToProcess.length) {
-            const excluidas = activitiesToProcess.filter(act => !filtered.some(f => f.id === act.id));
-            console.log(`[${elements}] Semana 1 - ${excluidas.length} actividades EXCLUIDAS del filtro:`);
-            excluidas.forEach(act => {
-              const momentos = act.acf?.momento_de_aprendizaje;
-              const momentosIDs = momentos ? momentos.map(m => m.ID || m).join(', ') : 'sin momento';
-              console.log(`  ❌ Actividad ${act.id} "${act.title?.rendered || 'sin título'}" EXCLUIDA: dia_especifico=${act.acf?.dia_especifico}, momento_IDs=[${momentosIDs}]`);
-              
-              // Destacar si es la actividad "Celebrando en comunidad"
-              if (act.id === 216627) {
-                console.log(`  ⚠️⚠️ ACTIVIDAD "Celebrando en comunidad" FUE EXCLUIDA DEL FILTRO`);
-              }
-            });
-          }
-          
-          acc.push(...filtered);
         }
-      
+
+        // Log de actividades que NO pasaron el filtro para semana 1
+        if (esSemana1 && filtered.length < activitiesToProcess.length) {
+          const excluidas = activitiesToProcess.filter(act => !filtered.some(f => f.id === act.id));
+          console.log(`[${elements}] Semana 1 - ${excluidas.length} actividades EXCLUIDAS del filtro:`);
+          excluidas.forEach(act => {
+            const momentos = act.acf?.momento_de_aprendizaje;
+            const momentosIDs = momentos ? momentos.map(m => m.ID || m).join(', ') : 'sin momento';
+            console.log(`  ❌ Actividad ${act.id} "${act.title?.rendered || 'sin título'}" EXCLUIDA: dia_especifico=${act.acf?.dia_especifico}, momento_IDs=[${momentosIDs}]`);
+
+            // Destacar si es la actividad "Celebrando en comunidad"
+            if (act.id === 216627) {
+              console.log(`  ⚠️⚠️ ACTIVIDAD "Celebrando en comunidad" FUE EXCLUIDA DEL FILTRO`);
+            }
+          });
+        }
+
+        acc.push(...filtered);
+      }
+
       return acc;
     }, []);
-    
+
     console.log(`Para ${elements}: ${totalRecibidas} actividades recibidas de WordPress, ${allObjects.length} después de filtrar${esActividadEspecial ? ' por semanas_a_las_que_pertence' : ' (por semanas_a_las_que_pertence o dia_especifico)'} (${fechaInicioSemana} al ${fechaFinSemana})`);
-    
+
     // Log detallado para semana 1
     if (esSemana1) {
       console.log(`\n[${elements}] 🔍 RESUMEN FILTRADO SEMANA 1:`);
@@ -3781,12 +3892,12 @@ const getWeekData3k = async (
       console.log(`[${elements}] - Actividades recibidas de WordPress: ${totalRecibidas}`);
       console.log(`[${elements}] - Actividades que pasaron el filtro: ${allObjects.length}`);
       console.log(`[${elements}] - Actividades excluidas: ${totalRecibidas - allObjects.length}`);
-      
+
       if (allObjects.length === 0 && totalRecibidas > 0) {
         console.warn(`[${elements}] ⚠️ PROBLEMA: Se recibieron ${totalRecibidas} actividades pero NINGUNA pasó el filtro.`);
         console.warn(`[${elements}] Esto puede indicar que las actividades tienen dia_especifico fuera del rango ${fechaInicioSemana} - ${fechaFinSemana}`);
       }
-      
+
       // Verificar si la actividad "Celebrando en comunidad" está en allObjects
       const celebrandoEnComunidad = allObjects.find(act => act.id === 216627);
       if (celebrandoEnComunidad) {
@@ -3796,14 +3907,14 @@ const getWeekData3k = async (
       }
       console.log(`[${elements}] 🔍 FIN RESUMEN FILTRADO SEMANA 1\n`);
     }
-    
+
     const uniqueObjects = Array.from(
       new Set(allObjects.map(JSON.stringify))
     ).map(JSON.parse);
-    
+
     // Las actividades ya están filtradas por dia_especifico antes de llegar aquí (en filterByDateRange)
     let filteredObjects = uniqueObjects;
-    
+
     // Función para agrupar los elementos por fecha
     function groupByDate(activities) {
       const groupedActivities = {};
@@ -3829,53 +3940,53 @@ const getWeekData3k = async (
         if (fechaMatches.length >= 2) {
           const inicioMatch = fechaMatches[0];
           const finMatch = fechaMatches[1];
-          
+
           const mesInicio = inicioMatch[1];
           const diaInicio = inicioMatch[2];
           const añoInicio = inicioMatch[3];
           fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-          
+
           const mesFin = finMatch[1];
           const diaFin = finMatch[2];
           const añoFin = finMatch[3];
           fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-          
+
           console.log(`[getWeekData3k] Fechas obtenidas del select después del filtrado inicial: ${fechaInicioSemana} al ${fechaFinSemana}`);
         }
       }
     }
-    
+
     // Las actividades ya están filtradas correctamente en allObjects:
     // - Actividades especiales: por semanas_a_las_que_pertence + validación de año
     // - Actividades normales: por semanas_a_las_que_pertence (si tienen la semana) o por dia_especifico (si no tienen la semana)
     // Sin embargo, necesitamos filtrar por año ANTES de agrupar para evitar intentar buscar contenedores de años anteriores
     let actividadesParaAgrupar = filteredObjects;
-    
+
     // Aplicar filtrado por año ANTES de agrupar por fecha para evitar logs innecesarios
     if (fechaInicioSemana && fechaFinSemana) {
       const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
       const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-      
+
       if (fechaInicio && fechaFin) {
         const añoInicio = fechaInicio.getFullYear();
         const añoFin = fechaFin.getFullYear();
         const cruzaAño = añoInicio !== añoFin;
-        
+
         const antesFiltradoAño = actividadesParaAgrupar.length;
-        
+
         actividadesParaAgrupar = actividadesParaAgrupar.filter((activity) => {
           // Si tiene dia_especifico, verificar que el año sea válido
           if (activity.acf?.dia_especifico) {
             const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
             if (fechaActividad) {
               const añoActividad = fechaActividad.getFullYear();
-              
+
               // Si la semana cruza el año, aceptar actividades de ambos años
               // Si no cruza el año, solo aceptar actividades del mismo año
-              const añoValido = cruzaAño 
+              const añoValido = cruzaAño
                 ? (añoActividad === añoInicio || añoActividad === añoFin)
                 : (añoActividad === añoInicio);
-              
+
               if (!añoValido) {
                 return false; // Excluir actividades de años incorrectos
               }
@@ -3885,19 +3996,19 @@ const getWeekData3k = async (
           // (ya fue filtrada por semana anteriormente)
           return true;
         });
-        
+
         if (antesFiltradoAño !== actividadesParaAgrupar.length) {
           console.log(`Para ${elements}: ${antesFiltradoAño} actividades antes de filtrar por año, ${actividadesParaAgrupar.length} después (años válidos: ${añoInicio}${cruzaAño ? ' y ' + añoFin : ''})`);
         }
       }
     }
-    
+
     console.log(`Para ${elements}: ${actividadesParaAgrupar.length} actividades listas para agrupar${esActividadEspecial ? ' (actividad especial)' : ''}`);
-    
+
     // Obtener el arreglo de actividades agrupadas por fecha (usando las filtradas por año)
     // IMPORTANTE: Solo agrupar actividades que ya pasaron el filtrado por año
     const activitiesByDate = groupByDate(actividadesParaAgrupar);
-    
+
     // Log para verificar qué fechas se están agrupando
     console.log(`Fechas agrupadas para ${elements}:`, Object.keys(activitiesByDate));
 
@@ -3910,23 +4021,23 @@ const getWeekData3k = async (
       // Estas actividades se muestran en todos los días, por lo que debemos asegurarnos
       // de que solo se usen actividades del año correcto
       let actividadesFinales = actividadesParaAgrupar; // Usar las actividades ya filtradas antes de agrupar
-      
+
       // Obtener los años de inicio y fin de las fechas de la semana
       let añoInicio = null;
       let añoFin = null;
       let fechaInicio = null;
       let fechaFin = null;
-      
+
       if (fechaInicioSemana && fechaFinSemana) {
         fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
         fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-        
+
         if (fechaInicio) añoInicio = fechaInicio.getFullYear();
         if (fechaFin) añoFin = fechaFin.getFullYear();
-        
+
         console.log(`Para ${elements}: fechas obtenidas - inicio: ${fechaInicioSemana} (año ${añoInicio}), fin: ${fechaFinSemana} (año ${añoFin})`);
       }
-      
+
       // Si no tenemos fechas del scope, intentar obtenerlas del select como respaldo
       if ((!añoInicio || !añoFin) && (!fechaInicio || !fechaFin)) {
         console.log(`Para ${elements}: no se tienen fechas del scope, intentando obtenerlas del select`);
@@ -3937,57 +4048,57 @@ const getWeekData3k = async (
           if (fechaMatches.length >= 2) {
             const inicioMatch = fechaMatches[0];
             const finMatch = fechaMatches[1];
-            
+
             const mesInicio = inicioMatch[1];
             const diaInicio = inicioMatch[2];
             const añoInicioStr = inicioMatch[3];
             const fechaInicioStr = `${diaInicio}/${mesInicio}/${añoInicioStr}`;
             fechaInicio = parseDateDDMMYYYY(fechaInicioStr);
             if (fechaInicio) añoInicio = fechaInicio.getFullYear();
-            
+
             const mesFin = finMatch[1];
             const diaFin = finMatch[2];
             const añoFinStr = finMatch[3];
             const fechaFinStr = `${diaFin}/${mesFin}/${añoFinStr}`;
             fechaFin = parseDateDDMMYYYY(fechaFinStr);
             if (fechaFin) añoFin = fechaFin.getFullYear();
-            
+
             // Actualizar también fechaInicioSemana y fechaFinSemana para que estén disponibles
             fechaInicioSemana = fechaInicioStr;
             fechaFinSemana = fechaFinStr;
-            
+
             console.log(`Para ${elements}: fechas obtenidas del select - inicio: ${fechaInicioStr} (año ${añoInicio}), fin: ${fechaFinStr} (año ${añoFin})`);
           }
         }
       }
-      
+
       // SIEMPRE aplicar filtrado adicional estricto por año para estas actividades especiales
       // IMPORTANTE: Para estas actividades, se filtra por semanas_a_las_que_pertence, NO por dia_especifico
       // Esto garantiza que solo se usen actividades del año correcto
       // Usar las fechas obtenidas (ya sea del scope o del select)
       if (añoInicio && añoFin) {
         const antesFiltrado = actividadesParaAgrupar.length;
-        
+
         // Filtrar por año y semanas_a_las_que_pertence (NO por dia_especifico)
         let actividadesFiltradasPorAño = actividadesParaAgrupar.filter((activity) => {
           // Verificar que tenga semanas_a_las_que_pertence y que incluya la semana actual
-          const tieneSemana = activity.acf?.semanas_a_las_que_pertence && 
-                             (activity.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-          
+          const tieneSemana = activity.acf?.semanas_a_las_que_pertence &&
+            (activity.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
           if (!tieneSemana) {
             console.log(`[${elements}] Excluyendo actividad ${activity.id}: semana ${week} no está en semanas_a_las_que_pertence:`, activity.acf?.semanas_a_las_que_pertence);
             return false;
           }
-          
+
           // Verificar el año basándose en dia_especifico si está disponible
           // Si no tiene dia_especifico, aceptarla si tiene la semana correcta
           if (activity.acf?.dia_especifico) {
             const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
             if (fechaActividad) {
               const añoActividad = fechaActividad.getFullYear();
-              
+
               // Si la semana cruza el año, aceptar actividades de ambos años
               // Si no cruza el año, solo aceptar actividades del año de la semana
               let añoValido = false;
@@ -3998,20 +4109,20 @@ const getWeekData3k = async (
                 // La semana cruza el año, aceptar actividades de ambos años
                 añoValido = (añoActividad === añoInicio || añoActividad === añoFin);
               }
-              
+
               if (!añoValido) {
                 console.log(`[${elements}] Excluyendo actividad ${activity.id}: año ${añoActividad} no válido (esperado ${añoInicio}${añoInicio !== añoFin ? ' o ' + añoFin : ''}), dia_especifico: ${activity.acf.dia_especifico}`);
                 return false;
               }
             }
           }
-          
+
           // Si tiene la semana correcta y el año es válido (o no tiene dia_especifico), incluirla
           return true;
         });
-        
+
         console.log(`Para ${elements}: ${antesFiltrado} actividades antes de filtrar por año, ${actividadesFiltradasPorAño.length} después (años válidos: ${añoInicio}${añoInicio !== añoFin ? ' y ' + añoFin : ''})`);
-        
+
         // Si hay múltiples actividades después del filtrado, priorizar la del año más reciente
         // o la que tenga fecha más cercana al inicio de la semana
         if (actividadesFiltradasPorAño.length > 1) {
@@ -4021,22 +4132,22 @@ const getWeekData3k = async (
             const fechaB = parseDateDDMMYYYY(b.acf.dia_especifico);
             const añoA = fechaA.getFullYear();
             const añoB = fechaB.getFullYear();
-            
+
             // Primero por año (más reciente primero)
             if (añoA !== añoB) {
               return añoB - añoA;
             }
-            
+
             // Si mismo año, por fecha (más cercana al inicio primero)
             const diffA = Math.abs(fechaA - fechaInicio);
             const diffB = Math.abs(fechaB - fechaInicio);
             return diffA - diffB;
           });
-          
+
           // Tomar solo la primera (la más reciente y más cercana)
           actividadesFinales = [actividadesFiltradasPorAño[0]];
           console.log(`[${elements}] Múltiples actividades encontradas, seleccionando la más reciente: ID ${actividadesFinales[0].id}, dia_especifico=${actividadesFinales[0].acf.dia_especifico}`);
-          
+
           // Log de las actividades excluidas
           actividadesFiltradasPorAño.slice(1).forEach(act => {
             const fechaAct = parseDateDDMMYYYY(act.acf.dia_especifico);
@@ -4045,7 +4156,7 @@ const getWeekData3k = async (
         } else {
           actividadesFinales = actividadesFiltradasPorAño;
         }
-        
+
         // Log de las actividades que quedaron
         if (actividadesFinales.length > 0) {
           actividadesFinales.forEach(act => {
@@ -4064,16 +4175,16 @@ const getWeekData3k = async (
         // Si no tenemos fechas válidas, usar las actividades ya filtradas
         actividadesFinales = actividadesParaAgrupar;
       }
-      
+
       console.log(`[${elements}] Renderizando ${actividadesFinales.length} actividad(es) final(es) en todos los días`);
-      
+
       // Para almuerzo-container, renderizar solo una vez antes de despedida
       if (elements == ".almuerzo-container" && actividadesFinales.length > 0) {
         // Para cada día, asegurar que solo haya 1 almuerzo-container antes de despedida
         document.querySelectorAll(`.curriculumcontent .week .day`).forEach((dayEl) => {
           const todosAlmuerzos = dayEl.querySelectorAll('.almuerzo-container');
           const despedidaContainer = dayEl.querySelector('.despedida-container');
-          
+
           // Contar cuántos almuerzo-container hay antes de despedida
           let almuerzosAntesDespedida = 0;
           if (despedidaContainer) {
@@ -4085,7 +4196,7 @@ const getWeekData3k = async (
               }
             });
           }
-          
+
           // Si hay más de 1 almuerzo-container antes de despedida, eliminar los extras
           if (almuerzosAntesDespedida > 1 && despedidaContainer) {
             const elementosAntesDespedida = Array.from(despedidaContainer.parentNode.children);
@@ -4100,7 +4211,7 @@ const getWeekData3k = async (
               }
             }
           }
-          
+
           // Si no hay ningún almuerzo-container antes de despedida, crear uno
           if (almuerzosAntesDespedida === 0 && despedidaContainer && todosAlmuerzos.length > 0) {
             const almuerzoOriginal = todosAlmuerzos[0];
@@ -4110,15 +4221,15 @@ const getWeekData3k = async (
             nuevoAlmuerzo.innerHTML = spanInicial ? spanInicial.outerHTML : '';
             despedidaContainer.parentNode.insertBefore(nuevoAlmuerzo, despedidaContainer);
           }
-          
+
           // Renderizar solo el almuerzo-container que está antes de despedida
           if (despedidaContainer) {
             const elementosAntesDespedida = Array.from(despedidaContainer.parentNode.children);
             const indiceDespedida = elementosAntesDespedida.indexOf(despedidaContainer);
-            const almuerzoAntesDespedida = elementosAntesDespedida.find((el, idx) => 
+            const almuerzoAntesDespedida = elementosAntesDespedida.find((el, idx) =>
               idx < indiceDespedida && el.classList.contains('almuerzo-container')
             );
-            
+
             if (almuerzoAntesDespedida) {
               updateElementsWithData(
                 [almuerzoAntesDespedida],
@@ -4133,7 +4244,7 @@ const getWeekData3k = async (
         // Para snack-container, renderizar solo una vez por día
         document.querySelectorAll(`.curriculumcontent .week .day`).forEach((dayEl) => {
           const todosSnacks = dayEl.querySelectorAll('.snack-container');
-          
+
           // Si hay más de 1 snack-container, eliminar los extras (mantener solo el primero)
           if (todosSnacks.length > 1) {
             // Mantener solo el primero y eliminar el resto
@@ -4141,7 +4252,7 @@ const getWeekData3k = async (
               todosSnacks[i].remove();
             }
           }
-          
+
           // Renderizar solo el snack-container que queda (debería ser exactamente 1)
           const snackFinal = dayEl.querySelector('.snack-container');
           if (snackFinal) {
@@ -4164,17 +4275,17 @@ const getWeekData3k = async (
       }
     } else {
       // Determinar si la semana cruza el año
-      const semanaCruzaAno = fechaInicioSemana && fechaFinSemana && 
-                              parseDateDDMMYYYY(fechaInicioSemana) && 
-                              parseDateDDMMYYYY(fechaFinSemana) &&
-                              parseDateDDMMYYYY(fechaInicioSemana).getFullYear() !== parseDateDDMMYYYY(fechaFinSemana).getFullYear();
-      
+      const semanaCruzaAno = fechaInicioSemana && fechaFinSemana &&
+        parseDateDDMMYYYY(fechaInicioSemana) &&
+        parseDateDDMMYYYY(fechaFinSemana) &&
+        parseDateDDMMYYYY(fechaInicioSemana).getFullYear() !== parseDateDDMMYYYY(fechaFinSemana).getFullYear();
+
       // Obtener firstDayCurrentWeek desde los data-date disponibles o calcularlo
       let firstDayCurrentWeek = null;
       const allDataDates = Array.from(document.querySelectorAll('.curriculumcontent .week .day, .outter.week.flex .day'))
         .map(day => day.getAttribute('data-date'))
         .filter(d => d);
-      
+
       if (allDataDates.length > 0) {
         // Obtener la primera fecha (lunes) de los data-date disponibles
         const primeraFecha = allDataDates[0];
@@ -4185,7 +4296,7 @@ const getWeekData3k = async (
           }
         }
       }
-      
+
       Object.keys(activitiesByDate).forEach((date, i) => {
         // Normalizar el formato de fecha a DD/MM/YYYY para el selector
         let dateForSelector = date;
@@ -4195,26 +4306,26 @@ const getWeekData3k = async (
             const day = parts[0].padStart(2, '0');
             const month = parts[1].padStart(2, '0');
             let year = parts[2];
-            
+
             // Si la semana cruza el año, ajustar el año para que coincida con los data-date
             if (semanaCruzaAno) {
               // Obtener todos los data-date disponibles
               const allDataDates = Array.from(document.querySelectorAll('.curriculumcontent .week .day, .outter.week.flex .day'))
                 .map(day => day.getAttribute('data-date'))
                 .filter(d => d);
-              
+
               // Buscar un data-date que coincida con el día y mes de la actividad
               const matchingDataDate = allDataDates.find(d => {
                 if (!d) return false;
                 const dParts = d.split('/');
                 return dParts.length === 3 && dParts[0] === day && dParts[1] === month;
               });
-              
+
               if (matchingDataDate) {
                 const matchingParts = matchingDataDate.split('/');
                 const añoDataDate = matchingParts[2];
                 const añoActividad = parseInt(year, 10);
-                
+
                 // Solo ajustar si el año es diferente
                 if (añoActividad !== parseInt(añoDataDate, 10)) {
                   year = añoDataDate; // Usar el año del data-date
@@ -4224,7 +4335,7 @@ const getWeekData3k = async (
                 // Si no se encuentra coincidencia, calcular el año basándose en firstDayCurrentWeek
                 const añoEsperado = firstDayCurrentWeek.getFullYear();
                 const mesActividad = parseInt(month, 10);
-                
+
                 // Si el mes es enero (1) y estamos en diciembre, el año debería ser el siguiente
                 if (mesActividad === 1 && firstDayCurrentWeek.getMonth() === 11) {
                   year = (añoEsperado + 1).toString();
@@ -4235,22 +4346,22 @@ const getWeekData3k = async (
                 }
               }
             }
-            
+
             dateForSelector = `${day}/${month}/${year}`; // DD/MM/YYYY
           }
         }
-        
+
         const containers = document.querySelectorAll(
           `.curriculumcontent .week .day[data-date="${dateForSelector}"] ${elements}, .outter.week.flex .day[data-date="${dateForSelector}"] ${elements}`
         );
-        
+
         if (containers.length > 0) {
-        updateElementsWithData(
+          updateElementsWithData(
             containers,
-          activitiesByDate[date],
-          colorfill,
-          colorstroke
-        );
+            activitiesByDate[date],
+            colorfill,
+            colorstroke
+          );
           console.log(`[getWeekData3k] Actualizados ${containers.length} contenedores para fecha ${dateForSelector} (fecha original: ${date})`);
         } else {
           console.warn(`[getWeekData3k] No se encontraron contenedores para fecha ${dateForSelector} (fecha original: ${date})`);
@@ -4265,7 +4376,7 @@ const getWeekData3k = async (
 };
 const getInfo3k = async (lang = "es", week = weekNumber) => {
   console.log("Dentro de getInfo3k, semana recibida:", week);
-  
+
   // Contar cuántas consultas se harán a WordPress para el curriculum 3K
   // Cada getWeekData3k puede hacer múltiples consultas si activityType tiene múltiples valores
   const consultasGetWeekData3k = [
@@ -4280,27 +4391,27 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     { activityType: "815", container: ".juegoalairelibre-container" },
     { activityType: "5720", container: ".lavado-container" },
   ];
-  
+
   let totalConsultas = 0;
   consultasGetWeekData3k.forEach(({ activityType }) => {
     // Cada activityType puede tener múltiples valores separados por coma
     const tipos = activityType.split(",");
     totalConsultas += tipos.length;
   });
-  
+
   // También se hace una consulta para canciones y materiales literarios
   totalConsultas += 1;
-  
+
   console.log(`[getInfo3k] 📊 RESUMEN DE CONSULTAS A WORDPRESS PARA CURRICULUM 3K (Semana ${week}):`);
   console.log(`[getInfo3k] - Consultas getWeekData3k: ${totalConsultas - 1} consultas`);
   console.log(`[getInfo3k] - Consulta canciones/materiales literarios: 1 consulta`);
   console.log(`[getInfo3k] - TOTAL: ${totalConsultas} consultas a WordPress`);
   console.log(`[getInfo3k] (Nota: Estas consultas se ejecutan en paralelo usando requestWPParallel)`);
-  
+
   // PRIMERO: Establecer los data-date antes de buscar los contenedores
   let firstDayCurrentWeek = null;
   const semanaSelect = document.getElementById('semanaSelect');
-  
+
   if (semanaSelect && semanaSelect.selectedIndex > 0) {
     const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
     // Extraer la fecha de inicio de la semana (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
@@ -4315,7 +4426,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       console.log('Estableciendo data-date desde texto del select (3K), primer día:', firstDayCurrentWeek, 'año:', year);
     }
   }
-  
+
   // Si no se pudo obtener del select, usar getDateFromWeekNumber como fallback
   if (!firstDayCurrentWeek) {
     let targetYear = null;
@@ -4324,13 +4435,13 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       const fechaMatch = weekText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
       if (fechaMatch && fechaMatch.length >= 4) {
         targetYear = parseInt(fechaMatch[3], 10);
-  }
+      }
     }
     if (!targetYear) {
       targetYear = new Date().getFullYear();
     }
     let currentDate = getDateFromWeekNumber(week, targetYear);
-    
+
     // Caso especial: si es la semana 1 del 2026 que cruza al 2027, 
     // getDateFromWeekNumber retorna el 29 de diciembre directamente
     // No ajustar al lunes anterior en este caso
@@ -4341,7 +4452,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     }
     console.log('Estableciendo data-date con getDateFromWeekNumber (3K), primer día:', firstDayCurrentWeek);
   }
-  
+
   // Establecer los data-date en formato DD/MM/YYYY
   if (firstDayCurrentWeek) {
     var daysOfWeek = document.querySelectorAll(".curriculumcontent .week .day, .outter.week.flex .day");
@@ -4364,7 +4475,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   // Obtener las fechas de inicio y fin de la semana para filtrar por dia_especifico
   let fechaInicioSemana = null;
   let fechaFinSemana = null;
-  
+
   if (semanaSelect && semanaSelect.selectedIndex > 0) {
     const weekText = semanaSelect.options[semanaSelect.selectedIndex].textContent;
     // Extraer las fechas de inicio y fin (formato: "Semana MM/DD/YYYY al MM/DD/YYYY")
@@ -4373,18 +4484,18 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       // Primera fecha es inicio, segunda es fin
       const inicioMatch = fechaMatches[0];
       const finMatch = fechaMatches[1];
-      
+
       // Convertir MM/DD/YYYY a DD/MM/YYYY para comparar con dia_especifico
       const mesInicio = inicioMatch[1];
       const diaInicio = inicioMatch[2];
       const añoInicio = inicioMatch[3];
       fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-      
+
       const mesFin = finMatch[1];
       const diaFin = finMatch[2];
       const añoFin = finMatch[3];
       fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-      
+
       console.log('Fechas de la semana para filtrar por dia_especifico (3K):', fechaInicioSemana, 'al', fechaFinSemana);
     } else {
       console.warn('No se pudieron obtener las fechas del select en getInfo3k');
@@ -4478,7 +4589,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       week
     ),
   ]);
-  
+
   // Extraer resultados de Promise.allSettled, devolviendo [] si falló alguna petición
   const [
     reunionMatutina,
@@ -4501,7 +4612,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       return []; // Devolver array vacío si falló
     }
   });
-  
+
   let a = [
     reunionMatutina,
     musicamovimiento,
@@ -4524,17 +4635,17 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       if (fechaMatches.length >= 2) {
         const inicioMatch = fechaMatches[0];
         const finMatch = fechaMatches[1];
-        
+
         const mesInicio = inicioMatch[1];
         const diaInicio = inicioMatch[2];
         const añoInicio = inicioMatch[3];
         fechaInicioSemana = `${diaInicio}/${mesInicio}/${añoInicio}`; // DD/MM/YYYY
-        
+
         const mesFin = finMatch[1];
         const diaFin = finMatch[2];
         const añoFin = finMatch[3];
         fechaFinSemana = `${diaFin}/${mesFin}/${añoFin}`; // DD/MM/YYYY
-        
+
         console.log('[getInfo3k] Fechas obtenidas del select después de Promise.all:', fechaInicioSemana, 'al', fechaFinSemana);
       }
     }
@@ -4543,18 +4654,18 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   // Usar los nuevos parámetros de WordPress para consultas más precisas
   // Nuevos parámetros disponibles: semana, fecha_inicio, fecha_fin, curriculum
   const esSemana1 = week === 1 || week === "1";
-  
+
   // Mapear curriculumID a nombre de curriculum para WordPress
   // 195 = 3k
   const curriculumName = curriculumID == 195 ? "3k" : curriculumID;
-  
+
   // Función para validar que las actividades devueltas corresponden a la semana solicitada
   const validarRespuestaSemana = (actividades, semanaSolicitada, fechaInicio = null, fechaFin = null) => {
     if (!actividades || actividades.length === 0) return false;
-    
+
     const weekStr = String(semanaSolicitada);
     const weekNum = Number(semanaSolicitada);
-    
+
     // Función auxiliar para parsear fechas DD/MM/YYYY
     const parseDateDDMMYYYY = (dateStr) => {
       if (!dateStr) return null;
@@ -4567,7 +4678,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
       return null;
     };
-    
+
     // Parsear fechas de rango si están disponibles
     let fechaInicioDate = null;
     let fechaFinDate = null;
@@ -4575,17 +4686,17 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       fechaInicioDate = parseDateDDMMYYYY(fechaInicio);
       fechaFinDate = parseDateDDMMYYYY(fechaFin);
     }
-    
+
     // Verificar que al menos algunas actividades son válidas para la semana
     const actividadesValidas = actividades.filter(act => {
       // Verificar si tiene la semana correcta en semanas_a_las_que_pertence
       const semanas = act.acf?.semanas_a_las_que_pertence;
-      const tieneSemanaCorrecta = semanas && Array.isArray(semanas) && 
+      const tieneSemanaCorrecta = semanas && Array.isArray(semanas) &&
         semanas.some(s => String(s) === weekStr || Number(s) === weekNum);
-      
+
       // Si tiene la semana correcta, es válida
       if (tieneSemanaCorrecta) return true;
-      
+
       // Si tenemos fechas de rango, verificar si dia_especifico está en el rango
       if (fechaInicioDate && fechaFinDate && act.acf?.dia_especifico) {
         const fechaActividad = parseDateDDMMYYYY(act.acf.dia_especifico);
@@ -4594,19 +4705,19 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           if (dentroDelRango) return true;
         }
       }
-      
+
       return false;
     });
-    
+
     // Si hay actividades, al menos el 50% deben ser válidas
     // Esto permite tolerar algunos errores pero detecta cuando WordPress devuelve datos incorrectos
     const porcentajeCorrecto = actividadesValidas.length / actividades.length;
     return porcentajeCorrecto >= 0.5;
   };
-  
+
   let resp;
   let usandoNuevosParametros = false;
-  
+
   if (esSemana1 && fechaInicioSemana && fechaFinSemana) {
     // Para semana 1 que cruza el año, usar los nuevos parámetros de WordPress
     // Convertir fechas de DD/MM/YYYY a YYYY-MM-DD para WordPress
@@ -4619,21 +4730,21 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
       return null;
     };
-    
+
     const fechaInicioWP = convertirFecha(fechaInicioSemana);
     const fechaFinWP = convertirFecha(fechaFinSemana);
-    
+
     if (fechaInicioWP && fechaFinWP) {
       // Intentar múltiples variaciones de la consulta hasta encontrar una que funcione
       let respValidada = false;
-      
+
       // Estrategia 1: Solo rango de fechas (sin semana, sin language)
       const endpointEstrategia1 = `planessemanales?fecha_inicio=${fechaInicioWP}&fecha_fin=${fechaFinWP}&curriculum=${curriculumName}`;
       console.log(`[getInfo3k] Estrategia 1 - URL completa: https://twinkle.acuarelacore.com/wp-json/wp/v2/${endpointEstrategia1}`);
       resp = await requestWP(endpointEstrategia1);
       usandoNuevosParametros = true;
       console.log(`[getInfo3k] Estrategia 1 - Parámetros: fecha_inicio=${fechaInicioWP}, fecha_fin=${fechaFinWP}, curriculum=${curriculumName}`);
-      
+
       const respFlat1 = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
       console.log(`[getInfo3k] Estrategia 1 - Respuesta recibida: ${respFlat1.length} actividades`);
       if (respFlat1.length > 0) {
@@ -4647,13 +4758,13 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
         console.log(`[getInfo3k] ✅ Estrategia 1 exitosa: ${respFlat1.length} actividades válidas`);
       } else {
         console.log(`[getInfo3k] ❌ Estrategia 1 falló: ${respFlat1.length} actividades, pero no válidas para semana ${week}`);
-        
-      // Estrategia 2: Rango de fechas + semana (sin language) - Formato exacto probado en Postman
-      const endpointEstrategia2 = `planessemanales?semana=${week}&fecha_inicio=${fechaInicioWP}&fecha_fin=${fechaFinWP}&curriculum=${curriculumName}`;
-      console.log(`[getInfo3k] Estrategia 2 - URL completa: https://twinkle.acuarelacore.com/wp-json/wp/v2/${endpointEstrategia2}`);
-      resp = await requestWP(endpointEstrategia2);
-      console.log(`[getInfo3k] Estrategia 2 - Parámetros: semana=${week}, fecha_inicio=${fechaInicioWP}, fecha_fin=${fechaFinWP}, curriculum=${curriculumName}`);
-        
+
+        // Estrategia 2: Rango de fechas + semana (sin language) - Formato exacto probado en Postman
+        const endpointEstrategia2 = `planessemanales?semana=${week}&fecha_inicio=${fechaInicioWP}&fecha_fin=${fechaFinWP}&curriculum=${curriculumName}`;
+        console.log(`[getInfo3k] Estrategia 2 - URL completa: https://twinkle.acuarelacore.com/wp-json/wp/v2/${endpointEstrategia2}`);
+        resp = await requestWP(endpointEstrategia2);
+        console.log(`[getInfo3k] Estrategia 2 - Parámetros: semana=${week}, fecha_inicio=${fechaInicioWP}, fecha_fin=${fechaFinWP}, curriculum=${curriculumName}`);
+
         const respFlat2 = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
         console.log(`[getInfo3k] Estrategia 2 - Respuesta recibida: ${respFlat2.length} actividades`);
         if (respFlat2.length > 0) {
@@ -4667,13 +4778,13 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           console.log(`[getInfo3k] ✅ Estrategia 2 exitosa: ${respFlat2.length} actividades válidas`);
         } else {
           console.log(`[getInfo3k] ❌ Estrategia 2 falló: ${respFlat2.length} actividades, pero no válidas para semana ${week}`);
-          
+
           // Estrategia 3: Solo rango de fechas + language
           const endpointEstrategia3 = `planessemanales?fecha_inicio=${fechaInicioWP}&fecha_fin=${fechaFinWP}&curriculum=${curriculumName}&language=${lang}`;
           console.log(`[getInfo3k] Estrategia 3 - URL completa: https://twinkle.acuarelacore.com/wp-json/wp/v2/${endpointEstrategia3}`);
           resp = await requestWP(endpointEstrategia3);
           console.log(`[getInfo3k] Estrategia 3 - Parámetros: fecha_inicio=${fechaInicioWP}, fecha_fin=${fechaFinWP}, curriculum=${curriculumName}, language=${lang}`);
-          
+
           const respFlat3 = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
           console.log(`[getInfo3k] Estrategia 3 - Respuesta recibida: ${respFlat3.length} actividades`);
           if (respFlat3.length > 0) {
@@ -4691,21 +4802,21 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           }
         }
       }
-      
+
       // Si ninguna estrategia funcionó, usar fallback al formato anterior
       // IMPORTANTE: Para semana 1, WordPress no filtra correctamente con los nuevos parámetros,
       // así que intentamos primero con el formato anterior que incluye el filtro de semana,
       // y si eso tampoco funciona, obtenemos todas las actividades y las filtramos en el cliente
       if (!respValidada) {
         console.warn(`[getInfo3k] ⚠️ Ninguna estrategia con nuevos parámetros funcionó. Intentando fallback con formato anterior...`);
-        
+
         // Intentar primero con el formato anterior que incluye el filtro de semana
         resp = await requestWP(
           `planessemanales?field=language,curriculum,semanas_a_las_que_pertence&value=${lang},${curriculumID},${week}&pp=500`
         );
         const respFlatFallback = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
         console.log(`[getInfo3k] Fallback con filtro de semana: ${respFlatFallback.length} actividades recibidas`);
-        
+
         // Validar si el fallback con filtro de semana funcionó
         if (respFlatFallback.length > 0 && validarRespuestaSemana(respFlatFallback, week, fechaInicioSemana, fechaFinSemana)) {
           console.log(`[getInfo3k] ✅ Fallback con filtro de semana exitoso: ${respFlatFallback.length} actividades válidas`);
@@ -4719,10 +4830,10 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           );
           console.log(`[getInfo3k] Fallback final: Consultando TODAS las actividades (pp=500) para filtrar completamente en cliente`);
         }
-        
+
         usandoNuevosParametros = false;
       }
-      
+
       console.log(`[getInfo3k] Respuesta final de WordPress:`, resp);
     } else {
       // Fallback: usar formato anterior si no se pueden convertir las fechas
@@ -4736,27 +4847,27 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     // Para otras semanas, intentar usar el parámetro semana directamente
     // Intentar múltiples variaciones si la primera no funciona
     let respValidada = false;
-    
+
     // Estrategia 1: semana + curriculum + language
     resp = await requestWP(
       `planessemanales?semana=${week}&curriculum=${curriculumName}&language=${lang}`
     );
     usandoNuevosParametros = true;
     console.log(`[getInfo3k] Estrategia 1 - Semana + curriculum + language: semana=${week}, curriculum=${curriculumName}, language=${lang}`);
-    
+
     const respFlat1 = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
     if (respFlat1.length > 0 && validarRespuestaSemana(respFlat1, week, fechaInicioSemana, fechaFinSemana)) {
       respValidada = true;
       console.log(`[getInfo3k] ✅ Estrategia 1 exitosa: ${respFlat1.length} actividades válidas`);
     } else {
       console.log(`[getInfo3k] ❌ Estrategia 1 falló: ${respFlat1.length} actividades, pero no válidas para semana ${week}`);
-      
+
       // Estrategia 2: semana + curriculum (sin language)
       resp = await requestWP(
         `planessemanales?semana=${week}&curriculum=${curriculumName}`
       );
       console.log(`[getInfo3k] Estrategia 2 - Semana + curriculum: semana=${week}, curriculum=${curriculumName}`);
-      
+
       const respFlat2 = Array.isArray(resp) ? resp.flat() : (resp ? [resp] : []);
       if (respFlat2.length > 0 && validarRespuestaSemana(respFlat2, week, fechaInicioSemana, fechaFinSemana)) {
         respValidada = true;
@@ -4766,7 +4877,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
         respValidada = false;
       }
     }
-    
+
     if (!respValidada) {
       console.warn(`[getInfo3k] ⚠️ Ninguna estrategia con nuevos parámetros funcionó. Usando fallback al formato anterior...`);
       resp = await requestWP(
@@ -4775,7 +4886,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       usandoNuevosParametros = false;
       console.log(`[getInfo3k] Fallback: Consultando con formato anterior para semana ${week}`);
     }
-    
+
     console.log(`[getInfo3k] Respuesta de WordPress:`, resp);
   }
 
@@ -4783,7 +4894,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   let flattenedActivities = resp.flat();
   console.log(`[getInfo3k] Actividades aplanadas (3K, después de consulta WordPress):`, flattenedActivities.length);
   console.log(`[getInfo3k] Respuesta RAW completa de WordPress:`, resp);
-  
+
   // Log ANTES del filtrado: ver qué tipos de actividades trajo WordPress
   // Definir tipos de materiales literarios una sola vez (se reutiliza después)
   const tiposMaterialLiterario = ["lectura", "adivinanzas", "travalenguas", "poesias", "cuentos", "copias", "retahílas", "fábulas", "historietas"];
@@ -4801,16 +4912,16 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       console.log(`[getInfo3k]   Material ${idx + 1} ANTES filtro: ID ${m.id}, Título: "${m.title?.rendered}", tipo: ${m.acf?.tipo_de_actividad}, semanas:`, m.acf?.semanas_a_las_que_pertence, `dia_especifico: ${m.acf?.dia_especifico}`);
     });
   }
-  
+
   // Guardar la respuesta original antes de cualquier filtrado adicional (por si acaso necesitamos usarla después)
   let respOriginal = esSemana1 ? [...flattenedActivities] : null;
-  
+
   // Con los nuevos parámetros de WordPress, el filtrado debería ser correcto en el servidor
   // Sin embargo, mantenemos un filtrado mínimo como respaldo para asegurar que solo se incluyan actividades correctas
   // Esto es especialmente importante para canciones y materiales literarios que pueden no tener dia_especifico
   if (esSemana1 && fechaInicioSemana && fechaFinSemana) {
     console.log(`[getInfo3k] Verificando respuesta de WordPress para semana 1. Fechas: ${fechaInicioSemana} al ${fechaFinSemana}. Actividades recibidas: ${flattenedActivities.length}`);
-    
+
     // Verificar que las actividades recibidas tienen la semana correcta o están en el rango de fechas
     // WordPress debería haber filtrado correctamente, pero verificamos como respaldo
     const parseDateDDMMYYYY = (dateStr) => {
@@ -4824,36 +4935,36 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
       return null;
     };
-    
+
     const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
     const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-    
+
     if (fechaInicio && fechaFin) {
       // Filtrado robusto: como WordPress no filtra correctamente, hacemos el filtrado completo en el cliente
       // Verificar que las actividades tienen la semana correcta O están dentro del rango de fechas
       const weekStr = String(week);
       const weekNum = Number(week);
-      
+
       // Identificar tipos de actividades especiales (canciones y materiales literarios)
       const tiposEspeciales = ["canciones", "lectura", "adivinanzas", "travalenguas", "poesias", "cuentos", "copias", "retahílas", "fábulas", "historietas"];
-      
+
       const actividadesValidadas = flattenedActivities.filter((activity) => {
         // Verificar si tiene la semana correcta en semanas_a_las_que_pertence
         const semanas = activity.acf?.semanas_a_las_que_pertence;
-        const tieneSemana = semanas && Array.isArray(semanas) && 
-                           (semanas.includes(weekStr) || 
-                            semanas.includes(weekNum) ||
-                            semanas.some(s => String(s) === weekStr || Number(s) === weekNum));
-        
+        const tieneSemana = semanas && Array.isArray(semanas) &&
+          (semanas.includes(weekStr) ||
+            semanas.includes(weekNum) ||
+            semanas.some(s => String(s) === weekStr || Number(s) === weekNum));
+
         const esTipoEspecial = tiposEspeciales.includes(activity.acf?.tipo_de_actividad);
-        
+
         // Para canciones y materiales literarios, si tienen la semana correcta, incluirlas SIEMPRE
         // (incluso si no tienen dia_especifico)
         if (esTipoEspecial && tieneSemana) {
           console.log(`[getInfo3k] ✅ Incluyendo ${activity.acf?.tipo_de_actividad} "${activity.title?.rendered}" - tiene semana ${week}`);
           return true;
         }
-        
+
         // Si tiene dia_especifico, verificar que esté en el rango
         if (activity.acf?.dia_especifico) {
           const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
@@ -4868,7 +4979,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
             }
           }
         }
-        
+
         // Si no tiene dia_especifico, incluir solo si tiene la semana correcta
         if (tieneSemana) {
           if (esTipoEspecial) {
@@ -4876,52 +4987,52 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           }
           return true;
         }
-        
+
         // Excluir si no cumple ninguna condición
         if (esTipoEspecial) {
           console.log(`[getInfo3k] ❌ Excluyendo ${activity.acf?.tipo_de_actividad} "${activity.title?.rendered}" - semanas:`, semanas, `dia_especifico: ${activity.acf?.dia_especifico}`);
         }
         return false;
       });
-      
+
       console.log(`[getInfo3k] Filtrado de respaldo para semana ${week}: ${actividadesValidadas.length} actividades válidas de ${flattenedActivities.length} recibidas`);
-      
+
       // Log detallado de canciones y materiales literarios después del filtrado
       const cancionesValidadas = actividadesValidadas.filter(a => a.acf?.tipo_de_actividad === "canciones");
       const materialesValidadas = actividadesValidadas.filter(a => tiposEspeciales.slice(1).includes(a.acf?.tipo_de_actividad));
       console.log(`[getInfo3k] Después del filtrado de respaldo - Canciones: ${cancionesValidadas.length}, Materiales literarios: ${materialesValidadas.length}`);
-      
+
       flattenedActivities = actividadesValidadas;
     }
   }
-  
+
   // Log: Respuesta cruda de WordPress para canciones y materiales literarios (DESPUÉS del filtrado inmediato para semana 1)
   // Para semana 1, este log mostrará solo las actividades que pasaron el filtrado inmediato (solo semana 1)
   // Para otras semanas, mostrará todas las actividades recibidas de WordPress
   console.log(`[getInfo3k] RESPUESTA CRUDA DE WORDPRESS (canciones y materiales literarios)${esSemana1 ? ' - DESPUÉS de filtrado inmediato' : ''}:`, flattenedActivities);
-  
+
   // Log detallado: Mostrar todas las canciones y materiales literarios en la respuesta (después del filtrado inmediato para semana 1)
   // tiposMaterialLiterario ya está definido arriba
-  
+
   const cancionesEnRespuesta = flattenedActivities.filter(a => a.acf?.tipo_de_actividad === "canciones");
   const materialesEnRespuesta = flattenedActivities.filter(a => tiposMaterialLiterario.includes(a.acf?.tipo_de_actividad));
-  
+
   console.log(`[getInfo3k] CANCIONES EN RESPUESTA CRUDA (después de filtrado inmediato):`, cancionesEnRespuesta);
   console.log(`[getInfo3k] Total canciones en respuesta cruda:`, cancionesEnRespuesta.length);
   cancionesEnRespuesta.forEach((cancion, idx) => {
     console.log(`[getInfo3k] Canción ${idx + 1}: ID ${cancion.id}, Título: "${cancion.title?.rendered}", dia_especifico: ${cancion.acf?.dia_especifico}, semanas_a_las_que_pertence:`, cancion.acf?.semanas_a_las_que_pertence);
   });
-  
+
   console.log(`[getInfo3k] MATERIALES LITERARIOS EN RESPUESTA CRUDA (después de filtrado inmediato):`, materialesEnRespuesta);
   console.log(`[getInfo3k] Total materiales literarios en respuesta cruda:`, materialesEnRespuesta.length);
   materialesEnRespuesta.forEach((material, idx) => {
     console.log(`[getInfo3k] Material ${idx + 1}: ID ${material.id}, Título: "${material.title?.rendered}", tipo: ${material.acf?.tipo_de_actividad}, dia_especifico: ${material.acf?.dia_especifico}, semanas_a_las_que_pertence:`, material.acf?.semanas_a_las_que_pertence);
   });
-  
+
   // Normalizar week a string y number para comparación consistente
   const weekStr = String(week);
   const weekNum = Number(week);
-  
+
   // Filtrar por dia_especifico si tenemos las fechas de la semana (EXACTAMENTE igual que en getWeekDataNew)
   if (fechaInicioSemana && fechaFinSemana) {
     // Convertir fechas DD/MM/YYYY a objetos Date para comparar (igual que en getWeekDataNew)
@@ -4936,43 +5047,43 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
       return null;
     };
-    
+
     const fechaInicio = parseDateDDMMYYYY(fechaInicioSemana);
     const fechaFin = parseDateDDMMYYYY(fechaFinSemana);
-    
+
     console.log(`[getInfo3k] Fechas parseadas - Inicio: ${fechaInicioSemana} (${fechaInicio}), Fin: ${fechaFinSemana} (${fechaFin})`);
-    
+
     if (fechaInicio && fechaFin) {
       const añoInicio = fechaInicio.getFullYear();
       const añoFin = fechaFin.getFullYear();
       const cruzaAño = añoInicio !== añoFin;
-      
+
       const weekStr = String(week);
       const weekNum = Number(week);
-      
+
       const actividadesFiltradasPorFecha = flattenedActivities.filter((activity) => {
         // Para semana 1, filtrar principalmente por fecha (dia_especifico) porque WordPress no devuelve actividades correctamente
         if (esSemana1) {
           // Verificar si tiene la semana correcta en semanas_a_las_que_pertence
-          const tieneSemana = activity.acf?.semanas_a_las_que_pertence && 
-                             (activity.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-          
+          const tieneSemana = activity.acf?.semanas_a_las_que_pertence &&
+            (activity.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+              activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+              activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
           // Identificar tipos de actividades especiales (canciones y materiales literarios)
           const tiposEspeciales = ["canciones", "lectura", "adivinanzas", "travalenguas", "poesias", "cuentos", "copias", "retahílas", "fábulas", "historietas"];
           const esTipoEspecial = tiposEspeciales.includes(activity.acf?.tipo_de_actividad);
-          
+
           // Para canciones y materiales literarios, si tienen la semana correcta, incluirlas aunque no tengan dia_especifico
           if (esTipoEspecial && tieneSemana) {
             return true;
           }
-          
+
           // Para otras actividades, si no tiene dia_especifico, excluirla (para semana 1 necesitamos fecha)
           if (!activity.acf?.dia_especifico) {
             return false;
           }
-          
+
           const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
           if (!fechaActividad) {
             // Si no se pudo parsear pero tiene la semana correcta, incluirla
@@ -4981,32 +5092,32 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
             }
             return false;
           }
-          
+
           const añoActividad = fechaActividad.getFullYear();
-          
+
           // Para semanas que cruzan año, aceptar actividades de ambos años
-          const añoValido = cruzaAño 
+          const añoValido = cruzaAño
             ? (añoActividad === añoInicio || añoActividad === añoFin)
             : (añoActividad === añoInicio);
-          
+
           if (!añoValido) {
             return false;
           }
-          
+
           // Verificar que la fecha de la actividad esté dentro del rango de la semana
           const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
-          
+
           // Para semana 1, incluir si está dentro del rango de fechas O si tiene la semana correcta
           return dentroDelRango || tieneSemana;
         }
-        
+
         // Verificar si tiene la semana correcta en semanas_a_las_que_pertence
-        const tieneSemana = activity.acf?.semanas_a_las_que_pertence && 
-                           (activity.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
-        
-        
+        const tieneSemana = activity.acf?.semanas_a_las_que_pertence &&
+          (activity.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            activity.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            activity.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+
+
         // Para otras actividades, si no tienen dia_especifico pero tienen la semana correcta, incluirlas
         if (!activity.acf?.dia_especifico) {
           if (tieneSemana) {
@@ -5015,7 +5126,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           }
           return false;
         }
-        
+
         const fechaActividad = parseDateDDMMYYYY(activity.acf.dia_especifico);
         if (!fechaActividad) {
           // Si no se pudo parsear pero tiene la semana correcta, incluirla
@@ -5024,39 +5135,39 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           }
           return false;
         }
-        
+
         const añoActividad = fechaActividad.getFullYear();
-        
+
         // Para semanas que cruzan año, aceptar actividades de ambos años
-        const añoValido = cruzaAño 
+        const añoValido = cruzaAño
           ? (añoActividad === añoInicio || añoActividad === añoFin)
           : (añoActividad === añoInicio);
-        
+
         if (!añoValido) {
           return false;
         }
-        
+
         // Verificar que la fecha de la actividad esté dentro del rango de la semana
         const dentroDelRango = fechaActividad >= fechaInicio && fechaActividad <= fechaFin;
-        
+
         // Identificar tipos de actividades que deben incluirse si tienen la semana correcta, incluso si dia_especifico está fuera del rango
         const tiposEspeciales = ["canciones", "lectura", "adivinanzas", "travalenguas", "poesias", "cuentos", "copias", "retahílas", "fábulas", "historietas"];
         const esTipoEspecial = tiposEspeciales.includes(activity.acf?.tipo_de_actividad);
-        
+
         // Log para debugging de canciones
         if (activity.acf?.tipo_de_actividad === "canciones") {
           console.log(`[getInfo3k] Canción "${activity.title?.rendered}" - dia_especifico: ${activity.acf.dia_especifico}, fecha parseada: ${fechaActividad}, dentro del rango: ${dentroDelRango}, año válido: ${añoValido}, tiene semana: ${tieneSemana}`);
         }
-        
+
         // Para canciones y materiales literarios, si tienen la semana correcta, incluirlas incluso si dia_especifico está fuera del rango
         if (esTipoEspecial && tieneSemana) {
           return true;
         }
-        
+
         // Para otras actividades, incluir solo si está dentro del rango
         return dentroDelRango;
       });
-      
+
       console.log(`Actividades filtradas por dia_especifico (3K, ${fechaInicioSemana} al ${fechaFinSemana}):`, actividadesFiltradasPorFecha.length, 'de', flattenedActivities.length);
       flattenedActivities = actividadesFiltradasPorFecha;
     } else {
@@ -5065,7 +5176,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   } else {
     console.warn(`[getInfo3k] No se tienen fechas para filtrar (fechaInicioSemana: ${fechaInicioSemana}, fechaFinSemana: ${fechaFinSemana})`);
   }
-  
+
   let material = [
     "lectura",
     "adivinanzas",
@@ -5081,7 +5192,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   let newArray = flattenedActivities.filter(
     (activity) => !a.some((item) => item.id === activity.id)
   );
-  
+
   console.log(`Actividades después de filtrar duplicados (3K):`, newArray.length);
 
   let literarios, song;
@@ -5090,7 +5201,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   // Esto asegura que no se muestren datos de semanas anteriores
   const songInitialHTML = '<span data-interfazid="7"><svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 0.5C5.37258 0.5 0 5.87258 0 12.5C0 19.1274 5.37258 24.5 12 24.5C18.6274 24.5 24 19.1274 24 12.5C24 5.87258 18.6274 0.5 12 0.5ZM8.77007 15.5547V15.2475C8.77007 14.55 8.77423 13.8525 8.7784 13.155C8.78673 11.76 8.79507 10.365 8.77007 8.97004C8.75507 8.22004 9.34007 7.31254 10.1201 7.06504C10.4805 6.95201 10.8409 6.83856 11.2015 6.72508C12.9941 6.16085 14.7893 5.5958 16.6001 5.07754C17.4326 4.83754 18.0476 5.14504 18.0476 6.13504C18.0559 7.86416 18.0527 9.59097 18.0494 11.318C18.0468 12.6998 18.0442 14.0817 18.0476 15.465C18.0476 16.4175 17.5676 17.07 16.8251 17.5725C15.9851 18.1425 15.0476 18.3 14.0651 18.0675C12.4976 17.6925 12.0101 16.1175 13.0976 14.91C14.0576 13.845 15.2726 13.5375 16.6526 13.86C16.7351 13.8825 16.8176 13.905 16.9001 13.92V9.25504C16.9001 8.92504 16.6976 8.81254 16.3076 8.91754C15.8051 9.05254 15.3101 9.20254 14.8151 9.36004C13.4351 9.79504 12.0551 10.23 10.6826 10.6725C10.1051 10.86 9.94007 11.0925 9.93257 11.685C9.92507 13.4775 9.91757 15.27 9.90257 17.0625C9.88757 18.5925 8.73257 19.7925 7.20257 19.86C6.76757 19.8825 6.30257 19.8825 5.89007 19.7775C4.64507 19.4625 4.13507 18.2325 4.78007 17.1225C5.38007 16.0875 6.33257 15.5775 7.50257 15.4875C7.77159 15.468 8.04062 15.4931 8.32004 15.5191C8.46668 15.5328 8.61619 15.5468 8.77007 15.5547Z" fill="white" /></svg> Canción semanal</span>';
   const storieInitialHTML = '<span data-interfazid="8"><img src="img/literario.svg" alt="Material Literario" />Material literario</span>';
-  
+
   document.querySelectorAll(".curriculumcontent .week .day .song, .outter.week.flex .day .song").forEach((songEl) => {
     // Limpiar solo los data-attributes, pero restaurar el contenido HTML inicial
     Array.from(songEl.attributes).forEach(attr => {
@@ -5102,7 +5213,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     songEl.style.display = "none";
     songEl.style.opacity = "0";
   });
-  
+
   document.querySelectorAll(".curriculumcontent .week .day .storie, .outter.week.flex .day .storie").forEach((storieEl) => {
     // Limpiar solo los data-attributes, pero restaurar el contenido HTML inicial
     Array.from(storieEl.attributes).forEach(attr => {
@@ -5125,28 +5236,28 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   literarios = flattenedActivities.filter(
     (data) => {
       const tieneTipoCorrecto = material.includes(data.acf.tipo_de_actividad);
-      const tieneSemana = data.acf.semanas_a_las_que_pertence && 
-                         (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                          data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                          data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+      const tieneSemana = data.acf.semanas_a_las_que_pertence &&
+        (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+          data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+          data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
       return tieneTipoCorrecto && tieneSemana;
     }
   );
-  
+
   // Para semana 1, también buscar materiales literarios en la respuesta original de WordPress
   // Esto asegura que se incluyan incluso si fueron filtrados por fecha anteriormente
   if (esSemana1 && respOriginal) {
     const literariosOriginales = respOriginal.filter(
       (data) => {
         const tieneTipoCorrecto = material.includes(data.acf?.tipo_de_actividad);
-        const tieneSemana = data.acf?.semanas_a_las_que_pertence && 
-                           (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+        const tieneSemana = data.acf?.semanas_a_las_que_pertence &&
+          (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
         return tieneTipoCorrecto && tieneSemana;
       }
     );
-    
+
     // Agregar materiales literarios de la respuesta original que no estén ya en literarios
     literariosOriginales.forEach(lit => {
       if (!literarios.some(l => l.id === lit.id)) {
@@ -5155,7 +5266,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
     });
   }
-  
+
   // Log: Materiales literarios filtrados
   console.log(`[getInfo3k] MATERIALES LITERARIOS FILTRADOS:`, literarios);
 
@@ -5163,28 +5274,28 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   song = flattenedActivities.filter(
     (data) => {
       const tieneTipoCorrecto = data.acf.tipo_de_actividad == "canciones";
-      const tieneSemana = data.acf.semanas_a_las_que_pertence && 
-                         (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                          data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                          data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+      const tieneSemana = data.acf.semanas_a_las_que_pertence &&
+        (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+          data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+          data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
       return tieneTipoCorrecto && tieneSemana;
     }
   );
-  
+
   // Para semana 1, también buscar canciones en la respuesta original de WordPress
   // Esto asegura que se incluyan incluso si fueron filtradas por fecha anteriormente
   if (esSemana1 && respOriginal) {
     const cancionesOriginales = respOriginal.filter(
       (data) => {
         const tieneTipoCorrecto = data.acf?.tipo_de_actividad == "canciones";
-        const tieneSemana = data.acf?.semanas_a_las_que_pertence && 
-                           (data.acf.semanas_a_las_que_pertence.includes(weekStr) || 
-                            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
-                            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
+        const tieneSemana = data.acf?.semanas_a_las_que_pertence &&
+          (data.acf.semanas_a_las_que_pertence.includes(weekStr) ||
+            data.acf.semanas_a_las_que_pertence.includes(weekNum) ||
+            data.acf.semanas_a_las_que_pertence.some(s => String(s) === weekStr || Number(s) === weekNum));
         return tieneTipoCorrecto && tieneSemana;
       }
     );
-    
+
     // Agregar canciones de la respuesta original que no estén ya en song
     cancionesOriginales.forEach(cancion => {
       if (!song.some(s => s.id === cancion.id)) {
@@ -5193,7 +5304,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
       }
     });
   }
-  
+
   // Log: Canciones filtradas
   console.log(`[getInfo3k] CANCIONES FILTRADAS:`, song);
 
@@ -5203,9 +5314,9 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     document.querySelectorAll(".curriculumcontent .week .day, .outter.week.flex .day").forEach((dayElement) => {
       const dayDate = dayElement.getAttribute("data-date");
       const storieElement = dayElement.querySelector(".storie");
-      
+
       if (!storieElement) return;
-      
+
       // Asegurar que el contenido HTML inicial esté presente antes de actualizar
       if (!storieElement.innerHTML || storieElement.innerHTML.trim() === "") {
         // Verificar si tiene data-interfazid para usar la versión correcta del HTML
@@ -5216,7 +5327,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           storieElement.innerHTML = '<span><img src="img/momentos/material_literario.svg" alt="Material literario" /> Material literario</span>';
         }
       }
-      
+
       if (dayDate) {
         // Buscar material literario para este día específico
         const literarioForDay = literarios.find(l => {
@@ -5224,7 +5335,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           // Comparar fechas en formato DD/MM/YYYY
           return l.acf.dia_especifico === dayDate;
         });
-        
+
         if (literarioForDay) {
           // Actualizar solo este elemento con el material del día
           updateElementsWithData(
@@ -5296,14 +5407,14 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
     document.querySelectorAll(".curriculumcontent .week .day, .outter.week.flex .day").forEach((dayElement) => {
       const dayDate = dayElement.getAttribute("data-date");
       const songElement = dayElement.querySelector(".song");
-      
+
       if (!songElement) return;
-      
+
       // Asegurar que el contenido HTML inicial esté presente antes de actualizar
       if (!songElement.innerHTML || songElement.innerHTML.trim() === "") {
         songElement.innerHTML = songInitialHTML;
       }
-      
+
       if (dayDate) {
         // Buscar canción para este día específico
         const songForDay = song.find(s => {
@@ -5311,7 +5422,7 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
           // Comparar fechas en formato DD/MM/YYYY
           return s.acf.dia_especifico === dayDate;
         });
-        
+
         if (songForDay) {
           // Actualizar solo este elemento con la canción del día
           updateElementsWithData(
@@ -5377,10 +5488,10 @@ const getInfo3k = async (lang = "es", week = weekNumber) => {
   } else {
     console.log(`No se encontraron canciones para semana ${week} (3K)`);
   }
-  
+
   // Traducir inmediatamente después de agregar al DOM (igual que en getWeekDataNew)
   translateInDOM(lang);
-  
+
   addFunctionActivities();
 };
 
@@ -5821,46 +5932,46 @@ const addFunctionActivities = () => {
         }
       };
       const setMultimediaLink = () => {
-          // Obtener el idioma actual del DOM cuando se ejecuta la función (para currículo 3K)
-          const currentLang = document.getElementById("lang").value || "es";
-          
-          const sanitizeMultimediaUrl = (value) => {
-            if (!value) return "";
-            const trimmed = value.toString().trim();
-            return trimmed === "" ||
-              trimmed === "false" ||
-              trimmed === "undefined"
-              ? ""
-              : trimmed;
-          };
+        // Obtener el idioma actual del DOM cuando se ejecuta la función (para currículo 3K)
+        const currentLang = document.getElementById("lang").value || "es";
 
-          // Usar el idioma actual del DOM, no el parámetro lang
-          const preferred =
-            currentLang === "es"
-              ? activity.dataset.multimedia
-              : activity.dataset.multimedia_en;
-          const fallback =
-            currentLang === "es"
-              ? activity.dataset.multimedia_en
-              : activity.dataset.multimedia;
-
-          const multimediaURL =
-            sanitizeMultimediaUrl(preferred) ||
-            sanitizeMultimediaUrl(fallback);
-
-          if (multimediaURL) {
-            const finalUrl = `/miembros/print.php?file=${encodeURIComponent(multimediaURL)}&fileName=${get_alias(title)}`;
-            btnmulti.href = finalUrl;
-            btnmultiDownload.href = `/miembros/download.php?file=${encodeURIComponent(multimediaURL)}&fileName=${get_alias(title)}`;
-            btnmulti.style.display = "flex";
-            btnmultiDownload.style.display = "flex";
-          } else {
-            btnmulti.style.display = "none";
-            btnmultiDownload.style.display = "none";
-          }
+        const sanitizeMultimediaUrl = (value) => {
+          if (!value) return "";
+          const trimmed = value.toString().trim();
+          return trimmed === "" ||
+            trimmed === "false" ||
+            trimmed === "undefined"
+            ? ""
+            : trimmed;
         };
 
-        const setHeaderStyles = () => {
+        // Usar el idioma actual del DOM, no el parámetro lang
+        const preferred =
+          currentLang === "es"
+            ? activity.dataset.multimedia
+            : activity.dataset.multimedia_en;
+        const fallback =
+          currentLang === "es"
+            ? activity.dataset.multimedia_en
+            : activity.dataset.multimedia;
+
+        const multimediaURL =
+          sanitizeMultimediaUrl(preferred) ||
+          sanitizeMultimediaUrl(fallback);
+
+        if (multimediaURL) {
+          const finalUrl = `/miembros/print.php?file=${encodeURIComponent(multimediaURL)}&fileName=${get_alias(title)}`;
+          btnmulti.href = finalUrl;
+          btnmultiDownload.href = `/miembros/download.php?file=${encodeURIComponent(multimediaURL)}&fileName=${get_alias(title)}`;
+          btnmulti.style.display = "flex";
+          btnmultiDownload.style.display = "flex";
+        } else {
+          btnmulti.style.display = "none";
+          btnmultiDownload.style.display = "none";
+        }
+      };
+
+      const setHeaderStyles = () => {
         document.querySelector(".dialog-header").style.backgroundColor =
           colorstroke;
         document.querySelector("dialog .dialog-header h2.title").innerHTML =
@@ -5872,7 +5983,7 @@ const addFunctionActivities = () => {
       const setContent = async () => {
         // Obtener el idioma actual del DOM
         const currentLang = document.getElementById("lang").value || "es";
-        
+
         if (window.innerWidth > 768) {
           document.querySelector("#orientacion").setAttribute("open", true);
           document.querySelector("#desc").setAttribute("open", true);
@@ -5881,7 +5992,7 @@ const addFunctionActivities = () => {
         document.querySelector("#orientacion .cont").innerHTML = instrucciones;
         document.querySelector("#desc .cont").innerHTML = description;
         document.querySelector("#objetivo .cont").innerHTML = objetivos;
-        
+
         // Determinar qué imagen usar según el idioma
         let imageUrl = null;
         let fotoUrl = activity.getAttribute("data-foto");
@@ -5903,7 +6014,7 @@ const addFunctionActivities = () => {
             imageUrl = multimedia;
           }
         }
-        
+
         if (imageUrl) {
           // Mostrar imagen
           document.querySelector(".foto img").style.display = "block";
@@ -6180,7 +6291,7 @@ function getDateFromWeekNumber(weekNumber, year) {
     const startOfYear = new Date(year, 0, 1);
     const pastDaysOfYear = (ultimoDiaDelAno - startOfYear) / 86400000;
     const ultimaSemanaDelAno = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
-    
+
     // Si el año no tiene semana 53, usar semana 1 del año siguiente
     if (ultimaSemanaDelAno < 53) {
       year = year + 1;
@@ -6191,7 +6302,7 @@ function getDateFromWeekNumber(weekNumber, year) {
   // Calcular la fecha del primer lunes del año usando getFirstDayOfWeek
   var januaryFirst = new Date(year, 0, 1);
   var firstDayOfWeekYear = getFirstDayOfWeek(januaryFirst);
-  
+
   // Si la semana es 1, verificar si realmente pertenece al año proporcionado
   // o si debería ser del año siguiente (cuando cruza el año)
   if (weekNumber === 1) {
@@ -6202,14 +6313,14 @@ function getDateFromWeekNumber(weekNumber, year) {
       // Calcular el lunes de la semana que contiene el 1 de enero del año siguiente
       year = year + 1;
       januaryFirst = new Date(year, 0, 1);
-      
+
       // Caso especial: para el año 2027, la semana 1 del 2026 debe iniciar el 29 de diciembre de 2026
       // El usuario especifica que la semana debe iniciar el 29 de diciembre y terminar el 2 de enero
       // Retornar directamente el 29 de diciembre de 2026 como fecha de inicio
       if (year === 2027) {
         return new Date(2026, 11, 29); // 29 de diciembre de 2026
       }
-      
+
       // Para otros años, usar el cálculo estándar
       return getFirstDayOfWeek(januaryFirst);
     }
@@ -6230,7 +6341,7 @@ function getOtherWeek(el) {
       .querySelectorAll(".containerActivities")
       .forEach((el) => (el.innerHTML = ""));
     let valueWeek = el.value;
-    
+
     // Obtener la fecha de inicio directamente del texto del select para evitar problemas con años cruzados
     let firstDayCurrentWeek = null;
     const semanaSelect = document.getElementById('semanaSelect');
@@ -6248,7 +6359,7 @@ function getOtherWeek(el) {
         console.log('Primer día de la semana calculado desde texto del select:', firstDayCurrentWeek, 'año:', year);
       }
     }
-    
+
     // Si no se pudo obtener del select, usar getDateFromWeekNumber como fallback
     if (!firstDayCurrentWeek) {
       let targetYear = null;
@@ -6263,7 +6374,7 @@ function getOtherWeek(el) {
         targetYear = new Date().getFullYear();
       }
       let currentDate = getDateFromWeekNumber(valueWeek, targetYear);
-      
+
       // Caso especial: si es la semana 1 del 2026 que cruza al 2027, 
       // getDateFromWeekNumber retorna el 29 de diciembre directamente
       // No ajustar al lunes anterior en este caso
@@ -6274,10 +6385,10 @@ function getOtherWeek(el) {
       }
       console.log('Primer día de la semana calculado con getDateFromWeekNumber:', firstDayCurrentWeek);
     }
-    
+
     var daysOfWeek = document.querySelectorAll(".outter.week.flex .day");
     var dayIncrement = 0;
-    
+
     for (var i = 0; i < daysOfWeek.length; i++) {
       var day = daysOfWeek[i];
       var date = new Date(firstDayCurrentWeek);
@@ -6303,7 +6414,7 @@ function getOtherWeek(el) {
       curriculumContent.innerHTML += generateDayHTML(day.data, day.es);
     });
     let valueWeek = el.value;
-    
+
     // Obtener la fecha de inicio directamente del texto del select para evitar problemas con años cruzados
     let firstDayCurrentWeek = null;
     const semanaSelect = document.getElementById('semanaSelect');
@@ -6321,7 +6432,7 @@ function getOtherWeek(el) {
         console.log('Primer día de la semana calculado desde texto del select (3K):', firstDayCurrentWeek, 'año:', year);
       }
     }
-    
+
     // Si no se pudo obtener del select, usar getDateFromWeekNumber como fallback
     if (!firstDayCurrentWeek) {
       let targetYear = null;
@@ -6336,7 +6447,7 @@ function getOtherWeek(el) {
         targetYear = new Date().getFullYear();
       }
       let currentDate = getDateFromWeekNumber(valueWeek, targetYear);
-      
+
       // Caso especial: si es la semana 1 del 2026 que cruza al 2027, 
       // getDateFromWeekNumber retorna el 29 de diciembre directamente
       // No ajustar al lunes anterior en este caso
@@ -6347,7 +6458,7 @@ function getOtherWeek(el) {
       }
       console.log('Primer día de la semana calculado con getDateFromWeekNumber (3K):', firstDayCurrentWeek);
     }
-    
+
     var daysOfWeek = document.querySelectorAll(".outter.week.flex .day");
     var dayIncrement = 0;
     for (var i = 0; i < daysOfWeek.length; i++) {
@@ -6412,7 +6523,7 @@ function getWeekNumberD(date) {
       // Verificar si la fecha está realmente en el año siguiente
       const primerDiaAnoSiguiente = new Date(year + 1, 0, 1);
       const diasDesdeInicioAnoSiguiente = (date - primerDiaAnoSiguiente) / 86400000;
-      
+
       if (diasDesdeInicioAnoSiguiente >= 0) {
         // La fecha está en el año siguiente, calcular semana 1
         const startOfNextYear = new Date(year + 1, 0, 1);
@@ -6471,12 +6582,12 @@ function getFormattedWeek(startDate) {
 function getWeekNumberFromDates(startDate, endDate) {
   const startYear = startDate.getFullYear();
   const endYear = endDate.getFullYear();
-  
+
   // Si las fechas cruzan el año, la semana pertenece al año siguiente (semana 1)
   if (startYear !== endYear) {
     return 1;
   }
-  
+
   // Si están en el mismo año, calcular la semana normalmente
   return getWeekNumberD(startDate);
 }
@@ -6532,10 +6643,10 @@ if (select) {
     previousWeekStart.setDate(firstDayCurrentWeek.getDate() - (i * 7));
     const previousWeek = getFormattedWeek(previousWeekStart);
     const previousWeekNumber = getWeekNumberFromFormattedDates(previousWeek.start, previousWeek.end);
-  weeks.push({
+    weeks.push({
       text: `Semana ${previousWeek.start} al ${previousWeek.end}`,
       value: previousWeekNumber,
-  });
+    });
   }
 
   // Semana actual
@@ -6544,7 +6655,7 @@ if (select) {
   let weekToUse = firstDayCurrentWeek;
   const currentWeekTemp = getFormattedWeek(firstDayCurrentWeek);
   const currentWeekNumberTemp = getWeekNumberFromFormattedDates(currentWeekTemp.start, currentWeekTemp.end);
-  
+
   // Si la semana es 1 y estamos en diciembre, puede ser la semana 1 del año siguiente
   // También verificar si estamos cerca del fin de año (día 25 o después de diciembre)
   const currentDate = new Date();
@@ -6565,7 +6676,7 @@ if (select) {
       weekToUse = week1NextYear;
     }
   }
-  
+
   const currentWeek = getFormattedWeek(weekToUse);
   const currentWeekNumber = getWeekNumberFromFormattedDates(currentWeek.start, currentWeek.end);
   weeks.push({
@@ -6573,26 +6684,26 @@ if (select) {
     value: currentWeekNumber,
     selected: true,
   });
-  
+
   // Actualizar firstDayCurrentWeek para que las semanas siguientes se calculen correctamente
   firstDayCurrentWeek = weekToUse;
 
   // Determinar cuántas semanas futuras mostrar según el dominio del correo
   // Si el correo es de bilingualchildcaretraining.com, mostrar 6 semanas futuras
   // De lo contrario, mostrar 4 semanas futuras (comportamiento por defecto)
-  const isBilingualEmail = typeof correo_usuario !== 'undefined' && 
-                            correo_usuario.indexOf('@bilingualchildcaretraining.com') !== -1;
+  const isBilingualEmail = typeof correo_usuario !== 'undefined' &&
+    correo_usuario.indexOf('@bilingualchildcaretraining.com') !== -1;
   const futureWeeksCount = isBilingualEmail ? 6 : 4;
 
   // Generar las semanas siguientes
   for (let i = 1; i <= futureWeeksCount; i++) {
-  const nextWeekStart = new Date(firstDayCurrentWeek);
+    const nextWeekStart = new Date(firstDayCurrentWeek);
     nextWeekStart.setDate(firstDayCurrentWeek.getDate() + (i * 7));
-  const nextWeek = getFormattedWeek(nextWeekStart);
+    const nextWeek = getFormattedWeek(nextWeekStart);
     const nextWeekNumber = getWeekNumberFromFormattedDates(nextWeek.start, nextWeek.end);
-  weeks.push({
-    text: `Semana ${nextWeek.start} al ${nextWeek.end}`,
-    value: nextWeekNumber,
+    weeks.push({
+      text: `Semana ${nextWeek.start} al ${nextWeek.end}`,
+      value: nextWeekNumber,
     });
   }
 
@@ -7368,7 +7479,7 @@ async function validateDaycareNameStrapi(daycareName, daycareState) {
 
         if (text.trim() === "") {
           console.warn("Respuesta vacía para:", word);
-          continue; 
+          continue;
         }
 
         const data = JSON.parse(text);
@@ -7491,31 +7602,31 @@ function initAsideCurriculum() {
       "material_adicional",
       "actividades_gratis",
     ];
-    
+
     console.log("IDs a procesar:", ids);
 
     // Usar delegación de eventos en el contenedor padre (método principal)
     const iconsContainer = asideElement.querySelector(".icons");
     console.log("iconsContainer encontrado:", !!iconsContainer);
-    
+
     if (iconsContainer && !iconsContainer.dataset.delegationAdded) {
       console.log("Agregando delegación de eventos a iconsContainer");
       iconsContainer.addEventListener("click", function (e) {
         console.log("Click detectado en iconsContainer, target:", e.target);
         const clickedItem = e.target.closest("li[id]");
         console.log("clickedItem encontrado:", clickedItem ? clickedItem.id : null);
-        
+
         if (clickedItem && ids.includes(clickedItem.id)) {
           const id = clickedItem.id;
           const dialogId = `aside-dialog-${id}`;
           const dialog = document.getElementById(dialogId);
-          
+
           console.log(`Intentando abrir diálogo: ${dialogId}`, { dialog: !!dialog });
-          
+
           if (dialog) {
             e.stopPropagation();
             console.log(`Click detected via delegation on item: ${id}`);
-            
+
             // Función para abrir el diálogo
             function openDialog() {
               console.log(`Abriendo diálogo: ${dialogId}`);
@@ -7536,7 +7647,7 @@ function initAsideCurriculum() {
               asideElement.classList.add("no-hover");
               main.classList.add("background");
             }
-            
+
             openDialog();
           } else {
             console.error(`Diálogo ${dialogId} no encontrado`);
@@ -7639,7 +7750,7 @@ function initAsideCurriculum() {
       item.style.cursor = "pointer";
       item.setAttribute("role", "button");
       item.setAttribute("tabindex", "0");
-      
+
       // Permitir activación con Enter/Space
       item.addEventListener("keydown", function (e) {
         if (e.key === "Enter" || e.key === " ") {
@@ -7693,7 +7804,7 @@ function tryInitAsideCurriculum() {
 if (document.readyState === 'loading') {
   // El DOM aún no está completamente cargado
   console.log("DOM aún cargando, esperando DOMContentLoaded");
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     console.log("DOMContentLoaded disparado, ejecutando initAsideCurriculum");
     tryInitAsideCurriculum();
   });
@@ -7701,13 +7812,13 @@ if (document.readyState === 'loading') {
   // El DOM ya está cargado, ejecutar inmediatamente
   console.log("DOM ya está cargado, ejecutando initAsideCurriculum inmediatamente");
   // Usar setTimeout para asegurar que todos los elementos estén disponibles
-  setTimeout(function() {
+  setTimeout(function () {
     tryInitAsideCurriculum();
   }, 100);
 }
 
 // También intentar ejecutar después de un delay adicional como respaldo
-setTimeout(function() {
+setTimeout(function () {
   console.log("Ejecutando initAsideCurriculum como respaldo después de 1 segundo");
   tryInitAsideCurriculum();
 }, 1000);
@@ -7741,7 +7852,7 @@ if (popupForm) {
 function confirmCancelSubscription(paypalId, subscriptionId) {
   // Verificar si el modal existe, si no, crearlo dinámicamente
   var modal = document.getElementById("cancelModalPaypal");
-  
+
   if (!modal) {
     // Crear el modal dinámicamente
     modal = document.createElement("div");
@@ -7755,7 +7866,7 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
     modal.style.height = "100%";
     modal.style.overflow = "auto";
     modal.style.backgroundColor = "rgba(0,0,0,0.4)";
-    
+
     modal.innerHTML = `
       <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -7770,7 +7881,7 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(modal);
   }
 
@@ -7827,7 +7938,7 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
         confirmButton.style.backgroundColor = "#5cb85c";
         confirmButton.style.borderColor = "#5cb85c";
         confirmButton.style.color = "white";
-        
+
         if (cancelMessage) {
           cancelMessage.style.display = "block";
           cancelMessage.style.backgroundColor = "#d4edda";
@@ -7873,7 +7984,7 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
     var newCloseButton = closeButton.cloneNode(true);
     closeButton.parentNode.replaceChild(newCloseButton, closeButton);
     closeButton = newCloseButton;
-    
+
     closeButton.onclick = function () {
       modal.style.display = "none";
       if (cancelMessage) {
@@ -7887,7 +7998,7 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
     var newSpan = span.cloneNode(true);
     span.parentNode.replaceChild(newSpan, span);
     span = newSpan;
-    
+
     span.onclick = function () {
       modal.style.display = "none";
       if (cancelMessage) {
@@ -8046,50 +8157,50 @@ const birthdateInput = document.getElementById("birthdate");
 const birthdateError = document.getElementById("birthdate-error");
 
 const setBirthdateLimits = () => {
-    if (!birthdateInput) return;
-    const today = new Date();
-    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-    birthdateInput.max = maxDate.toISOString().split("T")[0];
-    birthdateInput.min = "1900-01-01";
+  if (!birthdateInput) return;
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+  birthdateInput.max = maxDate.toISOString().split("T")[0];
+  birthdateInput.min = "1900-01-01";
 };
 
 const isAdult = (dateValue) => {
-        const dob = new Date(dateValue);
-        if (Number.isNaN(dob.getTime())) {
-            return false;
-        }
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const monthDiff = today.getMonth() - dob.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-            age--;
-        }
-        return age >= 18;
+  const dob = new Date(dateValue);
+  if (Number.isNaN(dob.getTime())) {
+    return false;
+  }
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age >= 18;
 };
 
 const validateBirthdate = () => {
-        if (!birthdateInput || !birthdateError) return true;
-        if (!birthdateInput.value) {
-            birthdateError.style.display = "none";
-            return false;
-        }
-        const adult = isAdult(birthdateInput.value);
-        birthdateError.style.display = adult ? "none" : "block";
-        return adult;
+  if (!birthdateInput || !birthdateError) return true;
+  if (!birthdateInput.value) {
+    birthdateError.style.display = "none";
+    return false;
+  }
+  const adult = isAdult(birthdateInput.value);
+  birthdateError.style.display = adult ? "none" : "block";
+  return adult;
 };
 
 setBirthdateLimits();
 
 if (birthdateInput) {
-    birthdateInput.addEventListener("change", validateBirthdate);
+  birthdateInput.addEventListener("change", validateBirthdate);
 }
 if (registerForm) {
-    registerForm.addEventListener("submit", function (event) {
-        if (!validateBirthdate()) {
-            event.preventDefault();
-            birthdateInput.focus();
-        }
-    });
+  registerForm.addEventListener("submit", function (event) {
+    if (!validateBirthdate()) {
+      event.preventDefault();
+      birthdateInput.focus();
+    }
+  });
 }
 
 function toggleButton() {

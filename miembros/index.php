@@ -16,7 +16,7 @@ if (isset($_SESSION['user'])) {
 
 // Si no hay sesión activa, continuar mostrando el from de login
 $classBody = "login";
-include 'includes/header.php'; 
+include 'includes/header.php';
 ?>
 <main>
     <form action="s/login/" method="POST" id="loginB" autocomplete="off">
@@ -28,7 +28,7 @@ include 'includes/header.php';
                 E-mail
             </label>
             <input type="email" placeholder="name@mail.com" name="email" id="email"
-                value="<?=isset($_GET['email']) ?  $_GET['email'] : ""?>"
+                value="<?= isset($_GET['email']) ? $_GET['email'] : "" ?>"
                 oninput="this.value = this.value.toLowerCase()" />
         </span>
         <span>
@@ -58,6 +58,26 @@ include 'includes/header.php';
         <a href="/miembros/recuperar-contrasena" class="link">Recuperar Contraseña</a>
         <a href="/" class="link register">Volver al inicio</a>
     </form>
+
+    <form action="s/verify_2fa/" method="POST" id="form2fa" autocomplete="off" style="display:none;">
+        <h1>Verificación de Dos Pasos</h1>
+        <p>Hemos enviado un código de verificación a tu correo electrónico.</p>
+        <span>
+            <label for="code">Código de Verificación</label>
+            <input type="text" placeholder="123456" name="code" id="code" maxlength="6" required />
+        </span>
+        <div class="noAccount" id="error2fa">
+            Código incorrecto
+        </div>
+
+        <div style="margin-bottom: 20px; text-align: right; font-size: 0.9em;">
+            <a href="#" id="resendCode" class="link"
+                style="pointer-events: none; color: #aaa; text-decoration: none;">Reenviar código en 60s</a>
+        </div>
+
+        <button type="submit">VERIFICAR</button>
+        <button type="button" onclick="location.reload()" class="link register">Volver</button>
+    </form>
 </main>
 <?php include 'includes/disclaimer-cookies.php'; ?>
-<?php include 'includes/footer.php';  ?>
+<?php include 'includes/footer.php'; ?>

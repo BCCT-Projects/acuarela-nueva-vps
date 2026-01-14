@@ -493,3 +493,200 @@
 [2026-01-13 17:06:31] CACHE HIT | Data: age: 1825s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
 [2026-01-13 17:06:31] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
 [2026-01-13 17:06:31] CACHE HIT | Data: age: 1823s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:43:42] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:43:42] CACHE EXPIRED | Data: age: 14856s > TTL: 3600s
+[2026-01-13 20:43:44] API CALL OK | Data: HTTP: 200, time: 1807ms, saved: yes
+[2026-01-13 20:43:44] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:43:44] CACHE EXPIRED | Data: age: 14856s > TTL: 3600s
+[2026-01-13 20:43:45] API CALL OK | Data: HTTP: 200, time: 980ms, saved: yes
+[2026-01-13 20:43:45] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:43:45] CACHE HIT | Data: age: 1s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:43:45] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:43:45] CACHE HIT | Data: age: 0s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:11] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:11] CACHE HIT | Data: age: 27s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:11] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:11] CACHE HIT | Data: age: 26s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:21] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:21] CACHE HIT | Data: age: 37s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:21] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:21] CACHE HIT | Data: age: 36s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:21] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:21] CACHE HIT | Data: age: 37s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:21] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:21] CACHE HIT | Data: age: 36s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:27] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:27] CACHE HIT | Data: age: 43s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:27] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:27] CACHE HIT | Data: age: 42s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:47] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:47] CACHE HIT | Data: age: 63s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:47] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:47] CACHE HIT | Data: age: 62s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:47] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:47] CACHE HIT | Data: age: 63s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:47] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:47] CACHE HIT | Data: age: 62s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:44:55] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:44:55] CACHE HIT | Data: age: 71s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:44:55] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:44:55] CACHE HIT | Data: age: 70s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:45:52] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:45:52] CACHE HIT | Data: age: 128s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:45:52] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:45:52] CACHE HIT | Data: age: 127s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:45:52] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 20:45:52] CACHE EXPIRED | Data: age: 14983s > TTL: 3600s
+[2026-01-13 20:45:53] API CALL OK | Data: HTTP: 200, time: 1083ms, saved: yes
+[2026-01-13 20:45:54] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:45:54] CACHE HIT | Data: age: 130s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:45:54] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:45:54] CACHE HIT | Data: age: 129s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:46:07] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:46:07] CACHE HIT | Data: age: 143s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:46:07] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:46:07] CACHE HIT | Data: age: 142s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:47:44] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:47:44] CACHE HIT | Data: age: 240s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:47:44] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:47:44] CACHE HIT | Data: age: 239s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:47:44] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 20:47:44] CACHE HIT | Data: age: 111s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 20:47:45] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:47:45] CACHE HIT | Data: age: 241s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:47:45] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:47:45] CACHE HIT | Data: age: 240s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:51:33] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:51:33] CACHE HIT | Data: age: 469s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:51:33] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:51:33] CACHE HIT | Data: age: 468s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:52:03] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:52:03] CACHE HIT | Data: age: 499s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:52:03] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:52:03] CACHE HIT | Data: age: 498s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:52:06] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:52:06] CACHE HIT | Data: age: 502s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:52:06] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:52:06] CACHE HIT | Data: age: 501s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:52:06] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 20:52:06] CACHE HIT | Data: age: 373s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 20:52:06] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:52:06] CACHE HIT | Data: age: 502s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:52:06] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:52:06] CACHE HIT | Data: age: 501s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:52:24] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:52:24] CACHE HIT | Data: age: 520s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:52:24] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:52:24] CACHE HIT | Data: age: 519s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:52:31] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:52:31] CACHE HIT | Data: age: 527s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:52:31] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:52:31] CACHE HIT | Data: age: 526s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:57:59] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:57:59] CACHE HIT | Data: age: 855s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:57:59] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:57:59] CACHE HIT | Data: age: 854s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:57:59] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 20:57:59] CACHE HIT | Data: age: 726s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 20:58:00] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:00] CACHE HIT | Data: age: 856s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:00] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:00] CACHE HIT | Data: age: 855s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:58:15] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:15] CACHE HIT | Data: age: 871s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:15] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:15] CACHE HIT | Data: age: 870s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:58:25] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:25] CACHE HIT | Data: age: 881s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:25] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:25] CACHE HIT | Data: age: 880s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:58:25] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:25] CACHE HIT | Data: age: 881s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:25] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:25] CACHE HIT | Data: age: 880s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:58:40] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:40] CACHE HIT | Data: age: 896s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:40] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:40] CACHE HIT | Data: age: 895s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:58:59] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:58:59] CACHE HIT | Data: age: 915s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:58:59] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:58:59] CACHE HIT | Data: age: 914s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 20:59:20] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 20:59:20] CACHE HIT | Data: age: 936s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 20:59:20] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 20:59:20] CACHE HIT | Data: age: 935s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:05:31] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:05:31] CACHE HIT | Data: age: 1307s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:05:31] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:05:31] CACHE HIT | Data: age: 1306s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:05:31] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 21:05:31] CACHE HIT | Data: age: 1178s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 21:05:31] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:05:31] CACHE HIT | Data: age: 1307s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:05:31] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:05:31] CACHE HIT | Data: age: 1306s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:05:49] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:05:49] CACHE HIT | Data: age: 1325s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:05:49] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:05:49] CACHE HIT | Data: age: 1324s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:12:41] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:12:41] CACHE HIT | Data: age: 1737s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:12:41] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:12:41] CACHE HIT | Data: age: 1736s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:12:42] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:12:42] CACHE HIT | Data: age: 1738s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:12:42] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:12:42] CACHE HIT | Data: age: 1737s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:12:55] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:12:55] CACHE HIT | Data: age: 1751s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:12:55] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:12:55] CACHE HIT | Data: age: 1750s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:17:18] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:17:18] CACHE HIT | Data: age: 2014s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:17:18] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:17:18] CACHE HIT | Data: age: 2013s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:17:19] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:17:19] CACHE HIT | Data: age: 2015s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:17:19] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:17:19] CACHE HIT | Data: age: 2014s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:17:49] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:17:49] CACHE HIT | Data: age: 2045s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:17:49] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:17:49] CACHE HIT | Data: age: 2044s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:18:55] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:18:55] CACHE HIT | Data: age: 2111s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:18:55] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:18:55] CACHE HIT | Data: age: 2110s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:19:07] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:19:07] CACHE HIT | Data: age: 2123s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:19:07] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:19:07] CACHE HIT | Data: age: 2122s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:20:03] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:20:03] CACHE HIT | Data: age: 2179s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:20:03] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:20:03] CACHE HIT | Data: age: 2178s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:20:03] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 21:20:03] CACHE HIT | Data: age: 2050s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 21:20:03] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:20:03] CACHE HIT | Data: age: 2179s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:20:03] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:20:03] CACHE HIT | Data: age: 2178s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:20:22] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:20:22] CACHE HIT | Data: age: 2198s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:20:22] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:20:22] CACHE HIT | Data: age: 2197s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:20:46] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:20:46] CACHE HIT | Data: age: 2222s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:20:46] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:20:46] CACHE HIT | Data: age: 2221s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:26:36] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:26:36] CACHE HIT | Data: age: 2572s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:26:36] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:26:36] CACHE HIT | Data: age: 2571s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
+[2026-01-13 21:26:36] queryWorpress llamado | Data: formas-bcct?per_page=100
+[2026-01-13 21:26:36] CACHE HIT | Data: age: 2443s, file: 8f80b0f17e2b087005b03a4f7d969d22
+[2026-01-13 21:26:36] queryWorpress llamado | Data: gruposdeedad?per_page=100
+[2026-01-13 21:26:36] CACHE HIT | Data: age: 2572s, file: cbf4f0b5d31a7acc41849d7262d0fd3c
+[2026-01-13 21:26:36] queryWorpress llamado | Data: momentoaprendizaje?per_page=100
+[2026-01-13 21:26:36] CACHE HIT | Data: age: 2571s, file: b9dcb9e8d7a9aca5ab01004af9ed9ee4
