@@ -192,28 +192,89 @@ if (document.getElementById("photo")) {
       wrapper.classList.add("loading");
       const file = event.target.files[0];
       if (file) {
+        if (file.size === 0) {
+          document.getElementById("photo").value = "";
+          wrapper.classList.remove("loading");
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo vacío",
+              text: "El archivo seleccionado está vacío o corrupto.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("El archivo seleccionado está vacío o corrupto.");
+          }
+          return;
+        }
+
+        const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+          document.getElementById("photo").value = "";
+          wrapper.classList.remove("loading");
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Formato incorrecto",
+              text: "Solo se permiten imágenes (JPG, PNG, WebP) para la foto de perfil.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("Solo se permiten imágenes (JPG, PNG, WebP).");
+          }
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          document.getElementById("photo").value = "";
+          wrapper.classList.remove("loading");
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo muy pesado",
+              text: "El archivo no permite imágenes de más de 5MB.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("La imagen excede el límite de 5MB.");
+          }
+          return;
+        }
         const reader = new FileReader();
         reader.readAsDataURL(file);
 
-        // Upload image to the server
+        // Upload image to the server securely
         try {
           let formData = new FormData();
           formData.append("files", file, file.name);
-          const response = await fetch("https://acuarelacore.com/api/upload/", {
+          const response = await fetch("s/uploadFile/", {
             method: "POST",
             body: formData,
-            // Note: Do not set the Content-Type header. The browser will set it automatically.
           });
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
+
           const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || "Error en la subida");
+          }
+
           document.querySelector("#photoID").value = result[0].id;
           wrapper.style.backgroundImage = `url(https://acuarelacore.com/api${result[0].url})`;
           wrapper.classList.remove("loading");
         } catch (error) {
           console.error("Error occurred while making network request: ", error);
-          // handle the error
+          wrapper.classList.remove("loading");
+
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Error al subir imagen",
+              text: error.message || "No se pudo subir la imagen.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert(error.message);
+          }
         }
       }
     });
@@ -479,7 +540,7 @@ function get_alias(str) {
 }
 
 document.querySelectorAll('.calendar-icon').forEach(button => {
-  button.addEventListener('click', function() {
+  button.addEventListener('click', function () {
     // Encuentra el input asociado al botón actual
     let input = button.previousElementSibling;
     if (input && input.type === 'date') {
@@ -498,8 +559,8 @@ function checkOtherOption(selectElement) {
   var otherSpan = selectElement.parentNode.nextElementSibling;
 
   if (selectElement.value === "Otra/o") {
-      otherSpan.style.display = "flex";
+    otherSpan.style.display = "flex";
   } else {
-      otherSpan.style.display = "none";
+    otherSpan.style.display = "none";
   }
 }

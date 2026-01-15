@@ -26,7 +26,9 @@ RUN echo "AddType text/css .css" >> /etc/apache2/apache2.conf \
 RUN echo "display_errors = On" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
     && echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
     && echo "session.save_handler = files" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
-    && echo "session.save_path = /tmp" >> /usr/local/etc/php/conf.d/docker-php-custom.ini
+    && echo "session.save_path = /tmp" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
+    && echo "upload_max_filesize = 20M" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
+    && echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/docker-php-custom.ini
 
 # Copiar el código al contenedor
 COPY . /var/www/html/

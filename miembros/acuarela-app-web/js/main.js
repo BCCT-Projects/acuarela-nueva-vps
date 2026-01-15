@@ -220,7 +220,7 @@ const handleInscripcion = async () => {
       });
       return;
     }
-    
+
     if (emailField.value && emailField.value.trim() !== "" && !isValidEmail(emailField.value)) {
       fadeOut(preloader);
       Swal.fire({
@@ -246,7 +246,7 @@ const handleInscripcion = async () => {
   if (isComplete) {
     const coppaConsent = document.getElementById("coppa_consent");
     const coppaVersion = document.getElementById("coppa_notice_version")?.value;
-    
+
     if (!coppaConsent || !coppaConsent.checked) {
       fadeOut(preloader);
       Swal.fire({
@@ -267,7 +267,7 @@ const handleInscripcion = async () => {
       });
       return;
     }
-    
+
     if (!coppaVersion || coppaVersion.trim() === "") {
       fadeOut(preloader);
       Swal.fire({
@@ -5541,6 +5541,57 @@ document.addEventListener("DOMContentLoaded", () => {
       const files = Array.from(event.target.files); // Convierte FileList a array
       imagePreview.innerHTML = ""; // Limpia las imágenes previas
 
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      for (const file of files) {
+        if (file.size === 0) {
+          imageInput.value = "";
+          imagePreview.innerHTML = "";
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo vacío",
+              text: "El archivo seleccionado está vacío o corrupto.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("El archivo seleccionado está vacío o corrupto.");
+          }
+          return;
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+          imageInput.value = "";
+          imagePreview.innerHTML = "";
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo no permitido",
+              text: "Solo se permiten imágenes (JPG, PNG, WebP). Para documentos use la sección de adjuntos.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("Solo se permiten imágenes (JPG, PNG, WebP).");
+          }
+          return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          imageInput.value = "";
+          imagePreview.innerHTML = "";
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo muy pesado",
+              text: "El archivo no permite imágenes de más de 5MB.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert("El archivo no permite imágenes de más de 5MB.");
+          }
+          return;
+        }
+      }
+
       files.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -5663,6 +5714,25 @@ document.addEventListener("DOMContentLoaded", () => {
         imageError.style.display = "none";
       }
 
+      // Validación redundante de tamaño (defensa en profundidad)
+      for (let i = 0; i < images.length; i++) {
+        if (images[i].size > 5 * 1024 * 1024) {
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "Archivo muy pesado",
+              text: "El archivo no permite imágenes de más de 5MB.",
+              icon: "error",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert(`El archivo ${images[i].name} excede el límite de 5MB.`);
+          }
+          isValid = false;
+          imageInput.value = ""; // Limpiar para obligar a reseleccionar
+          break;
+        }
+      }
+
       // Validar actividad seleccionada
       const selectedActivity = activitiesListContainer.querySelector(
         ".activity-item.selected"
@@ -5713,9 +5783,44 @@ document.addEventListener("DOMContentLoaded", () => {
           console.log(result);
         } else {
           console.error(result.error);
+          // Restaurar botón
+          publishButton.textContent = "Publicar";
+          publishButton.disabled = false;
+
+          // Mostrar notificación de error al usuario
+          if (typeof Swal !== 'undefined') {
+            Swal.fire({
+              title: "No se pudo publicar",
+              text: result.error || "Ocurrió un error al procesar tu solicitud.",
+              icon: "error",
+              confirmButtonText: "Entendido",
+              background: "#f0feff",
+              color: "#333",
+              confirmButtonColor: "#0cb5c3",
+            });
+          } else {
+            alert(result.error || "Ocurrió un error al procesar tu solicitud.");
+          }
         }
       } catch (error) {
         console.error("Error en la solicitud:", error);
+        // Restaurar botón
+        publishButton.textContent = "Publicar";
+        publishButton.disabled = false;
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: "Error de conexión",
+            text: "Hubo un problema al conectar con el servidor. Por favor intenta de nuevo.",
+            icon: "error",
+            confirmButtonText: "Entendido",
+            background: "#f0feff",
+            color: "#333",
+            confirmButtonColor: "#0cb5c3",
+          });
+        } else {
+          alert("Hubo un problema al conectar con el servidor.");
+        }
       }
     });
   }
@@ -5762,6 +5867,58 @@ document.addEventListener("DOMContentLoaded", () => {
         fadeIn(preloader);
         const file = event.target.files[0];
         if (file) {
+          if (file.size === 0) {
+            this.value = "";
+            this.classList.remove("selected");
+            fadeOut(preloader);
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: "Archivo vacío",
+                text: "El archivo seleccionado está vacío o corrupto.",
+                icon: "error",
+                confirmButtonColor: "#0cb5c3",
+              });
+            } else {
+              alert("El archivo seleccionado está vacío o corrupto.");
+            }
+            return;
+          }
+
+          const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+          if (!allowedTypes.includes(file.type)) {
+            this.value = ""; // Limpia el input
+            this.classList.remove("selected");
+            fadeOut(preloader);
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: "Formato no válido",
+                text: "Por favor, selecciona una imagen (JPG, PNG, WebP) o un documento PDF.",
+                icon: "error",
+                confirmButtonColor: "#0cb5c3",
+              });
+            } else {
+              alert("Solo se permiten imágenes (JPG, PNG, WebP) o PDF.");
+            }
+            return;
+          }
+
+          if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            this.value = "";
+            this.classList.remove("selected");
+            fadeOut(preloader);
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: "Archivo muy pesado",
+                text: "El archivo no permite imágenes o documentos de más de 5MB.",
+                icon: "error",
+                confirmButtonColor: "#0cb5c3",
+              });
+            } else {
+              alert(`El archivo excede el límite de 5MB.`);
+            }
+            return;
+          }
+
           const reader = new FileReader();
           reader.readAsDataURL(file);
 
@@ -5770,17 +5927,19 @@ document.addEventListener("DOMContentLoaded", () => {
             let formData = new FormData();
             formData.append("files", file, file.name);
             const response = await fetch(
-              "https://acuarelacore.com/api/upload/",
+              "s/uploadFile/",
               {
                 method: "POST",
                 body: formData,
-                // Note: Do not set the Content-Type header. The browser will set it automatically.
               }
             );
-            if (!response.ok) {
-              throw new Error("Network response was not ok");
-            }
+
             const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.error || "Network response was not ok");
+            }
+
             const inputWrapper = event.target.closest(".wrapper");
             const inputID = inputWrapper.querySelector('input[type="hidden"]');
             const label = inputWrapper.querySelector("label");
@@ -5801,7 +5960,17 @@ document.addEventListener("DOMContentLoaded", () => {
               "Error occurred while making network request: ",
               error
             );
-            // handle the error
+            fadeOut(preloader);
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: "Error al subir archivo",
+                text: error.message || "No se pudo subir el archivo.",
+                icon: "error",
+                confirmButtonColor: "#0cb5c3",
+              });
+            } else {
+              alert(error.message);
+            }
           }
         } else {
           fadeOut(preloader);

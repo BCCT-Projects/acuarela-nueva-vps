@@ -344,10 +344,12 @@ $inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
         foreach ($additionalFiles as $fileId => $labelText) {
           // Verificar si el archivo ya existe en $inscripcion->files
           $exists = false;
-          foreach ($inscripcion->files as $file) {
-            if ($file->name === $fileId) {
-              $exists = true;
-              break;
+          if (is_object($inscripcion) && !empty($inscripcion->files) && is_iterable($inscripcion->files)) {
+            foreach ($inscripcion->files as $file) {
+              if ($file->name === $fileId) {
+                $exists = true;
+                break;
+              }
             }
           }
 
