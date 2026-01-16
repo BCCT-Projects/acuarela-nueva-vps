@@ -29,7 +29,10 @@ $translations = [
         'contact_section' => 'Contacto',
         'contact_desc' => 'Para preguntas sobre este aviso o para ejercer sus derechos, contacte:',
         'footer_rights' => 'Bilingual Child Care Training (BCCT). Todos los derechos reservados.',
-        'back_to_app' => 'Volver a la aplicación'
+        'back_to_app' => 'Volver a la aplicación',
+        'revocation_title' => '¿Desea Revocar el Consentimiento?',
+        'revocation_desc' => 'Si desea retirar su consentimiento para el procesamiento de datos de su hijo(a), puede hacerlo en cualquier momento usando nuestra herramienta de revocación.',
+        'revocation_btn' => 'Solicitar Revocación'
     ],
     'en' => [
         'title' => 'COPPA Privacy Notice',
@@ -52,7 +55,10 @@ $translations = [
         'contact_section' => 'Contact',
         'contact_desc' => 'For questions regarding this notice or to exercise your rights, please contact:',
         'footer_rights' => 'Bilingual Child Care Training (BCCT). All rights reserved.',
-        'back_to_app' => 'Back to Application'
+        'back_to_app' => 'Back to Application',
+        'revocation_title' => 'Want to Revoke Consent?',
+        'revocation_desc' => 'If you wish to withdraw your consent for processing your child\'s data, you can do so at any time using our revocation tool.',
+        'revocation_btn' => 'Request Revocation'
     ]
 ];
 
@@ -364,6 +370,46 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
             color: var(--cielo);
         }
 
+        /* Revocation Box Styles */
+        .coppa-revocation-box {
+            background: linear-gradient(135deg, rgba(250, 111, 92, 0.05) 0%, rgba(250, 111, 92, 0.02) 100%);
+            border: 2px solid rgba(250, 111, 92, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        .coppa-revocation-box .coppa-subsection__title {
+            border-left-color: var(--sandia);
+            color: var(--sandia) !important;
+        }
+
+        .btn-revocation {
+            display: inline-flex;
+            align-items: center;
+            background: var(--sandia);
+            color: white !important;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(250, 111, 92, 0.3);
+        }
+
+        .btn-revocation:hover {
+            background: #d85d4b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(250, 111, 92, 0.4);
+            color: white !important;
+        }
+
+        .btn-revocation:active {
+            transform: translateY(0);
+        }
+
         @media (max-width: 768px) {
             .coppa-header {
                 padding: 4rem 1.5rem 6rem;
@@ -377,6 +423,12 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
             .coppa-main {
                 padding: 0 15px 3rem;
                 margin-top: -4rem;
+            }
+
+            .btn-revocation {
+                width: 100%;
+                justify-content: center;
+                font-size: 1.4rem;
             }
         }
     </style>

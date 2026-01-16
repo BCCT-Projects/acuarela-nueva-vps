@@ -1,30 +1,71 @@
-# Ignorar archivos de Git
-.git
+# Git
+.git/
 .gitignore
+.github/
 
-# Ignorar archivos de Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Ignorar archivos de desarrollo
-*.log
-error_log
-.DS_Store
-Thumbs.db
-
-# Ignorar carpetas vacías innecesarias
-bluecard/
-modo-inspeccion/
-
-# Ignorar archivos de editor
+# IDE / Editor
+.vscode/
+.cursor/
+.cursorignore
+.cursorrules
+.idea/
 *.swp
 *.swo
 *~
-.idea/
-.vscode/
 
-# Ignorar node_modules si existe
+# Docs y desarrollo
+docs/
+README.md
+*.md
+!composer.md
+
+# Archivos de configuración local
+.env.local
+.env.*.local
+sftp.json
+
+# Logs y cache
+logs/
+*.log
+cache/
+error_log
+
+# Archivos temporales y test
+test.html
+test_*.php
+temp_*.html
+*.tmp
+*.bak
+
+# Node (si los hubiera)
 node_modules/
+package-lock.json
 
+# Docker
+Dockerfile
+Dockerfile.production
+docker-compose.yml
+docker-compose.production.yml
+.dockerignore
+rebuild-docker.*
 
+# SCSS (solo sube CSS compilado)
+scss/
+*.scss
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Videos grandes (usar CDN)
+videos/
+*.mp4
+*.avi
+*.mov
+
+# Backups
+*.sql
+*.sql.gz
+backup/
+backups/

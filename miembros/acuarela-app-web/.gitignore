@@ -18,7 +18,7 @@ marketplaceapp/stripe/
 # =================================
 # Videos tutoriales (usar CDN)
 /videos/
-
+sftp.json
 # =================================
 # LOGS
 # =================================
@@ -45,6 +45,6 @@ DEPLOY_VERSION.txt
 # IDE / SISTEMA
 # =================================
 .idea/
-.vscode/
+.vscode
 .DS_Store
 Thumbs.db

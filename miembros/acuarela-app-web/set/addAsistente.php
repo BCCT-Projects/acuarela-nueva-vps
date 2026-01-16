@@ -3,19 +3,25 @@ session_start();
 include "../includes/sdk.php";
 $a = new Acuarela();
 
-// Asegúrate de validar y sanitizar los datos antes de usarlos.
-$calle = $_POST['calle'] ?? '';
-$depto_unidad = $_POST['depto-unidad'] ?? '';
-$fecha_nacimiento = $_POST['fecha-de-nacimiento'] ?? '';
-$ciudad = $_POST['ciudad'] ?? '';
-$apellidos = $_POST['apellidos'] ?? '';
-$email = $_POST['email'] ?? '';
-$nombres = $_POST['nombres'] ?? '';
-$telefono = $_POST['telefono'] ?? '';
-$photoID = $_POST['photoID'] ?? '';
-$estado = $_POST['estado'] ?? '';
-$nivel_educativo = $_POST['nivel-educativo'] ?? '';
-$codigo_postal = $_POST['codigo-postal'] ?? '';
+// Explicit inputs with sanitization
+$calle = filter_input(INPUT_POST, 'calle', FILTER_SANITIZE_SPECIAL_CHARS);
+$depto_unidad = filter_input(INPUT_POST, 'depto-unidad', FILTER_SANITIZE_SPECIAL_CHARS);
+$fecha_nacimiento = filter_input(INPUT_POST, 'fecha-de-nacimiento', FILTER_SANITIZE_SPECIAL_CHARS);
+$ciudad = filter_input(INPUT_POST, 'ciudad', FILTER_SANITIZE_SPECIAL_CHARS);
+$apellidos = filter_input(INPUT_POST, 'apellidos', FILTER_SANITIZE_SPECIAL_CHARS);
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$nombres = filter_input(INPUT_POST, 'nombres', FILTER_SANITIZE_SPECIAL_CHARS);
+$telefono = filter_input(INPUT_POST, 'telefono', FILTER_SANITIZE_SPECIAL_CHARS);
+$photoID = filter_input(INPUT_POST, 'photoID', FILTER_SANITIZE_SPECIAL_CHARS);
+$estado = filter_input(INPUT_POST, 'estado', FILTER_SANITIZE_SPECIAL_CHARS);
+$nivel_educativo = filter_input(INPUT_POST, 'nivel-educativo', FILTER_SANITIZE_SPECIAL_CHARS);
+$codigo_postal = filter_input(INPUT_POST, 'codigo-postal', FILTER_SANITIZE_SPECIAL_CHARS);
+
+// Basic validation for required fields
+if (!$nombres || !$apellidos || !$email) {
+    echo json_encode(['error' => 'Missing required fields (nombres, apellidos, email)']);
+    exit;
+}
 
 // Generar contraseña temporal segura (12 caracteres alfanuméricos)
 function generarContrasenaTemporal($length = 12) {

@@ -7,22 +7,22 @@ $a = new Acuarela();
 
 // Leer datos de entrada
 $data = file_get_contents('php://input');
-$data = json_decode($data);
+$jsonData = json_decode($data); // Renamed to avoid confusion
 
 // Verificar si la lectura de datos fue exitosa
-if ($data === false) {
+if ($jsonData === null && json_last_error() !== JSON_ERROR_NONE) {
     http_response_code(400);
     echo json_encode(['error' => 'Error al leer los datos de entrada']);
     exit();
 }
 
 // Validar y procesar el tipo de operación
-if (isset($_GET['type'])) {
-    $type = $_GET['type'];
-    
+$type = filter_input(INPUT_GET, 'type', FILTER_SANITIZE_SPECIAL_CHARS);
+
+if ($type) {
     if ($type === 'checkin') {
         try {
-            $result = $a->checkIn($data);
+            $result = $a->checkIn($jsonData);
             echo json_encode($result);
         } catch (Exception $e) {
             http_response_code(500);
@@ -30,7 +30,7 @@ if (isset($_GET['type'])) {
         }
     } elseif ($type === 'checkout') {
         try {
-            $result = $a->checkOut($data);
+            $result = $a->checkOut($jsonData);
             echo json_encode($result);
         } catch (Exception $e) {
             http_response_code(500);

@@ -1,0 +1,49 @@
+# Docker Compose para Acuarela - PRODUCCIÓN
+version: '3.8'
+
+services:
+  acuarela-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: acuarela-web-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Solo logs y uploads (NO montar todo el código)
+      - ./logs:/var/log/apache2:rw
+      - acuarela_uploads:/var/www/html/uploads:rw
+      - php_sessions:/tmp:rw
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+      - TZ=America/New_York
+    restart: always
+    networks:
+      - acuarela-network
+    labels:
+      - "com.acuarela.environment=production"
+      - "com.acuarela.version=1.0.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  acuarela-network:
+    driver: bridge
+
+volumes:
+  php_sessions:
+    driver: local
+  acuarela_uploads:
+    driver: local

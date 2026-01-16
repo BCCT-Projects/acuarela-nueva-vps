@@ -1,6 +1,20 @@
 <?php
 
+$price = filter_input(INPUT_GET, 'price', FILTER_VALIDATE_INT);
+
+if (!$price) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Invalid or missing price']);
+    exit;
+}
+
 $curl = curl_init();
+
+$postFields = http_build_query([
+    'currency' => 'usd',
+    'unit_amount' => $price,
+    'product' => 'prod_SBV7HsrQ041w1d'
+]);
 
 curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://api.stripe.com/v1/prices',
@@ -11,7 +25,7 @@ curl_setopt_array($curl, array(
   CURLOPT_FOLLOWLOCATION => true,
   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS => 'currency=usd&unit_amount='.$_GET['price'].'&product=prod_SBV7HsrQ041w1d',
+  CURLOPT_POSTFIELDS => $postFields,
   CURLOPT_HTTPHEADER => array(
     'Content-Type: application/x-www-form-urlencoded',
     'Authorization: Basic c2tfdGVzdF9KYUl2UWt3dG5ueFBNNmlRdk5rNGQ1cE06',

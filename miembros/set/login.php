@@ -5,8 +5,14 @@ include '../includes/config.php';
 require_once '../acuarela-app-web/includes/env.php';
 
 // Normaliza los datos
-$email = strtolower(trim($_POST['email']));
-$password = $_POST['password'];
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+$password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);
+
+if (!$email || !$password) {
+    echo json_encode(['status' => 'error', 'message' => 'Email y contraseña requeridos']);
+    exit;
+}
+$email = strtolower(trim($email));
 
 $_SESSION["estanoesunacontrasena"] = $password;
 $userLogin = $a->loginBilingualUser($email, $password);

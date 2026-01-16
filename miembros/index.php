@@ -55,7 +55,7 @@ include 'includes/header.php';
             No se encontró un usuario registrado!
         </div>
         <button type="submit">INICIAR SESIÓN</button>
-        <a href="/miembros/recuperar-contrasena" class="link">Recuperar Contraseña</a>
+
         <a href="/" class="link register">Volver al inicio</a>
     </form>
 

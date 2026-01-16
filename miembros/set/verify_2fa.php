@@ -6,7 +6,7 @@ header('Content-Type: application/json');
 $response = ['ok' => false, 'message' => 'Código inválido'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $code = trim($_POST['code'] ?? '');
+    $code = filter_input(INPUT_POST, 'code', FILTER_SANITIZE_SPECIAL_CHARS);
 
     if (empty($code)) {
         echo json_encode(['ok' => false, 'message' => 'Código requerido']);

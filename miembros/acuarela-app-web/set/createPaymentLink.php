@@ -1,6 +1,36 @@
 <?php
 
+$id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS);
+$tax = filter_input(INPUT_GET, 'tax', FILTER_VALIDATE_FLOAT);
+
+if (!$id || $tax === false) { // 0 is a valid tax, but false is failure
+     http_response_code(400);
+     echo json_encode(['error' => 'Invalid or missing parameters (id, tax)']);
+     exit;
+}
+
 $curl = curl_init();
+
+// Use http_build_query for safe parameter construction
+// Structure:
+// line_items[0][price] = $id
+// line_items[0][quantity] = 1
+// transfer_data[destination] = acct_1HS0yeEQeRGcldhl
+// transfer_data[amount] = $tax
+
+$params = [
+    'line_items' => [
+        [
+            'price' => $id,
+            'quantity' => 1
+        ]
+    ],
+    'transfer_data' => [
+        'destination' => 'acct_1HS0yeEQeRGcldhl',
+        'amount' => $tax
+    ]
+];
+$postFields = http_build_query($params);
 
 curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://api.stripe.com/v1/payment_links',
@@ -11,7 +41,7 @@ curl_setopt_array($curl, array(
   CURLOPT_FOLLOWLOCATION => true,
   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS => 'line_items%5B0%5D%5Bprice%5D='.$_GET["id"].'&line_items%5B0%5D%5Bquantity%5D=1&transfer_data[destination]=acct_1HS0yeEQeRGcldhl&transfer_data[amount]='.$_GET["tax"],
+  CURLOPT_POSTFIELDS => $postFields,
   CURLOPT_HTTPHEADER => array(
     'Stripe-Account: acct_1DQndiHyTDqIJMr2',
     'Content-Type: application/x-www-form-urlencoded',

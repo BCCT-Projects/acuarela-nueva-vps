@@ -1,14 +1,15 @@
 <?php
 // Mostrar errores de PHP (esto es útil para depuración, puedes desactivarlo en producción)
-ini_set('display_errors', 1);
+// Mostrar errores desactivado para producción
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Obtener los datos del formulario enviados por POST
-$correo_acudiente = $_POST['correo'] ?? '';
-$nombre_acudiente = $_POST['acudiente'] ?? '';
-$nombre_nino = $_POST['nino'] ?? '';
-$edad_nino = $_POST['edad'] ?? '';
-$daycare = $_POST['daycare'] ?? '';
+// Explicit inputs
+$correo_acudiente = filter_input(INPUT_POST, 'correo', FILTER_VALIDATE_EMAIL);
+$nombre_acudiente = filter_input(INPUT_POST, 'acudiente', FILTER_SANITIZE_SPECIAL_CHARS);
+$nombre_nino = filter_input(INPUT_POST, 'nino', FILTER_SANITIZE_SPECIAL_CHARS);
+$edad_nino = filter_input(INPUT_POST, 'edad', FILTER_SANITIZE_SPECIAL_CHARS);
+$daycare = filter_input(INPUT_POST, 'daycare', FILTER_SANITIZE_SPECIAL_CHARS);
 
 // Verificar que los datos estén presentes
 if (empty($nombre_acudiente) || empty($correo_acudiente) || empty($nombre_nino) || empty($edad_nino)) {
@@ -51,7 +52,7 @@ if (isset($data[0]['color_1'])) {
 
 if (isset($data[0]['logo_web']['url'])) {
     $logoUrl = $data[0]['logo_web']['url'];
-} 
+}
 
 // POST para registrar la preinscripción
 $api_url_preinscripcion = "https://acuarelacore.com/api/preinscripciones";
