@@ -242,46 +242,9 @@ const handleInscripcion = async () => {
     }
   }
 
-  // Validar consentimiento COPPA si el formulario está completo
-  if (isComplete) {
-    const coppaConsent = document.getElementById("coppa_consent");
-    const coppaVersion = document.getElementById("coppa_notice_version")?.value;
 
-    if (!coppaConsent || !coppaConsent.checked) {
-      fadeOut(preloader);
-      Swal.fire({
-        title: "Consentimiento requerido",
-        text: "Debe leer y aceptar el Aviso de Privacidad COPPA para completar la inscripción.",
-        icon: "error",
-        confirmButtonText: "Entendido",
-        background: "#f0feff",
-        color: "#333",
-        confirmButtonColor: "#0cb5c3",
-      }).then(() => {
-        // Ir a la pestaña de consentimiento COPPA
-        const coppaTab = document.querySelector('.navtab[data-target="coppa-consent"]');
-        if (coppaTab) {
-          coppaTab.click();
-          coppaConsent?.focus();
-        }
-      });
-      return;
-    }
 
-    if (!coppaVersion || coppaVersion.trim() === "") {
-      fadeOut(preloader);
-      Swal.fire({
-        title: "Error de versión",
-        text: "No se pudo verificar la versión del aviso COPPA. Por favor recargue la página.",
-        icon: "error",
-        confirmButtonText: "Entendido",
-        background: "#f0feff",
-        color: "#333",
-        confirmButtonColor: "#0cb5c3",
-      });
-      return;
-    }
-  }
+
 
   const files = [
     {
@@ -391,9 +354,12 @@ const handleInscripcion = async () => {
           headers: { "Content-Type": "application/json" },
         });
         const body = await response.json();
+
+        // Primero procesar la respuesta normal (enviar invitaciones)
         const success = await processResponse(body, dataToSend, formValues);
+
+        // Redirigir directamente sin mostrar alert (se recarga muy rápido)
         if (success) {
-          // Aquí puedes redirigir o hacer alguna acción adicional si es necesario
           window.location.href = `/miembros/acuarela-app-web/inscripciones`;
         } else {
           // Manejo de errores en caso de que processResponse falle
@@ -861,7 +827,39 @@ const requestinscripciones = async () => {
       inscripciones
         .filter((insc) => insc !== null)
         .forEach((insc, index) => {
-          let { name, lastname, status, percentaje, id, child } = insc;
+          let { name, lastname, status, percentaje, id, child, coppa_status } = insc;
+
+          // Helper para estado COPPA
+          const getCoppaBadge = (status) => {
+            if (!status || status === 'N/A') return '';
+
+            let colorClass, translateId, textDefault;
+            switch (status) {
+              case 'granted':
+                colorClass = 'success';
+                translateId = 198;
+                textDefault = 'Aprobado';
+                break;
+              case 'revoked':
+                colorClass = 'danger';
+                translateId = 199;
+                textDefault = 'Revocado';
+                break;
+              case 'pending':
+              default:
+                colorClass = 'warning';
+                translateId = 197;
+                textDefault = 'Pendiente';
+                break;
+            }
+
+            return `<div class="coppa-badge ${colorClass}" style="margin-top:5px; font-size: 0.8em;">
+                 <strong><span data-translate="200">Estado COPPA</span>:</strong> <span data-translate="${translateId}">${textDefault}</span>
+             </div>`;
+          };
+
+          const coppaHtml = getCoppaBadge(coppa_status);
+
           let template = ``;
           if (child) {
             console.log(percentaje);
@@ -893,6 +891,7 @@ const requestinscripciones = async () => {
               }%</strong></small>
                 <div class="bar"><div class="barpro" style="width: ${percentaje}%"></div></div>
               </div>
+              ${coppaHtml}
             </li>`;
           } else {
             template = `<li class="${percentaje >= 100 ? "complete" : ""}">
@@ -930,6 +929,10 @@ const requestinscripciones = async () => {
       document.querySelector(".emptyElement").style.display = "flex";
     }
 
+    // Actualizar traducciones si la función existe
+    if (typeof getTranslateAndReplace === "function") {
+      getTranslateAndReplace();
+    }
     fadeOut(preloader);
   }
 };
@@ -1033,35 +1036,44 @@ const getChildren = async () => {
       document.querySelector(".emptyinhome").style.display = "block";
     }
 
-    const createKidTemplate = (kid, iconClass) => `
+    const createKidTemplate = (kid, iconClass) => {
+      const isLocked = kid.coppa_status && kid.coppa_status !== 'granted';
+      const lockOverlay = isLocked ? `
+        <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.6);z-index:10;display:flex;justify-content:center;align-items:center;border-radius:50%;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>` : '';
+
+      return `
     <div class="options">
       <i class="acuarela acuarela-Opciones"></i>
       <ul>
         <li>
           <button type="button" id="desactivar" onclick="updateKid('${kid.id
-      }', {'status': false, 'indaycare': false})">Desactivar</button>
+        }', {'status': false, 'indaycare': false})">Desactivar</button>
         </li>
         <li>
           <button type="button" id="eliminar" onclick='showLightbox("Eliminar Ninx","¿Estás seguro de que quieres eliminar esta ninx?","children","${kid.id
-      }");'>Eliminar</button>
+        }");'>Eliminar</button>
         </li>
       </ul>
     </div>
-    <div class="image">
+    <div class="image" style="position:relative;">
+      ${lockOverlay}
       ${kid.photo
-        ? `<img src='https://acuarelacore.com/api/${kid.photo.url}' alt='${kid.name}'>`
-        : `
+          ? `<img src='https://acuarelacore.com/api/${kid.photo.url}' alt='${kid.name}'>`
+          : `
       ${kid.gender === "Masculino" ? `<img src="img/mal.png" alt="">` : ""}
       ${kid.gender === "Femenino" ? `<img src="img/fem.png" alt="">` : ""}
       ${kid.gender === "X" ? `<img src="img/Nonbinary.png" alt="">` : ""}
       `
-      }
-      <i class="acuarela ${iconClass}"></i>
+        }
+      ${!isLocked ? `<i class="acuarela ${iconClass}"></i>` : ''}
       <div class="acuarelausers-buttons"></div>
     </div>
     <span class="name">${kid.name}</span>
     <a href="/miembros/acuarela-app-web/ninxs/${kid.id
-      }" class="btn btn-action-primary enfasis btn-small">Ver perfil</a>`;
+        }" class="btn btn-action-primary enfasis btn-small">Ver perfil</a>`;
+    };
 
     const createKidInaciveTemplate = (kid, iconClass) => `
         <div class="image">
@@ -1191,6 +1203,25 @@ const getChildren = async () => {
         listItem.innerHTML = template;
 
         listItem.querySelector(".image").addEventListener("click", () => {
+          // COPPA Restriction Check
+          const coppaStatus = kid.coppa_status || 'pending';
+          if (coppaStatus !== 'granted') {
+            let msg = "No se puede registrar asistencia porque el consentimiento COPPA está pendiente de aprobación.";
+            if (coppaStatus === 'revoked') msg = "No se puede registrar asistencia porque el consentimiento COPPA ha sido revocado.";
+
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: 'Acción Restringida',
+                text: msg,
+                icon: 'warning',
+                confirmButtonColor: '#0cb5c3'
+              });
+            } else {
+              alert(msg);
+            }
+            return;
+          }
+
           listItem.classList.toggle("active");
           if (container.querySelectorAll("li.active").length > 0) {
             container.classList.add("activeKid");
@@ -3249,6 +3280,28 @@ const getGrupos = async () => {
   }
 };
 
+// Validación Global COPPA para checkboxes de selección
+window.validateCoppaSelection = (event, status) => {
+  if (status && status !== 'granted') {
+    event.preventDefault();
+    event.stopPropagation();
+    let msg = "No se puede seleccionar este niño porque el consentimiento COPPA está pendiente de aprobación.";
+    if (status === 'revoked') msg = "No se puede seleccionar este niño porque el consentimiento COPPA ha sido revocado.";
+
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        title: 'Acción Restringida',
+        text: msg,
+        icon: 'warning',
+        confirmButtonColor: '#0cb5c3'
+      });
+    } else {
+      alert(msg);
+    }
+    return false;
+  }
+};
+
 const getInfoNewGroup = () => {
   if (document.querySelector(".newgroup")) {
     fetchAllUrls(["g/getAsistentes/", "g/getAgeGroups/", "g/getChildren/"])
@@ -3283,16 +3336,19 @@ const getInfoNewGroup = () => {
         });
         let childrenNoGroup = children.response;
         childrenNoGroup.forEach((kid) => {
-          let { name, photo, id, group } = kid;
+          let { name, photo, id, group, coppa_status } = kid;
+          let isCoppaLocked = coppa_status && coppa_status !== 'granted';
+
           let url = null;
           if (photo) {
             url = photo.url;
           }
           if (!group) {
-            document.querySelector(".children").innerHTML += `<li >
+            document.querySelector(".children").innerHTML += `<li ${isCoppaLocked ? 'style="opacity:0.6;"' : ''}>
                           <input type="checkbox" name="${id}" id="${id}" ${childrenGroup.includes(id) ? `checked` : ``
-              }>
-                          <label for="${id}">
+              } onclick="validateCoppaSelection(event, '${coppa_status || 'pending'}')">
+                          <label for="${id}" ${isCoppaLocked ? 'style="cursor:pointer;" title="Consentimiento COPPA requerido"' : ''}>
+                               ${isCoppaLocked ? '<i class="acuarela acuarela-Bloquear" style="color:red; margin-right:5px; font-size:1.2em;"></i>' : ''}
                                ${photo
                 ? `<img src='https://acuarelacore.com/api/${photo.formats.small.url}' alt='${kid.name}'>`
                 : `${kid.gender === "Masculino"

@@ -14,8 +14,8 @@ $inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
     <div class="navtab" data-index="1" data-target="familia">Familia</div>
     <div class="navtab" data-index="2" data-target="pagos">Horarios y pagos</div>
     <div class="navtab" data-index="3" data-target="adjuntos">Adjuntos</div>
-    <div class="navtab" data-index="4" data-target="coppa-consent">Consentimiento COPPA</div>
-    <div class="navtab" data-index="5" data-target="resumen">Resumen</div>
+
+    <div class="navtab" data-index="4" data-target="resumen">Resumen</div>
     <div class="underline"></div>
   </div>
   <div class="content">
@@ -376,33 +376,7 @@ $inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
 
       </div>
 
-      <!-- COPPA CONSENT (Moved before Resumen) -->
-      <div id="coppa-consent" class="tab-content">
-        <section class="coppa-consent-section">
-          <h2>Aviso de Privacidad COPPA</h2>
-          <p>Antes de completar la inscripción, por favor lea y acepte el Aviso de Privacidad COPPA que explica cómo
-            recopilamos, usamos y protegemos los datos de menores.</p>
-          <div class="coppa-consent-box">
-            <div class="cntr-check">
-              <input type="checkbox" id="coppa_consent" name="coppa_consent" class="hidden-xs-up" required />
-              <label for="coppa_consent" class="cbx"></label>
-              <span>
-                He leído y entiendo el
-                <a href="/miembros/acuarela-app-web/privacy/coppa" target="_blank" id="coppa-notice-link"
-                  class="coppa-link">
-                  Aviso de Privacidad COPPA
-                </a>
-                <span id="coppa-version-text"></span>
-              </span>
-            </div>
-            <p class="coppa-consent-note">
-              <small>Al marcar esta casilla, usted confirma que ha leído el aviso completo y otorga su consentimiento
-                para el procesamiento de datos de su menor según se describe en el aviso.</small>
-            </p>
-          </div>
-          <input type="hidden" name="coppa_notice_version" id="coppa_notice_version" value="">
-        </section>
-      </div>
+
 
       <div id="resumen" class="tab-content">
         <h4>Información básica del niño</h4>
@@ -444,47 +418,6 @@ $inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
   </div>
 </main>
 
-<script>
-  // Cargar versión del aviso COPPA al cargar la página
-  document.addEventListener('DOMContentLoaded', async function () {
-    try {
-      const response = await fetch('get/getCoppaNotice.php');
-      const result = await response.json();
 
-      if (result.success && result.data) {
-        const version = result.data.version || 'v1.0';
-        const versionInput = document.getElementById('coppa_notice_version');
-        const versionText = document.getElementById('coppa-version-text');
-        const noticeLink = document.getElementById('coppa-notice-link');
-
-        if (versionInput) {
-          versionInput.value = version;
-        }
-
-        if (versionText) {
-          versionText.textContent = ` (${version})`;
-        }
-
-        // Agregar versión al enlace si es necesario
-        if (noticeLink && result.data.id) {
-          noticeLink.href = `/miembros/acuarela-app-web/privacy/coppa?v=${version}`;
-        }
-      } else {
-        console.error('No se pudo cargar la versión del aviso COPPA');
-        // Mostrar mensaje de advertencia si no hay aviso disponible
-        const coppaSection = document.querySelector('.coppa-consent-section');
-        if (coppaSection) {
-          const warning = document.createElement('div');
-          warning.className = 'coppa-warning';
-          warning.style.cssText = 'background-color: #fff3cd; border: 1px solid #ffc107; padding: 1rem; border-radius: 4px; margin: 1rem 0;';
-          warning.innerHTML = '<strong>Advertencia:</strong> El Aviso COPPA no está disponible. Por favor contacte al administrador antes de completar la inscripción.';
-          coppaSection.insertBefore(warning, coppaSection.firstChild);
-        }
-      }
-    } catch (error) {
-      console.error('Error al cargar el aviso COPPA:', error);
-    }
-  });
-</script>
 
 <?php include "includes/footer.php" ?>

@@ -38,6 +38,11 @@ RewriteRule ^privacy/coppa$ privacy/coppa.php [L,QSA]
 RewriteCond %{SCRIPT_FILENAME} !-d
 RewriteCond %{SCRIPT_FILENAME} !-f
 
+# CONSENT ENDPOINTS (COPPA) - Debe ir antes de las reglas generales
+RewriteRule ^s/consent/verify\.php$ set/consent/verify.php [L,QSA]
+RewriteRule ^s/consent/([^/]*)/$ set/consent/$1.php?lang=es [L,QSA]
+
+# GENERAL ENDPOINTS
 RewriteRule ^s/([^/]*)/$ set/$1.php?lang=es [L,QSA]
 RewriteRule ^g/([^/]*)/$ get/$1.php?lang=es [L,QSA]
 RewriteRule ^c/([^/]*)/$ cron/$1.php?lang=es [L,QSA]

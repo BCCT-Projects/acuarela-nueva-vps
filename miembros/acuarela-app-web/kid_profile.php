@@ -1,6 +1,51 @@
 <?php $classBody = "kid_profile";
 include "includes/header.php";
 $kid = $a->getChildren($_GET['id']);
+
+// Obtener estado COPPA
+$coppaStatus = 'pending'; // Default
+if (isset($kid->id)) {
+    $consents = $a->queryStrapi("parental-consents?child_id={$kid->id}&_sort=createdAt:desc&_limit=1");
+    if (is_array($consents) && count($consents) > 0) {
+        $coppaStatus = $consents[0]->consent_status ?? 'pending';
+    }
+}
+
+$coppaClass = 'warning';
+$coppaLabel = 'Pendiente';
+if ($coppaStatus === 'granted') {
+    $coppaClass = 'success';
+    $coppaLabel = 'Aprobado';
+} elseif ($coppaStatus === 'revoked') {
+    $coppaClass = 'danger';
+    $coppaLabel = 'Revocado';
+}
+
+// Asegurar estructura de healthinfo para evitar errores
+if (!isset($kid->healthinfo) || !is_object($kid->healthinfo)) {
+    $kid->healthinfo = new stdClass();
+}
+$healthInfoDefaults = [
+    'allergies' => [],
+    'asthma' => 0,
+    'medicines' => [],
+    'vacination' => [],
+    'accidents' => [],
+    'physical_health' => '',
+    'emotional_health' => '',
+    'suspected_abuse' => '',
+    'ointments' => [],
+    'pediatrician' => '',
+    'pediatrician_number' => '',
+    'pediatrician_email' => '',
+    'incidents' => [],
+    'healthcheck' => []
+];
+foreach ($healthInfoDefaults as $key => $default) {
+    if (!isset($kid->healthinfo->$key)) {
+        $kid->healthinfo->$key = $default;
+    }
+}
 ?>
 <script>
     let activities = <?= json_encode($kid->childrenactivities) ?>;
@@ -42,10 +87,33 @@ $kid = $a->getChildren($_GET['id']);
                                     <strong><?= $published_at_formateada ?: 'No disponible' ?></strong>
                                 </span>
                             </p>
+                            <?php
+                            $colorStyle = 'color: #f5aa16;'; // Warning default
+                            if ($coppaStatus === 'granted') {
+                                $colorStyle = 'color: #3fb072;'; // Green
+                            } elseif ($coppaStatus === 'revoked') {
+                                $colorStyle = 'color: #e65252;'; // Red
+                            }
+                            ?>
+                            <p><i class="acuarela acuarela-Informacion"></i>
+                                <span class="txt_infodata">
+                                    <span>Estado COPPA</span>
+                                    <strong style="<?= $colorStyle ?>"><?= $coppaLabel ?></strong>
+
+                                    <?php if ($coppaStatus !== 'granted'): ?>
+                                        <button id="btnResendConsent" type="button" data-child-id="<?= $kid->id ?>"
+                                            style="margin-left: 10px; cursor: pointer; border: none; background: #6c757d; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; transition: background 0.3s;"
+                                            onmouseover="this.style.background='#5a6268'"
+                                            onmouseout="this.style.background='#6c757d'">
+                                            Reenviar Solicitud
+                                        </button>
+                                    <?php endif; ?>
+                                </span>
+                            </p>
                             <p><i class="acuarela acuarela-Localizacion"></i>
                                 <span class="txt_infodata">
                                     <span>Ciudad</span>
-                                    <strong><?= $kid->city ?: 'No disponible' ?></strong>
+                                    <strong><?= $kid->city ?? 'No disponible' ?></strong>
                                 </span>
                             </p>
                             <p><i class="acuarela acuarela-Telefono"></i>
@@ -82,7 +150,8 @@ $kid = $a->getChildren($_GET['id']);
                             // echo '</pre>';
                             ?>
                         </div>
-                        <button class="emergency_contact" href="javascript:;" id="lightbox-emergencycontact">Contacto de Emergencia</button>
+                        <button class="emergency_contact" href="javascript:;" id="lightbox-emergencycontact">Contacto de
+                            Emergencia</button>
                     </div>
                     <div class="photo">
                         <?php
@@ -120,10 +189,10 @@ $kid = $a->getChildren($_GET['id']);
                         <?php
                         for ($i = 0; $i < count($kid->acuarelausers); $i++) {
                             $parent = $kid->acuarelausers[$i];
-                        ?>
+                            ?>
                             <li>
                                 <div class="image">
-                                    <?= $parent->photo
+                                    <?= !empty($parent->photo)
                                         ? "<img src='https://acuarelacore.com/api/{$parent->photo->formats->small->url}' alt='{$parent->name}'>"
                                         : "<i class='acuarela acuarela-Camara'></i>" ?>
 
@@ -132,7 +201,7 @@ $kid = $a->getChildren($_GET['id']);
                                 <?php if ($parent->is_principal) { ?>
                                     <i class="acuarela acuarela-Estrella"></i>
                                 <?php } ?>
-                                <span class="name"><?= $parent->name ?> <?= $parent->lastname ?></span>
+                                <span class="name"><?= $parent->name ?>     <?= $parent->lastname ?></span>
                             </li>
                         <?php } ?>
                     </ul>
@@ -141,7 +210,7 @@ $kid = $a->getChildren($_GET['id']);
                         <?php
                         for ($i = 0; $i < count($kid->guardians); $i++) {
                             $guardian = $kid->guardians[$i];
-                        ?>
+                            ?>
                             <li>
                                 <div class="image">
                                     <?= isset($guardian->photo) && isset($guardian->photo->formats->small->url)
@@ -151,7 +220,8 @@ $kid = $a->getChildren($_GET['id']);
                                 <?php if (isset($guardian->guardian_emergency) && $guardian->guardian_emergency) { ?>
                                     <i class="acuarela acuarela-Estrella"></i>
                                 <?php } ?>
-                                <span class="name"><?= $guardian->guardian_name ?> <?= $guardian->guardian_lastname ?></span>
+                                <span class="name"><?= $guardian->guardian_name ?>
+                                    <?= $guardian->guardian_lastname ?></span>
                             </li>
                         <?php } ?>
                     </ul>
@@ -164,7 +234,8 @@ $kid = $a->getChildren($_GET['id']);
                                 <h3>Historial de salud</h3>
                                 <!-- <p><span class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Alergias: </span> </span>  <?= $kid->healthinfo->allergies ?> </p> -->
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Alergias:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Alergias:</span>
+                                    </p>
                                     <div class="saludcampos-JSON">
                                         <?php
                                         $alergias = $kid->healthinfo->allergies ?? [];
@@ -179,13 +250,16 @@ $kid = $a->getChildren($_GET['id']);
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Asma: </span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Asma: </span>
+                                    </p>
                                     <div class="saludcampos-JSON">
                                         <p><?= $kid->healthinfo->asthma == 1 ? 'Sí' : 'No' ?></p>
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Medicamentos:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i>
+                                        <span>Medicamentos:</span>
+                                    </p>
                                     <div class="saludcampos-JSON">
                                         <?php
                                         $medicamentos = $kid->healthinfo->medicines ?? [];
@@ -200,7 +274,8 @@ $kid = $a->getChildren($_GET['id']);
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Vacunas:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Vacunas:</span>
+                                    </p>
                                     <div class="saludcampos-JSON">
                                         <?php
                                         $vacunas = $kid->healthinfo->vacination ?? [];
@@ -215,7 +290,9 @@ $kid = $a->getChildren($_GET['id']);
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Accidentes:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i>
+                                        <span>Accidentes:</span>
+                                    </p>
                                     <div class="saludcampos-JSON">
                                         <?php
                                         $accidentes = $kid->healthinfo->accidents ?? [];
@@ -231,21 +308,27 @@ $kid = $a->getChildren($_GET['id']);
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Salud física:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Salud
+                                            física:</span></p>
                                     <div class="saludcampos-JSON">
-                                        <p><?= !empty($kid->healthinfo->physical_health) ? $kid->healthinfo->physical_health : 'Ninguna' ?></p>
+                                        <p><?= !empty($kid->healthinfo->physical_health) ? $kid->healthinfo->physical_health : 'Ninguna' ?>
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Salud emocional:</span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Salud
+                                            emocional:</span></p>
                                     <div class="saludcampos-JSON">
-                                        <p><?= !empty($kid->healthinfo->emotional_health) ? $kid->healthinfo->emotional_health : 'Ninguna' ?></p>
+                                        <p><?= !empty($kid->healthinfo->emotional_health) ? $kid->healthinfo->emotional_health : 'Ninguna' ?>
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="saludcampos">
-                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Sospecha de abuso: </span></p>
+                                    <p class="hs-sep"><i class="acuarela acuarela-Checklist"></i> <span>Sospecha de
+                                            abuso: </span></p>
                                     <div class="saludcampos-JSON">
-                                        <p><?= !empty($kid->healthinfo->suspected_abuse) ? $kid->healthinfo->suspected_abuse : 'Ninguna' ?></p>
+                                        <p><?= !empty($kid->healthinfo->suspected_abuse) ? $kid->healthinfo->suspected_abuse : 'Ninguna' ?>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -274,67 +357,93 @@ $kid = $a->getChildren($_GET['id']);
                                         <p class="ung-btn"><i class="iconung acuarela acuarela-Flecha_arriba"></i></p>
                                     </div>
                                     <div class="unguentoscontent show">
-                                        <p class="hs-sep3"><strong>Doctor: </strong> <?= !empty($kid->healthinfo->pediatrician) ? $kid->healthinfo->pediatrician : 'No agregados' ?> </p>
-                                        <p class="hs-sep3"><strong>Teléfono: </strong> <?= !empty($kid->healthinfo->pediatrician_number) ? $kid->healthinfo->pediatrician_number : 'No agregados' ?> </p>
-                                        <p class="hs-sep3"><strong>Correo: </strong> <?= !empty($kid->healthinfo->pediatrician_email) ? $kid->healthinfo->pediatrician_email : 'No agregados' ?> </p>
+                                        <p class="hs-sep3"><strong>Doctor: </strong>
+                                            <?= !empty($kid->healthinfo->pediatrician) ? $kid->healthinfo->pediatrician : 'No agregados' ?>
+                                        </p>
+                                        <p class="hs-sep3"><strong>Teléfono: </strong>
+                                            <?= !empty($kid->healthinfo->pediatrician_number) ? $kid->healthinfo->pediatrician_number : 'No agregados' ?>
+                                        </p>
+                                        <p class="hs-sep3"><strong>Correo: </strong>
+                                            <?= !empty($kid->healthinfo->pediatrician_email) ? $kid->healthinfo->pediatrician_email : 'No agregados' ?>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <a class="saludinfoadd saludinfoadd-shadow" href="/miembros/acuarela-app-web/agregar-salud/<?= $kid->_id ?>"><i class="acuarela acuarela-Agregar"></i> Agregar datos de salud </a>
+                        <a class="saludinfoadd saludinfoadd-shadow"
+                            href="/miembros/acuarela-app-web/agregar-salud/<?= $kid->_id ?>"><i
+                                class="acuarela acuarela-Agregar"></i> Agregar datos de salud </a>
 
                         <div class="saludincidentes">
                             <h3 class="saludincidentes-title">Incidentes</h3>
-                            <?php if (!empty($kid->healthinfo->incidents)) : ?>
-                                <?php foreach ($kid->healthinfo->incidents as $index => $incident) : ?>
+                            <?php if (!empty($kid->healthinfo->incidents)): ?>
+                                <?php foreach ($kid->healthinfo->incidents as $index => $incident): ?>
                                     <div class="incidentnino" id="incidentes">
                                         <div class="incidentnino-desp">
-                                            <h4 class="h4">Incidente <?= $index + 1 ?></h4> <!-- Mostrará Incidente 1, Incidente 2, etc. -->
+                                            <h4 class="h4">Incidente <?= $index + 1 ?></h4>
+                                            <!-- Mostrará Incidente 1, Incidente 2, etc. -->
                                             <p class="iconincid"><i class="acuarela acuarela-Flecha_arriba"></i></p>
                                         </div>
                                         <div class="incidentinfo">
                                             <div class="incidentreport">
                                                 <p> Reportado por <?= $incident->reported_for ?> </p>
                                                 <!-- <p><i class="acuarela acuarela-Horario"></i> <?= date('H:i', strtotime($incident->reported_enh)) ?> </p> -->
-                                                <p><i class="acuarela acuarela-Calendario"></i> <?= date('m-d-Y', strtotime($incident->reported_enf)) ?> </p>
+                                                <p><i class="acuarela acuarela-Calendario"></i>
+                                                    <?= date('m-d-Y', strtotime($incident->reported_enf)) ?> </p>
                                             </div>
                                             <div class="incidentdetails">
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Ayuda"></i> <span>Tipo de incidente </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->incident_type) ? htmlspecialchars($incident->incident_type) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Ayuda"></i> <span>Tipo de
+                                                            incidente </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->incident_type) ? htmlspecialchars($incident->incident_type) : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i> <span>Descripción </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->description) ? htmlspecialchars($incident->description) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i>
+                                                        <span>Descripción </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->description) ? htmlspecialchars($incident->description) : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Prioridad"></i> <span>Nivel de gravedad </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->gravedad) ? htmlspecialchars($incident->gravedad) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Prioridad"></i>
+                                                        <span>Nivel de gravedad </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->gravedad) ? htmlspecialchars($incident->gravedad) : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Advertencia"></i> <span>Temperatura </span></span>
-                                                    <span class="inc-text"><?= isset($incident->temperature) && trim($incident->temperature) !== '' ? htmlspecialchars($incident->temperature) . ' °F' : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Advertencia"></i>
+                                                        <span>Temperatura </span></span>
+                                                    <span
+                                                        class="inc-text"><?= isset($incident->temperature) && trim($incident->temperature) !== '' ? htmlspecialchars($incident->temperature) . ' °F' : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Salud"></i> <span>Estado de salud </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->statehealth) ? htmlspecialchars($incident->statehealth) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Salud"></i> <span>Estado
+                                                            de salud </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->statehealth) ? htmlspecialchars($incident->statehealth) : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i> <span>Acciones tomadas </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->actions_taken) ? htmlspecialchars($incident->actions_taken) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i>
+                                                        <span>Acciones tomadas </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->actions_taken) ? htmlspecialchars($incident->actions_taken) : 'No registrado' ?></span>
                                                 </p>
                                                 <p class="incdet-p">
-                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i> <span>Acciones esperadas </span></span>
-                                                    <span class="inc-text"><?= !empty($incident->actions_expected) ? htmlspecialchars($incident->actions_expected) : 'No registrado' ?></span>
+                                                    <span class="hs-sep2"><i class="acuarela acuarela-Informacion"></i>
+                                                        <span>Acciones esperadas </span></span>
+                                                    <span
+                                                        class="inc-text"><?= !empty($incident->actions_expected) ? htmlspecialchars($incident->actions_expected) : 'No registrado' ?></span>
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
-                            <?php else : ?>
+                            <?php else: ?>
                                 <p>No hay incidentes registrados.</p>
                             <?php endif; ?>
-                            <a class="saludinfoadd" href="/miembros/acuarela-app-web/agregar-reporte/<?= $kid->_id ?>"><i class="acuarela acuarela-Agregar"></i> Agregar nuevo reporte </a>
+                            <a class="saludinfoadd"
+                                href="/miembros/acuarela-app-web/agregar-reporte/<?= $kid->_id ?>"><i
+                                    class="acuarela acuarela-Agregar"></i> Agregar nuevo reporte </a>
                         </div>
                     </div>
                 </div>
@@ -366,8 +475,10 @@ $kid = $a->getChildren($_GET['id']);
                         </div>
                     </div>
                     <div class="health-buttoms">
-                        <button id="btnView-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable"> Ver reporte </button>
-                        <button id="btnAgregar-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable"> Agregar reporte </button>
+                        <button id="btnView-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable"> Ver
+                            reporte </button>
+                        <button id="btnAgregar-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable">
+                            Agregar reporte </button>
                     </div>
                 </div>
 
@@ -392,11 +503,11 @@ $kid = $a->getChildren($_GET['id']);
                         <?php
                         for ($i = 0; $i < count($kid->movements); $i++) {
                             $pay = $kid->movements[$i];
-                        ?>
+                            ?>
                             <li>
                                 <h4><?= $pay->name ?></h4>
                                 <span class="status" style="color:<?= $pay->status ? "#3fb072"
-                                                                        : "#f5aa16" ?>;">
+                                    : "#f5aa16" ?>;">
                                     <?= $pay->status ? "PAGO APROBADO" : "PAGO PENDIENTE" ?>
                                 </span>
                                 <span class="date">
@@ -412,7 +523,7 @@ $kid = $a->getChildren($_GET['id']);
                                     $<?= $pay->amount ?>
                                 </span>
                             </li>
-                        <?php
+                            <?php
                         }
                         ?>
 
@@ -425,14 +536,14 @@ $kid = $a->getChildren($_GET['id']);
                         <?php
                         for ($i = 0; $i < count($kid->files); $i++) {
                             $file = $kid->files[$i];
-                        ?>
+                            ?>
                             <li>
                                 <a href="https://acuarelacore.com/api<?= $file->file->url ?>">
                                     <i class="acuarela acuarela-Nota"></i>
                                     <h4><?= $file->name ?></h4>
                                 </a>
                             </li>
-                        <?php
+                            <?php
                         }
                         ?>
 
@@ -446,9 +557,15 @@ $kid = $a->getChildren($_GET['id']);
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         //==> Calendario del HEALTH CHECK
         const calendar = document.querySelector('#calendar tbody');
+
+        // Safe access to healthcheck data
+        const safeHealthCheck = (kidData && kidData.healthinfo && kidData.healthinfo.healthcheck) ? kidData.healthinfo.healthcheck : [];
+        kidData.healthinfo = kidData.healthinfo || {}; // Ensure healthinfo exists
+        kidData.healthinfo.healthcheck = safeHealthCheck; // Assign safe array back to object structure to avoid rewriting all logic
+
         const monthSelect = document.querySelector('#month-select');
         const yearSelect = document.querySelector('#year-select');
 
@@ -557,19 +674,19 @@ $kid = $a->getChildren($_GET['id']);
                     td.style.backgroundColor = "var(--fondo2)";
                 }
 
-                td.addEventListener("mouseenter", function() {
+                td.addEventListener("mouseenter", function () {
                     if (!this.classList.contains("active")) {
                         this.style.backgroundColor = "var(--cielo_tenue)";
                     }
                 });
 
-                td.addEventListener("mouseleave", function() {
+                td.addEventListener("mouseleave", function () {
                     if (!this.classList.contains("active")) {
                         this.style.backgroundColor = this.classList.contains("has-data") ? "#d7f6f9" : "";
                     }
                 });
 
-                td.addEventListener("click", function() {
+                td.addEventListener("click", function () {
                     tds.forEach(cell => {
                         cell.classList.remove("active");
                         if (cell.classList.contains("has-data")) {
@@ -671,13 +788,13 @@ $kid = $a->getChildren($_GET['id']);
 
 
         // Evento para actualizar el calendario al cambiar mes o año
-        monthSelect.addEventListener('change', function() {
+        monthSelect.addEventListener('change', function () {
             currentMonth = parseInt(this.value, 10);
             generateCalendar(currentYear, currentMonth);
             asignarEventosCalendario();
         });
 
-        yearSelect.addEventListener('change', function() {
+        yearSelect.addEventListener('change', function () {
             currentYear = parseInt(this.value, 10);
             generateCalendar(currentYear, currentMonth);
             asignarEventosCalendario();
@@ -689,7 +806,7 @@ $kid = $a->getChildren($_GET['id']);
 
 
         // Evento para mostrar el Lightbox de agregar reporte
-        btnAddreport.addEventListener("click", function() {
+        btnAddreport.addEventListener("click", function () {
             if (!btnAddreport.disabled) {
                 const fechaSeleccionada = btnAddreport.getAttribute("data-fecha");
                 if (fechaSeleccionada) {
@@ -699,7 +816,7 @@ $kid = $a->getChildren($_GET['id']);
         });
 
         // Evento para mostrar el Lightbox de ver reporte
-        btnViewreport.addEventListener("click", function() {
+        btnViewreport.addEventListener("click", function () {
             if (!btnViewreport.disabled) {
                 const fechaSeleccionada = btnViewreport.getAttribute("data-fecha");
                 if (fechaSeleccionada) {
@@ -707,5 +824,45 @@ $kid = $a->getChildren($_GET['id']);
                 }
             }
         });
+
+
+        // Lógica para Reenviar Consentimiento COPPA
+        const btnResend = document.getElementById('btnResendConsent');
+        if (btnResend) {
+            btnResend.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (!confirm('¿Enviar un nuevo correo de solicitud de consentimiento? Esto generará un nuevo token e invalidará enlaces anteriores.')) return;
+
+                const originalText = this.innerHTML;
+                this.disabled = true;
+                this.innerHTML = 'Enviando...';
+
+                const childId = this.getAttribute('data-child-id');
+
+                fetch('set/consent/resend_request.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ child_id: childId })
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ Correo enviado exitosamente.');
+                        } else {
+                            alert('❌ Error: ' + (data.message || 'Desconocido'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('❌ Error de conexión.');
+                    })
+                    .finally(() => {
+                        btnResend.disabled = false;
+                        btnResend.innerHTML = originalText;
+                    });
+            });
+        }
     });
 </script>

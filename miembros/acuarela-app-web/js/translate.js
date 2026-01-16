@@ -391,6 +391,10 @@ let words = [
     es: "Cambiar de daycare",
     en: "Change Daycare",
   },
+  { id: 197, es: "Pendiente", en: "Pending" },
+  { id: 198, es: "Aprobado", en: "Approved" },
+  { id: 199, es: "Revocado", en: "Revoked" },
+  { id: 200, es: "Estado COPPA", en: "COPPA Status" },
 ];
 
 function getTranslateAndReplace() {

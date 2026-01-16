@@ -97,8 +97,11 @@ function getPublicCoppaNotice()
     if ($httpCode === 200) {
         $data = json_decode($response, true);
         if (is_array($data) && !empty($data)) {
-            return (object) ['response' => array_map(function ($item) {
-                return (object) $item; }, $data)];
+            return (object) [
+                'response' => array_map(function ($item) {
+                    return (object) $item;
+                }, $data)
+            ];
         }
     } else {
         error_log("COPPA Notice API Error (endpoint: $endpoint): HTTP $httpCode - $error");
@@ -400,7 +403,8 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                 <!-- Información de versión -->
                 <div class="coppa-notice__meta">
                     <p class="coppa-notice__version"><?= $t['version'] ?>:
-                        <strong><?= htmlspecialchars($version) ?></strong></p>
+                        <strong><?= htmlspecialchars($version) ?></strong>
+                    </p>
                     <p class="coppa-notice__date"><?= $t['published'] ?>:
                         <strong><?= htmlspecialchars($publishedAt) ?></strong>
                     </p>
@@ -477,6 +481,23 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                             <h3 class="coppa-subsection__title"><?= $t['parent_rights'] ?></h3>
                             <div class="coppa-subsection__content">
                                 <?= nl2br(htmlspecialchars($rights)) ?>
+                            </div>
+                        </div>
+
+                        <!-- NUEVA SECCION: Herramienta de Revocación -->
+                        <div class="coppa-subsection coppa-revocation-box">
+                            <h3 class="coppa-subsection__title" style="color: var(--sandia);"><?= $t['revocation_title'] ?>
+                            </h3>
+                            <div class="coppa-subsection__content">
+                                <p><?= $t['revocation_desc'] ?></p>
+                                <a href="revocation_request.php?lang=<?= $lang ?>" class="btn-revocation">
+                                    <?= $t['revocation_btn'] ?>
+                                    <svg style="width:16px; height:16px; margin-left:8px; vertical-align:middle;"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     <?php endif; ?>
