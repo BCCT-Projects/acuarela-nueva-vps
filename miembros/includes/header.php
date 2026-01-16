@@ -74,7 +74,7 @@ $states = array(
     <title>Portal de usuarios - Bilingual Childcare Taining</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
-    <link rel="stylesheet" href="/miembros/css/styles.css?v=<?= time() ?>" />
+    <link rel="stylesheet" href="/miembros/css/styles.css?v=3.0" />
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QHGJX12D97"></script>
     <script>
@@ -130,8 +130,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             */
             // Desregistrar cualquier SW existente
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
+                navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                    for (let registration of registrations) {
                         registration.unregister();
                     }
                 });
@@ -147,21 +147,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
     <header class="outter">
         <div class="container flex">
-            <?php if(isset($_GET['service'])){ ?>
-            <?php switch ($_GET['service']) {
-                case 'acuarela':
-                    echo '<h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logotipo_invertido.svg?v=1" /></a></h1>';
-                    break;
-                
-                default:
-                    echo '<h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logomiembros_w.svg" /></a></h1>';
-                    break;
+            <?php if (isset($_GET['service'])) { ?>
+                <?php switch ($_GET['service']) {
+                    case 'acuarela':
+                        echo '<h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logotipo_invertido.svg?v=1" /></a></h1>';
+                        break;
+
+                    default:
+                        echo '<h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logomiembros_w.svg" /></a></h1>';
+                        break;
                 } ?>
 
-            <?php } else{?>
-            <h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logomiembros_w.svg" /></a></h1>
+            <?php } else { ?>
+                <h1><a href="/miembros/acuarela-app-web/"><img src="/miembros/img/logomiembros_w.svg" /></a></h1>
             <?php } ?>
-            
+
             <!--<nav>
             <ul><li><a class="uppercase" href=""></a></li></ul>
         </nav>-->
@@ -190,8 +190,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                         <li><a href="/miembros/acuarela-app-web/">Aplicación</a></li>
                         <li><a href="/miembros/acuarela-app-web/configuracion">Configuración</a></li>
                         <!-- <li><a id="link-open-modal-3">Invitar Usuario</a></li> -->
-                        <li><a href="/miembros/cerrar-sesion">Cerrar sesión<svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
+                        <li><a href="/miembros/cerrar-sesion">Cerrar sesión<svg width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M16.3125 8.0625L20.25 12L16.3125 15.9375" stroke="currentColor"
                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M9.75 12H20.25" stroke="currentColor" stroke-width="2" stroke-linecap="round"

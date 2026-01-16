@@ -6213,7 +6213,7 @@ function filtrarPorIdioma(item, idioma) {
 }
 
 
-console.log("Función generateDayHTML llamada");
+// console.log("Función generateDayHTML llamada") aaaa;
 // Función para generar el HTML para un día de la semana
 function generateDayHTML(data, day) {
   return ` <section class="day">
@@ -6614,7 +6614,7 @@ function formatDateSelect(date) {
   return `${month}/${day}/${year}`;
 }
 
-console.log('Holaaaaaaaaa');
+// console.log('Holaaaaaaaaa');
 
 const select = document.getElementById("semanaSelect");
 if (select) {
@@ -7183,34 +7183,33 @@ if (copiarBtn) {
   });
 }
 
-// Validar si el botón de compartir por WhatsApp existe
-const whatsappButton = document.getElementById("compartir-whatsapp");
-if (whatsappButton) {
-  whatsappButton.addEventListener("click", function () {
-    const codigo = document.getElementById("codigo-referido").innerText;
-    const message = `¡Hola! Usa mi código de referido ${codigo} para obtener $10 de descuento en tu primera compra en BCCT.`;
-    const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappURL, "_blank");
-  });
-} else {
-  console.warn("Botón de compartir por WhatsApp no encontrado.");
-}
+// Solo ejecutar en páginas que NO sean login
+if (!document.body.classList.contains('login')) {
+  // Validar si el botón de compartir por WhatsApp existe
+  const whatsappButton = document.getElementById("compartir-whatsapp");
+  if (whatsappButton) {
+    whatsappButton.addEventListener("click", function () {
+      const codigo = document.getElementById("codigo-referido").innerText;
+      const message = `¡Hola! Usa mi código de referido ${codigo} para obtener $10 de descuento en tu primera compra en BCCT.`;
+      const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappURL, "_blank");
+    });
+  }
 
-// Validar si el botón de compartir por email existe
-const emailButton = document.getElementById("compartir-email");
-if (emailButton) {
-  emailButton.addEventListener("click", function () {
-    const codigo = document.getElementById("codigo-referido").innerText;
-    const subject =
-      "¡Obtén $10 de descuento en BCCT con mi código de referido!";
-    const body = `¡Hola! Usa mi código de referido ${codigo} para obtener $10 de descuento en tu primera compra en BCCT.`;
-    const mailtoURL = `mailto:?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoURL, "_blank");
-  });
-} else {
-  console.warn("Botón de compartir por email no encontrado.");
+  // Validar si el botón de compartir por email existe
+  const emailButton = document.getElementById("compartir-email");
+  if (emailButton) {
+    emailButton.addEventListener("click", function () {
+      const codigo = document.getElementById("codigo-referido").innerText;
+      const subject =
+        "¡Obtén $10 de descuento en BCCT con mi código de referido!";
+      const body = `¡Hola! Usa mi código de referido ${codigo} para obtener $10 de descuento en tu primera compra en BCCT.`;
+      const mailtoURL = `mailto:?subject=${encodeURIComponent(
+        subject
+      )}&body=${encodeURIComponent(body)}`;
+      window.open(mailtoURL, "_blank");
+    });
+  }
 }
 
 //POPUP CREAR DAYCARE
@@ -7544,330 +7543,332 @@ async function setNewDaycareStrapi() {
   }
 }
 
-//Aside menu curriculums
-console.log("Script main.js cargado - sección aside curriculum");
+// Solo ejecutar aside curriculum en páginas que NO sean login
+if (!document.body.classList.contains('login')) {
+  //Aside menu curriculums
+  // console.log("Script main.js cargado - sección aside curriculum");
 
-// Función que se ejecuta cuando el DOM está listo
-function initAsideCurriculum() {
-  console.log("initAsideCurriculum ejecutándose");
-  const asideElement = document.getElementById("aside-curriculum");
-  const main = document.querySelector(".main-curriculum");
-  const fabButton = document.getElementById("fab");
-  const fabIcon = document.getElementById("fab-icon");
+  // Función que se ejecuta cuando el DOM está listo
+  function initAsideCurriculum() {
+    // console.log("initAsideCurriculum ejecutándose");
+    const asideElement = document.getElementById("aside-curriculum");
+    const main = document.querySelector(".main-curriculum");
+    const fabButton = document.getElementById("fab");
+    const fabIcon = document.getElementById("fab-icon");
 
-  if (!asideElement) {
-    console.warn("aside-curriculum element not found");
-    return;
-  }
-
-  if (!main) {
-    console.warn("main-curriculum element not found");
-    return;
-  }
-
-  if (fabButton && fabIcon) {
-    fabButton.addEventListener("click", function () {
-      if (asideElement) {
-        asideElement.classList.toggle("responsive");
-        fabButton.classList.toggle("open");
-
-        // Change the icon with animation
-        if (fabButton.classList.contains("open")) {
-          fabIcon.classList.remove("acuarela-Menu");
-          fabIcon.classList.add("acuarela-Cancelar");
-          fabIcon.classList.remove("menu");
-          fabIcon.classList.add("cancel");
-        } else {
-          fabIcon.classList.remove("acuarela-Cancelar");
-          fabIcon.classList.add("acuarela-Menu");
-          fabIcon.classList.remove("cancel");
-          fabIcon.classList.add("menu");
-        }
-      }
-    });
-  }
-
-  // Función para inicializar los diálogos del aside
-  function initAsideDialogs() {
-    console.log("initAsideDialogs ejecutándose");
-    if (!asideElement || !main) {
-      console.warn("Aside element or main element not found", { asideElement, main });
+    if (!asideElement) {
+      // console.warn("aside-curriculum element not found");
       return;
     }
 
-    const ids = [
-      "planeacion",
-      "lista",
-      "temas_mes",
-      "material_adicional",
-      "actividades_gratis",
-    ];
+    if (!main) {
+      console.warn("main-curriculum element not found");
+      return;
+    }
 
-    console.log("IDs a procesar:", ids);
+    if (fabButton && fabIcon) {
+      fabButton.addEventListener("click", function () {
+        if (asideElement) {
+          asideElement.classList.toggle("responsive");
+          fabButton.classList.toggle("open");
 
-    // Usar delegación de eventos en el contenedor padre (método principal)
-    const iconsContainer = asideElement.querySelector(".icons");
-    console.log("iconsContainer encontrado:", !!iconsContainer);
-
-    if (iconsContainer && !iconsContainer.dataset.delegationAdded) {
-      console.log("Agregando delegación de eventos a iconsContainer");
-      iconsContainer.addEventListener("click", function (e) {
-        console.log("Click detectado en iconsContainer, target:", e.target);
-        const clickedItem = e.target.closest("li[id]");
-        console.log("clickedItem encontrado:", clickedItem ? clickedItem.id : null);
-
-        if (clickedItem && ids.includes(clickedItem.id)) {
-          const id = clickedItem.id;
-          const dialogId = `aside-dialog-${id}`;
-          const dialog = document.getElementById(dialogId);
-
-          console.log(`Intentando abrir diálogo: ${dialogId}`, { dialog: !!dialog });
-
-          if (dialog) {
-            e.stopPropagation();
-            console.log(`Click detected via delegation on item: ${id}`);
-
-            // Función para abrir el diálogo
-            function openDialog() {
-              console.log(`Abriendo diálogo: ${dialogId}`);
-              // Mostrar el diálogo usando jQuery si está disponible, sino usar vanilla JS
-              if (typeof $ !== 'undefined' && $.fn.fadeIn) {
-                console.log("Usando jQuery fadeIn");
-                $(dialog).fadeIn(300);
-              } else {
-                console.log("Usando vanilla JS para mostrar diálogo");
-                dialog.style.display = "block";
-                dialog.style.opacity = "0";
-                setTimeout(() => {
-                  dialog.style.transition = "opacity 0.3s";
-                  dialog.style.opacity = "1";
-                }, 10);
-              }
-
-              asideElement.classList.add("no-hover");
-              main.classList.add("background");
-            }
-
-            openDialog();
+          // Change the icon with animation
+          if (fabButton.classList.contains("open")) {
+            fabIcon.classList.remove("acuarela-Menu");
+            fabIcon.classList.add("acuarela-Cancelar");
+            fabIcon.classList.remove("menu");
+            fabIcon.classList.add("cancel");
           } else {
-            console.error(`Diálogo ${dialogId} no encontrado`);
+            fabIcon.classList.remove("acuarela-Cancelar");
+            fabIcon.classList.add("acuarela-Menu");
+            fabIcon.classList.remove("cancel");
+            fabIcon.classList.add("menu");
           }
         }
       });
-      iconsContainer.dataset.delegationAdded = "true";
-      console.log("Delegación de eventos agregada correctamente");
-    } else if (iconsContainer && iconsContainer.dataset.delegationAdded) {
-      console.log("Delegación de eventos ya estaba agregada");
     }
 
-    ids.forEach((id) => {
-      const item = document.getElementById(id);
-      const dialogId = `aside-dialog-${id}`;
-      const dialog = document.getElementById(dialogId);
+    // Función para inicializar los diálogos del aside
+    function initAsideDialogs() {
+      console.log("initAsideDialogs ejecutándose");
+      if (!asideElement || !main) {
+        console.warn("Aside element or main element not found", { asideElement, main });
+        return;
+      }// Continúa con el resto del código existente...
 
-      console.log(`Procesando ${id}:`, { item: !!item, dialog: !!dialog });
+      const ids = [
+        "planeacion",
+        "lista",
+        "temas_mes",
+        "material_adicional",
+        "actividades_gratis",
+      ];
 
-      if (!item) {
-        // Solo mostrar warning si el elemento debería existir (no para actividades_gratis que está comentado)
-        if (id !== "actividades_gratis") {
-          console.warn(`Item with id "${id}" not found`);
+      console.log("IDs a procesar:", ids);
+
+      // Usar delegación de eventos en el contenedor padre (método principal)
+      const iconsContainer = asideElement.querySelector(".icons");
+      console.log("iconsContainer encontrado:", !!iconsContainer);
+
+      if (iconsContainer && !iconsContainer.dataset.delegationAdded) {
+        console.log("Agregando delegación de eventos a iconsContainer");
+        iconsContainer.addEventListener("click", function (e) {
+          console.log("Click detectado en iconsContainer, target:", e.target);
+          const clickedItem = e.target.closest("li[id]");
+          console.log("clickedItem encontrado:", clickedItem ? clickedItem.id : null);
+
+          if (clickedItem && ids.includes(clickedItem.id)) {
+            const id = clickedItem.id;
+            const dialogId = `aside-dialog-${id}`;
+            const dialog = document.getElementById(dialogId);
+
+            console.log(`Intentando abrir diálogo: ${dialogId}`, { dialog: !!dialog });
+
+            if (dialog) {
+              e.stopPropagation();
+              console.log(`Click detected via delegation on item: ${id}`);
+
+              // Función para abrir el diálogo
+              function openDialog() {
+                console.log(`Abriendo diálogo: ${dialogId}`);
+                // Mostrar el diálogo usando jQuery si está disponible, sino usar vanilla JS
+                if (typeof $ !== 'undefined' && $.fn.fadeIn) {
+                  console.log("Usando jQuery fadeIn");
+                  $(dialog).fadeIn(300);
+                } else {
+                  console.log("Usando vanilla JS para mostrar diálogo");
+                  dialog.style.display = "block";
+                  dialog.style.opacity = "0";
+                  setTimeout(() => {
+                    dialog.style.transition = "opacity 0.3s";
+                    dialog.style.opacity = "1";
+                  }, 10);
+                }
+
+                asideElement.classList.add("no-hover");
+                main.classList.add("background");
+              }
+
+              openDialog();
+            } else {
+              console.error(`Diálogo ${dialogId} no encontrado`);
+            }
+          }
+        });
+        iconsContainer.dataset.delegationAdded = "true";
+        console.log("Delegación de eventos agregada correctamente");
+      } else if (iconsContainer && iconsContainer.dataset.delegationAdded) {
+        console.log("Delegación de eventos ya estaba agregada");
+      }
+
+      ids.forEach((id) => {
+        const item = document.getElementById(id);
+        const dialogId = `aside-dialog-${id}`;
+        const dialog = document.getElementById(dialogId);
+
+        console.log(`Procesando ${id}:`, { item: !!item, dialog: !!dialog });
+
+        if (!item) {
+          // Solo mostrar warning si el elemento debería existir (no para actividades_gratis que está comentado)
+          if (id !== "actividades_gratis") {
+            console.warn(`Item with id "${id}" not found`);
+          }
+          return;
         }
-        return;
-      }
 
-      if (!dialog) {
-        if (id !== "actividades_gratis") {
-          console.warn(`Dialog with id "${dialogId}" not found`);
+        if (!dialog) {
+          if (id !== "actividades_gratis") {
+            console.warn(`Dialog with id "${dialogId}" not found`);
+          }
+          return;
         }
-        return;
-      }
 
-      // Buscar el botón de cerrar dentro del diálogo
-      const closeDialog = dialog.querySelector(".acuarela-Cancelar");
-      if (!closeDialog) {
-        console.warn(`Close button not found in dialog "${dialogId}"`);
-        return;
-      }
+        // Buscar el botón de cerrar dentro del diálogo
+        const closeDialog = dialog.querySelector(".acuarela-Cancelar");
+        if (!closeDialog) {
+          console.warn(`Close button not found in dialog "${dialogId}"`);
+          return;
+        }
 
-      // Verificar si ya tiene event listeners (evitar duplicados)
-      if (item.dataset.listenerAdded === "true") {
-        return;
-      }
+        // Verificar si ya tiene event listeners (evitar duplicados)
+        if (item.dataset.listenerAdded === "true") {
+          return;
+        }
 
-      // Asegurarse de que el diálogo esté oculto inicialmente
-      if (dialog.style.display !== "none" && !dialog.classList.contains("hidden")) {
-        dialog.style.display = "none";
-      }
+        // Asegurarse de que el diálogo esté oculto inicialmente
+        if (dialog.style.display !== "none" && !dialog.classList.contains("hidden")) {
+          dialog.style.display = "none";
+        }
 
-      // Función para abrir el diálogo
-      function openDialog() {
-        // Mostrar el diálogo usando jQuery si está disponible, sino usar vanilla JS
-        if (typeof $ !== 'undefined' && $.fn.fadeIn) {
-          $(dialog).fadeIn(300);
-        } else {
-          dialog.style.display = "block";
-          dialog.style.opacity = "0";
-          setTimeout(() => {
+        // Función para abrir el diálogo
+        function openDialog() {
+          // Mostrar el diálogo usando jQuery si está disponible, sino usar vanilla JS
+          if (typeof $ !== 'undefined' && $.fn.fadeIn) {
+            $(dialog).fadeIn(300);
+          } else {
+            dialog.style.display = "block";
+            dialog.style.opacity = "0";
+            setTimeout(() => {
+              dialog.style.transition = "opacity 0.3s";
+              dialog.style.opacity = "1";
+            }, 10);
+          }
+
+          // Add no-hover class to aside
+          asideElement.classList.add("no-hover");
+
+          // Add background class to main
+          main.classList.add("background");
+        }
+
+        // Función para cerrar el diálogo
+        function closeDialogFunc() {
+          // Ocultar el diálogo usando jQuery si está disponible, sino usar vanilla JS
+          if (typeof $ !== 'undefined' && $.fn.fadeOut) {
+            $(dialog).fadeOut("fast", function () {
+              asideElement.classList.remove("no-hover");
+              main.classList.remove("background");
+            });
+          } else {
             dialog.style.transition = "opacity 0.3s";
-            dialog.style.opacity = "1";
-          }, 10);
+            dialog.style.opacity = "0";
+            setTimeout(() => {
+              dialog.style.display = "none";
+              asideElement.classList.remove("no-hover");
+              main.classList.remove("background");
+            }, 300);
+          }
         }
 
-        // Add no-hover class to aside
-        asideElement.classList.add("no-hover");
-
-        // Add background class to main
-        main.classList.add("background");
-      }
-
-      // Función para cerrar el diálogo
-      function closeDialogFunc() {
-        // Ocultar el diálogo usando jQuery si está disponible, sino usar vanilla JS
-        if (typeof $ !== 'undefined' && $.fn.fadeOut) {
-          $(dialog).fadeOut("fast", function () {
-            asideElement.classList.remove("no-hover");
-            main.classList.remove("background");
-          });
-        } else {
-          dialog.style.transition = "opacity 0.3s";
-          dialog.style.opacity = "0";
-          setTimeout(() => {
-            dialog.style.display = "none";
-            asideElement.classList.remove("no-hover");
-            main.classList.remove("background");
-          }, 300);
-        }
-      }
-
-      // Agregar event listener al item (li)
-      item.addEventListener("click", function (e) {
-        e.stopPropagation();
-        console.log(`Click detected on item: ${id}`);
-        openDialog();
-      });
-
-      // También agregar listener usando delegación de eventos como respaldo
-      item.style.cursor = "pointer";
-      item.setAttribute("role", "button");
-      item.setAttribute("tabindex", "0");
-
-      // Permitir activación con Enter/Space
-      item.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+        // Agregar event listener al item (li)
+        item.addEventListener("click", function (e) {
           e.stopPropagation();
+          console.log(`Click detected on item: ${id}`);
           openDialog();
-        }
-      });
+        });
 
-      // Agregar event listener al botón de cerrar
-      closeDialog.addEventListener("click", function (e) {
-        e.stopPropagation();
-        closeDialogFunc();
-      });
+        // También agregar listener usando delegación de eventos como respaldo
+        item.style.cursor = "pointer";
+        item.setAttribute("role", "button");
+        item.setAttribute("tabindex", "0");
 
-      // Cerrar al hacer clic fuera del diálogo (solo en el fondo, no en el contenido)
-      dialog.addEventListener("click", function (e) {
-        if (e.target === dialog) {
+        // Permitir activación con Enter/Space
+        item.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            openDialog();
+          }
+        });
+
+        // Agregar event listener al botón de cerrar
+        closeDialog.addEventListener("click", function (e) {
+          e.stopPropagation();
           closeDialogFunc();
-        }
+        });
+
+        // Cerrar al hacer clic fuera del diálogo (solo en el fondo, no en el contenido)
+        dialog.addEventListener("click", function (e) {
+          if (e.target === dialog) {
+            closeDialogFunc();
+          }
+        });
+
+        // Marcar que los listeners ya fueron agregados
+        item.dataset.listenerAdded = "true";
       });
-
-      // Marcar que los listeners ya fueron agregados
-      item.dataset.listenerAdded = "true";
-    });
-  }
-
-  // Inicializar los diálogos
-  initAsideDialogs();
-
-  // Re-inicializar después de un pequeño delay para asegurar que todo esté cargado
-  // Esto es útil si el contenido se carga dinámicamente
-  setTimeout(() => {
-    initAsideDialogs();
-  }, 500);
-}
-
-// Ejecutar la función cuando el DOM esté listo o inmediatamente si ya lo está
-console.log("Verificando estado del DOM:", document.readyState);
-
-// Función wrapper con manejo de errores
-function tryInitAsideCurriculum() {
-  try {
-    console.log("Intentando ejecutar initAsideCurriculum");
-    initAsideCurriculum();
-  } catch (error) {
-    console.error("Error al ejecutar initAsideCurriculum:", error);
-  }
-}
-
-if (document.readyState === 'loading') {
-  // El DOM aún no está completamente cargado
-  console.log("DOM aún cargando, esperando DOMContentLoaded");
-  document.addEventListener('DOMContentLoaded', function () {
-    console.log("DOMContentLoaded disparado, ejecutando initAsideCurriculum");
-    tryInitAsideCurriculum();
-  });
-} else {
-  // El DOM ya está cargado, ejecutar inmediatamente
-  console.log("DOM ya está cargado, ejecutando initAsideCurriculum inmediatamente");
-  // Usar setTimeout para asegurar que todos los elementos estén disponibles
-  setTimeout(function () {
-    tryInitAsideCurriculum();
-  }, 100);
-}
-
-// También intentar ejecutar después de un delay adicional como respaldo
-setTimeout(function () {
-  console.log("Ejecutando initAsideCurriculum como respaldo después de 1 segundo");
-  tryInitAsideCurriculum();
-}, 1000);
-
-// Inscripción de niños
-// Selecciona el botón y el formulario pop-up
-const openFormButton = document.getElementById("addKid");
-const popupForm = document.getElementById("popupFormAddKid");
-const closeFormButton = document.getElementById("closeFormButton");
-
-if (popupForm) {
-  // Muestra el formulario cuando se hace clic en el botón
-  openFormButton.onclick = function () {
-    popupForm.style.display = "block";
-  };
-
-  // Oculta el formulario cuando se hace clic en el botón de cerrar
-  closeFormButton.onclick = function () {
-    popupForm.style.display = "none";
-  };
-
-  // Oculta el formulario cuando se hace clic fuera del formulario
-  window.onclick = function (event) {
-    if (event.target == popupForm) {
-      popupForm.style.display = "none";
     }
-  };
-}
 
-// Cancelar suscripcion Paypal
-function confirmCancelSubscription(paypalId, subscriptionId) {
-  // Verificar si el modal existe, si no, crearlo dinámicamente
-  var modal = document.getElementById("cancelModalPaypal");
+    // Inicializar los diálogos
+    initAsideDialogs();
 
-  if (!modal) {
-    // Crear el modal dinámicamente
-    modal = document.createElement("div");
-    modal.id = "cancelModalPaypal";
-    modal.style.display = "none";
-    modal.style.position = "fixed";
-    modal.style.zIndex = "10000";
-    modal.style.left = "0";
-    modal.style.top = "0";
-    modal.style.width = "100%";
-    modal.style.height = "100%";
-    modal.style.overflow = "auto";
-    modal.style.backgroundColor = "rgba(0,0,0,0.4)";
+    // Re-inicializar después de un pequeño delay para asegurar que todo esté cargado
+    // Esto es útil si el contenido se carga dinámicamente
+    setTimeout(() => {
+      initAsideDialogs();
+    }, 500);
+  }
 
-    modal.innerHTML = `
+  // Ejecutar la función cuando el DOM esté listo o inmediatamente si ya lo está
+  console.log("Verificando estado del DOM:", document.readyState);
+
+  // Función wrapper con manejo de errores
+  function tryInitAsideCurriculum() {
+    try {
+      console.log("Intentando ejecutar initAsideCurriculum");
+      initAsideCurriculum();
+    } catch (error) {
+      console.error("Error al ejecutar initAsideCurriculum:", error);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    // El DOM aún no está completamente cargado
+    console.log("DOM aún cargando, esperando DOMContentLoaded");
+    document.addEventListener('DOMContentLoaded', function () {
+      console.log("DOMContentLoaded disparado, ejecutando initAsideCurriculum");
+      tryInitAsideCurriculum();
+    });
+  } else {
+    // El DOM ya está cargado, ejecutar inmediatamente
+    console.log("DOM ya está cargado, ejecutando initAsideCurriculum inmediatamente");
+    // Usar setTimeout para asegurar que todos los elementos estén disponibles
+    setTimeout(function () {
+      tryInitAsideCurriculum();
+    }, 100);
+  }
+
+  // También intentar ejecutar después de un delay adicional como respaldo
+  setTimeout(function () {
+    console.log("Ejecutando initAsideCurriculum como respaldo después de 1 segundo");
+    tryInitAsideCurriculum();
+  }, 1000);
+
+  // Inscripción de niños
+  // Selecciona el botón y el formulario pop-up
+  const openFormButton = document.getElementById("addKid");
+  const popupForm = document.getElementById("popupFormAddKid");
+  const closeFormButton = document.getElementById("closeFormButton");
+
+  if (popupForm) {
+    // Muestra el formulario cuando se hace clic en el botón
+    openFormButton.onclick = function () {
+      popupForm.style.display = "block";
+    };
+
+    // Oculta el formulario cuando se hace clic en el botón de cerrar
+    closeFormButton.onclick = function () {
+      popupForm.style.display = "none";
+    };
+
+    // Oculta el formulario cuando se hace clic fuera del formulario
+    window.onclick = function (event) {
+      if (event.target == popupForm) {
+        popupForm.style.display = "none";
+      }
+    };
+  }
+
+  // Cancelar suscripcion Paypal
+  function confirmCancelSubscription(paypalId, subscriptionId) {
+    // Verificar si el modal existe, si no, crearlo dinámicamente
+    var modal = document.getElementById("cancelModalPaypal");
+
+    if (!modal) {
+      // Crear el modal dinámicamente
+      modal = document.createElement("div");
+      modal.id = "cancelModalPaypal";
+      modal.style.display = "none";
+      modal.style.position = "fixed";
+      modal.style.zIndex = "10000";
+      modal.style.left = "0";
+      modal.style.top = "0";
+      modal.style.width = "100%";
+      modal.style.height = "100%";
+      modal.style.overflow = "auto";
+      modal.style.backgroundColor = "rgba(0,0,0,0.4)";
+
+      modal.innerHTML = `
       <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h2 style="margin: 0; color: #333;">Cancelar Suscripción</h2>
@@ -7882,263 +7883,266 @@ function confirmCancelSubscription(paypalId, subscriptionId) {
       </div>
     `;
 
-    document.body.appendChild(modal);
-  }
-
-  // Mostrar el modal
-  modal.style.display = "block";
-
-  // Obtener los elementos del modal
-  var confirmButton = document.getElementById("confirmCancel");
-  var cancelMessage = document.getElementById("cancelMessage");
-  var closeButton = document.getElementById("closeModal");
-  var span = document.getElementById("btnCancelarPaypal");
-
-  // Limpiar eventos anteriores para evitar duplicados
-  var newConfirmButton = confirmButton.cloneNode(true);
-  confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-  confirmButton = newConfirmButton;
-
-  // Configurar el evento del botón de confirmación
-  confirmButton.onclick = function () {
-    // Ocultar el botón de cerrar
-    if (closeButton) {
-      closeButton.style.display = "none";
-    }
-    if (span) {
-      span.style.display = "none";
+      document.body.appendChild(modal);
     }
 
-    // Cambiar el texto del botón de confirmación a "Cancelando"
-    confirmButton.textContent = "Cancelando";
-    confirmButton.style.backgroundColor = "#f0ad4e";
-    confirmButton.style.borderColor = "#f0ad4e";
-    confirmButton.disabled = true;
+    // Mostrar el modal
+    modal.style.display = "block";
 
-    // Mostrar el mensaje debajo del botón de confirmación
-    if (cancelMessage) {
-      cancelMessage.style.display = "block";
-      cancelMessage.textContent = "Procesando cancelación...";
-    }
+    // Obtener los elementos del modal
+    var confirmButton = document.getElementById("confirmCancel");
+    var cancelMessage = document.getElementById("cancelMessage");
+    var closeButton = document.getElementById("closeModal");
+    var span = document.getElementById("btnCancelarPaypal");
 
-    // Hacer la solicitud POST al PHP intermediario
-    fetch("/miembros/s/cancelSuscription/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        paypal_id: paypalId,
-        subscription_id: subscriptionId,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        confirmButton.textContent = "Cancelado";
-        confirmButton.style.backgroundColor = "#5cb85c";
-        confirmButton.style.borderColor = "#5cb85c";
-        confirmButton.style.color = "white";
+    // Limpiar eventos anteriores para evitar duplicados
+    var newConfirmButton = confirmButton.cloneNode(true);
+    confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+    confirmButton = newConfirmButton;
 
-        if (cancelMessage) {
-          cancelMessage.style.display = "block";
-          cancelMessage.style.backgroundColor = "#d4edda";
-          cancelMessage.style.borderColor = "#c3e6cb";
-          cancelMessage.style.color = "#155724";
-          cancelMessage.textContent = "Suscripción cancelada exitosamente.";
-        }
+    // Configurar el evento del botón de confirmación
+    confirmButton.onclick = function () {
+      // Ocultar el botón de cerrar
+      if (closeButton) {
+        closeButton.style.display = "none";
+      }
+      if (span) {
+        span.style.display = "none";
+      }
 
-        // Redirigir a otra página después de un breve retraso
-        setTimeout(function () {
-          window.location.reload();
-          localStorage.removeItem("suscriptions");
-          localStorage.removeItem("daycare_name");
-          localStorage.removeItem("daycare_id");
-        }, 2000);
+      // Cambiar el texto del botón de confirmación a "Cancelando"
+      confirmButton.textContent = "Cancelando";
+      confirmButton.style.backgroundColor = "#f0ad4e";
+      confirmButton.style.borderColor = "#f0ad4e";
+      confirmButton.disabled = true;
+
+      // Mostrar el mensaje debajo del botón de confirmación
+      if (cancelMessage) {
+        cancelMessage.style.display = "block";
+        cancelMessage.textContent = "Procesando cancelación...";
+      }
+
+      // Hacer la solicitud POST al PHP intermediario
+      fetch("/miembros/s/cancelSuscription/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paypal_id: paypalId,
+          subscription_id: subscriptionId,
+        }),
       })
-      .catch((error) => {
-        console.error("Error:", error);
-        // Restaurar el estado original de los botones en caso de error
-        if (closeButton) {
-          closeButton.style.display = "block";
-        }
-        if (span) {
-          span.style.display = "block";
-        }
-        confirmButton.textContent = "Confirmar Cancelación";
-        confirmButton.style.backgroundColor = "#dc3545";
-        confirmButton.style.borderColor = "#dc3545";
-        confirmButton.style.color = "white";
-        confirmButton.disabled = false;
-        if (cancelMessage) {
-          cancelMessage.style.display = "block";
-          cancelMessage.style.backgroundColor = "#f8d7da";
-          cancelMessage.style.borderColor = "#f5c6cb";
-          cancelMessage.style.color = "#721c24";
-          cancelMessage.textContent = "Error al cancelar la suscripción. Por favor, intenta nuevamente.";
-        }
-      });
-  };
+        .then((response) => response.json())
+        .then((data) => {
+          confirmButton.textContent = "Cancelado";
+          confirmButton.style.backgroundColor = "#5cb85c";
+          confirmButton.style.borderColor = "#5cb85c";
+          confirmButton.style.color = "white";
 
-  // Configurar el botón de cierre
-  if (closeButton) {
-    var newCloseButton = closeButton.cloneNode(true);
-    closeButton.parentNode.replaceChild(newCloseButton, closeButton);
-    closeButton = newCloseButton;
-
-    closeButton.onclick = function () {
-      modal.style.display = "none";
-      if (cancelMessage) {
-        cancelMessage.style.display = "none";
-      }
-    };
-  }
-
-  // Configurar el span que cierra el modal
-  if (span) {
-    var newSpan = span.cloneNode(true);
-    span.parentNode.replaceChild(newSpan, span);
-    span = newSpan;
-
-    span.onclick = function () {
-      modal.style.display = "none";
-      if (cancelMessage) {
-        cancelMessage.style.display = "none";
-      }
-    };
-  }
-
-  // Cerrar el modal si se hace clic fuera del contenido
-  var existingOnClick = window.onclick;
-  modal.onclick = function (event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-      if (cancelMessage) {
-        cancelMessage.style.display = "none";
-      }
-    }
-  };
-}
-
-//Foto del daycare
-if (document.getElementById("photo")) {
-  document
-    .getElementById("photo")
-    .addEventListener("change", async function (event) {
-      const wrapper = document.querySelector(".wrapper.photo");
-      const container = document.getElementById("photo-container");
-
-      const nextButton = document.getElementById("nextButton");
-      const createAccountButton = document.getElementById("createAccount");
-
-      const addDaycare = document.getElementById("addDaycare");
-
-      if (nextButton) {
-        nextButton.disabled = true;
-      }
-
-      if (createAccountButton) {
-        createAccountButton.disabled = true;
-      }
-
-      if (addDaycare) {
-        addDaycare.disabled = true;
-      }
-
-      wrapper.classList.add("loading");
-
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-
-        // Upload image to the server
-        try {
-          let formData = new FormData();
-          formData.append("files", file, file.name);
-
-          const response = await fetch("https://acuarelacore.com/api/upload/", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            console.error(
-              "Respuesta del servidor no OK:",
-              response.status,
-              response.statusText
-            );
-            throw new Error("Network response was not ok");
+          if (cancelMessage) {
+            cancelMessage.style.display = "block";
+            cancelMessage.style.backgroundColor = "#d4edda";
+            cancelMessage.style.borderColor = "#c3e6cb";
+            cancelMessage.style.color = "#155724";
+            cancelMessage.textContent = "Suscripción cancelada exitosamente.";
           }
 
-          const result = await response.json();
+          // Redirigir a otra página después de un breve retraso
+          setTimeout(function () {
+            window.location.reload();
+            localStorage.removeItem("suscriptions");
+            localStorage.removeItem("daycare_name");
+            localStorage.removeItem("daycare_id");
+          }, 2000);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          // Restaurar el estado original de los botones en caso de error
+          if (closeButton) {
+            closeButton.style.display = "block";
+          }
+          if (span) {
+            span.style.display = "block";
+          }
+          confirmButton.textContent = "Confirmar Cancelación";
+          confirmButton.style.backgroundColor = "#dc3545";
+          confirmButton.style.borderColor = "#dc3545";
+          confirmButton.style.color = "white";
+          confirmButton.disabled = false;
+          if (cancelMessage) {
+            cancelMessage.style.display = "block";
+            cancelMessage.style.backgroundColor = "#f8d7da";
+            cancelMessage.style.borderColor = "#f5c6cb";
+            cancelMessage.style.color = "#721c24";
+            cancelMessage.textContent = "Error al cancelar la suscripción. Por favor, intenta nuevamente.";
+          }
+        });
+    };
 
-          document.querySelector("#photoID").value = result[0].id;
+    // Configurar el botón de cierre
+    if (closeButton) {
+      var newCloseButton = closeButton.cloneNode(true);
+      closeButton.parentNode.replaceChild(newCloseButton, closeButton);
+      closeButton = newCloseButton;
 
-          container.style.display = "block";
-          container.style.backgroundImage = `url(https://acuarelacore.com/api${result[0].url})`;
+      closeButton.onclick = function () {
+        modal.style.display = "none";
+        if (cancelMessage) {
+          cancelMessage.style.display = "none";
+        }
+      };
+    }
 
-          // Añadir el botón de eliminar foto
-          const deleteButton = document.createElement("button");
-          deleteButton.innerHTML = "X";
-          deleteButton.classList.add("delete-button");
-          deleteButton.onclick = function () {
-            // Limpiar la imagen y el input photoID
-            container.style.backgroundImage = "none";
-            document.querySelector("#photoID").value = "";
+    // Configurar el span que cierra el modal
+    if (span) {
+      var newSpan = span.cloneNode(true);
+      span.parentNode.replaceChild(newSpan, span);
+      span = newSpan;
 
-            // Eliminar el botón de eliminar xd
-            deleteButton.remove();
+      span.onclick = function () {
+        modal.style.display = "none";
+        if (cancelMessage) {
+          cancelMessage.style.display = "none";
+        }
+      };
+    }
 
-            // Desactivar botones de navegación
+    // Cerrar el modal si se hace clic fuera del contenido
+    var existingOnClick = window.onclick;
+    modal.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = "none";
+        if (cancelMessage) {
+          cancelMessage.style.display = "none";
+        }
+      }
+    };
+  }
+
+  //Foto del daycare
+  if (document.getElementById("photo")) {
+    document
+      .getElementById("photo")
+      .addEventListener("change", async function (event) {
+        const wrapper = document.querySelector(".wrapper.photo");
+        const container = document.getElementById("photo-container");
+
+        const nextButton = document.getElementById("nextButton");
+        const createAccountButton = document.getElementById("createAccount");
+
+        const addDaycare = document.getElementById("addDaycare");
+
+        if (nextButton) {
+          nextButton.disabled = true;
+        }
+
+        if (createAccountButton) {
+          createAccountButton.disabled = true;
+        }
+
+        if (addDaycare) {
+          addDaycare.disabled = true;
+        }
+
+        wrapper.classList.add("loading");
+
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+
+          // Upload image to the server
+          try {
+            let formData = new FormData();
+            formData.append("files", file, file.name);
+
+            const response = await fetch("https://acuarelacore.com/api/upload/", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              console.error(
+                "Respuesta del servidor no OK:",
+                response.status,
+                response.statusText
+              );
+              throw new Error("Network response was not ok");
+            }
+
+            const result = await response.json();
+
+            document.querySelector("#photoID").value = result[0].id;
+
+            container.style.display = "block";
+            container.style.backgroundImage = `url(https://acuarelacore.com/api${result[0].url})`;
+
+            // Añadir el botón de eliminar foto
+            const deleteButton = document.createElement("button");
+            deleteButton.innerHTML = "X";
+            deleteButton.classList.add("delete-button");
+            deleteButton.onclick = function () {
+              // Limpiar la imagen y el input photoID
+              container.style.backgroundImage = "none";
+              document.querySelector("#photoID").value = "";
+
+              // Eliminar el botón de eliminar xd
+              deleteButton.remove();
+
+              // Desactivar botones de navegación
+              if (nextButton) {
+                nextButton.disabled = true;
+              }
+
+              if (createAccountButton) {
+                createAccountButton.disabled = true;
+              }
+
+              if (addDaycare) {
+                addDaycare.disabled = true;
+              }
+
+              // Eliminar clase "loading" si estaba
+              wrapper.classList.remove("loading");
+            };
+
+            // Agregar el botón al contenedor de la imagen
+            container.appendChild(deleteButton);
+
+            wrapper.classList.remove("loading");
+
             if (nextButton) {
-              nextButton.disabled = true;
+              nextButton.disabled = false;
             }
 
             if (createAccountButton) {
-              createAccountButton.disabled = true;
+              createAccountButton.disabled = false;
             }
 
             if (addDaycare) {
-              addDaycare.disabled = true;
+              addDaycare.disabled = false;
             }
 
-            // Eliminar clase "loading" si estaba
+            const photoInput = document.getElementById("photo");
+            photoInput.removeAttribute("name");
+          } catch (error) {
+            console.error(
+              "Error occurred while making network request:",
+              error.message
+            );
+            if (addDaycare) {
+              addDaycare.disabled = false;
+            }
             wrapper.classList.remove("loading");
-          };
-
-          // Agregar el botón al contenedor de la imagen
-          container.appendChild(deleteButton);
-
-          wrapper.classList.remove("loading");
-
-          if (nextButton) {
-            nextButton.disabled = false;
           }
-
-          if (createAccountButton) {
-            createAccountButton.disabled = false;
-          }
-
-          if (addDaycare) {
-            addDaycare.disabled = false;
-          }
-
-          const photoInput = document.getElementById("photo");
-          photoInput.removeAttribute("name");
-        } catch (error) {
-          console.error(
-            "Error occurred while making network request:",
-            error.message
-          );
-          console.error("Detalles del error:", error);
+        } else {
+          console.log("No se seleccionó ningún archivo.");
         }
-      } else {
-        console.log("No se seleccionó ningún archivo.");
-      }
-    });
-} else {
-  console.log("Elemento 'photo' no encontrado.");
+      });
+  }
 }
+
 
 // Asegurarse de que solo se envíe `photoID` y no el archivo
 const registerForm = document.getElementById("register");

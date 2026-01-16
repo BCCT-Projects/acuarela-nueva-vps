@@ -79,5 +79,14 @@ include 'includes/header.php';
         <button type="button" onclick="location.reload()" class="link register">Volver</button>
     </form>
 </main>
+<script>
+  // Ocultar preloader inicialmente en login
+  document.addEventListener('DOMContentLoaded', function() {
+    const preloader = document.querySelector('.preloader');
+    if (preloader) {
+      preloader.style.display = 'none';
+    }
+  });
+</script>
 <?php include 'includes/disclaimer-cookies.php'; ?>
 <?php include 'includes/footer.php'; ?>

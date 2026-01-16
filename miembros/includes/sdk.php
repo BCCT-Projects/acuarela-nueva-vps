@@ -17,9 +17,12 @@ class acuarela
 
     function __construct()
     {
-        $this->getgruposdeedad = $this->getgruposdeedad();
-        $this->getmomentoaprendizaje = $this->getmomentoaprendizaje();
-        $this->getformas = $this->getformas();
+        // Optimizacion: Carga diferida. No llamar APIs en el constructor.
+        // Se deben llamar explicitamente cuando se necesiten con sus metodos respectivos:
+        // $a->getgruposdeedad(); 
+        // $this->getgruposdeedad = "";
+        // $this->getmomentoaprendizaje = "";
+        // $this->getformas = "";
     }
     function performCurlRequest($url, $method, $data, $headers)
     {
@@ -420,14 +423,14 @@ class acuarela
         if (!is_dir($cacheDir)) {
             @mkdir($cacheDir, 0755, true);
         }
-        
+
         // Generar key de cache basada en la URL
         $cacheKey = md5($url . $body);
         $cacheFile = $cacheDir . $cacheKey . '.json';
-        
+
         // Log para debug
         $this->logWP("queryWorpress llamado", substr($url, 0, 80));
-        
+
         // Verificar si existe cache válido
         if ($cache && file_exists($cacheFile)) {
             $cacheAge = time() - filemtime($cacheFile);
@@ -444,7 +447,7 @@ class acuarela
         } else {
             $this->logWP("CACHE MISS", "file not found or cache disabled");
         }
-        
+
         // Hacer la llamada HTTP con timeout aumentado para pp=500
         $startTime = microtime(true);
         $curl = curl_init();
@@ -465,7 +468,7 @@ class acuarela
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $elapsed = round((microtime(true) - $startTime) * 1000);
         curl_close($curl);
-        
+
         // Si hay error, intentar devolver cache antiguo si existe
         if ($response === false || $curlError) {
             $this->logWP("CURL ERROR", "error: $curlError, time: {$elapsed}ms");
@@ -476,9 +479,9 @@ class acuarela
             }
             return null;
         }
-        
+
         $request = json_decode($response);
-        
+
         // Guardar en cache si la respuesta es válida
         if ($cache && $request !== null) {
             $saved = @file_put_contents($cacheFile, $response);
@@ -486,14 +489,15 @@ class acuarela
         } else {
             $this->logWP("API CALL", "HTTP: $httpCode, time: {$elapsed}ms, not cached (null response)");
         }
-        
+
         return $request;
     }
-    
+
     /**
      * Log de debug para llamadas WordPress
      */
-    private function logWP($message, $data = null) {
+    private function logWP($message, $data = null)
+    {
         $logFile = __DIR__ . '/../cache/wp_debug.log';
         $timestamp = date('Y-m-d H:i:s');
         $logEntry = "[$timestamp] $message";
@@ -503,7 +507,7 @@ class acuarela
         $logEntry .= PHP_EOL;
         file_put_contents($logFile, $logEntry, FILE_APPEND | LOCK_EX);
     }
-    
+
     /**
      * Ejecuta múltiples llamadas a WordPress API en paralelo
      * @param array $urls Array asociativo ['key' => 'url', ...]
@@ -511,25 +515,26 @@ class acuarela
      * @param int $cacheTTL Tiempo de vida del cache en segundos (default: 600)
      * @return array Array asociativo con las respuestas ['key' => response, ...]
      */
-    function queryWorpressParallel($urls, $cache = true, $cacheTTL = 3600) {
+    function queryWorpressParallel($urls, $cache = true, $cacheTTL = 3600)
+    {
         $startTime = microtime(true);
         $this->logWP("=== INICIO queryWorpressParallel ===", count($urls) . " URLs");
-        
+
         // Directorio de cache
         $cacheDir = __DIR__ . '/../cache/wp/';
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0755, true);
         }
-        
+
         $results = [];
         $urlsToFetch = [];
         $baseUrl = 'https://twinkle.acuarelacore.com/wp-json/wp/v2/';
-        
+
         // Paso 1: Verificar cache para cada URL
         foreach ($urls as $key => $url) {
             $cacheKey = md5($url);
             $cacheFile = $cacheDir . $cacheKey . '.json';
-            
+
             if ($cache && file_exists($cacheFile)) {
                 $cacheAge = time() - filemtime($cacheFile);
                 if ($cacheAge < $cacheTTL) {
@@ -551,20 +556,20 @@ class acuarela
             // Necesita fetch
             $urlsToFetch[$key] = $url;
         }
-        
+
         // Si todo estaba en cache, retornar
         if (empty($urlsToFetch)) {
             $elapsed = round((microtime(true) - $startTime) * 1000, 2);
             $this->logWP("=== FIN (todo en cache) ===", "{$elapsed}ms");
             return $results;
         }
-        
+
         $this->logWP("URLs a buscar (sin cache)", count($urlsToFetch));
-        
+
         // Paso 2: Preparar multi-curl
         $multiHandle = curl_multi_init();
         $curlHandles = [];
-        
+
         foreach ($urlsToFetch as $key => $url) {
             $ch = curl_init();
             curl_setopt_array($ch, [
@@ -580,7 +585,7 @@ class acuarela
             curl_multi_add_handle($multiHandle, $ch);
             $curlHandles[$key] = $ch;
         }
-        
+
         // Paso 3: Ejecutar todas las llamadas en paralelo
         $running = null;
         do {
@@ -589,18 +594,18 @@ class acuarela
                 curl_multi_select($multiHandle);
             }
         } while ($running && $status == CURLM_OK);
-        
+
         // Paso 4: Recoger resultados
         foreach ($curlHandles as $key => $ch) {
             $response = curl_multi_getcontent($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
             $totalTime = round(curl_getinfo($ch, CURLINFO_TOTAL_TIME) * 1000, 2);
-            
+
             if ($error) {
                 $this->logWP("ERROR en $key", "Error: $error");
                 $results[$key] = null;
-                
+
                 // Intentar usar cache antiguo como fallback
                 $cacheKey = md5($urlsToFetch[$key]);
                 $cacheFile = $cacheDir . $cacheKey . '.json';
@@ -626,7 +631,7 @@ class acuarela
                 $results[$key] = null;
             } else {
                 $decoded = json_decode($response);
-                
+
                 // Normalizar: siempre devolver un array, incluso si WordPress devuelve un objeto individual
                 if ($decoded !== null) {
                     if (is_array($decoded)) {
@@ -638,9 +643,9 @@ class acuarela
                 } else {
                     $results[$key] = [];
                 }
-                
+
                 $this->logWP("OK: $key", "HTTP: $httpCode, Time: {$totalTime}ms, Items: " . (is_array($results[$key]) ? count($results[$key]) : 1));
-                
+
                 // Guardar en cache
                 if ($cache && $decoded !== null) {
                     $cacheKey = md5($urlsToFetch[$key]);
@@ -648,19 +653,19 @@ class acuarela
                     file_put_contents($cacheFile, $response);
                 }
             }
-            
+
             curl_multi_remove_handle($multiHandle, $ch);
             curl_close($ch);
         }
-        
+
         curl_multi_close($multiHandle);
-        
+
         $elapsed = round((microtime(true) - $startTime) * 1000, 2);
         $this->logWP("=== FIN queryWorpressParallel ===", "Total: {$elapsed}ms, URLs: " . count($urls));
-        
+
         return $results;
     }
-    
+
     function queryWorpressAcuarela($url, $body = "", $method = "GET")
     {
         $endpoint = $this->domainWPA . '/' . $url;
@@ -1127,14 +1132,14 @@ class acuarela
             "bilingual_users":["'.$bilingualID.'"],
             "active":true
         }';
-    
+
         // Realizar la solicitud a Strapi para agregar la guardería
         $daycareResponse = $this->queryStrapi("daycares", $data, "POST");
         $array["daycare"] = $daycareResponse;
-    
+
         // Obtener el usuario bilingüe asociado
         $user = $this->getBilingualUser($bilingualID);
-    
+
         // Almacenar el usuario en la sesión
         $_SESSION["user"] = $user;*/
 
@@ -1253,8 +1258,7 @@ class acuarela
         $array["acuarelaUser"] = $acuarelaUser;
         $array["user"] = $user;
         $array["loginUser"] = $loginUser;
-        $array["respMake"] = $resp;
-        $array["all"] = $all;
+
         if ($welcome) {
             $this->send_notification('info@bilingualchildcaretraining.com', $user->email, $user->name, "", "Bienvenido!", 'portal-miembros-e4', 'maRkSStgpCapJoSmwHOZDg', "Bilingual Childcare Training");
         }

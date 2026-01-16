@@ -1,27 +1,28 @@
 <?php include __DIR__ . "/config.php";
 $daycares = isset($_SESSION["user"]->daycares) ? $_SESSION["user"]->daycares : [];
-function findDaycareById($daycares, $id) {
-    if (empty($id) || empty($daycares)) {
-        return null;
+function findDaycareById($daycares, $id)
+{
+  if (empty($id) || empty($daycares)) {
+    return null;
+  }
+  foreach ($daycares as $daycare) {
+    if (isset($daycare->id) && $daycare->id === $id) {
+      return $daycare;
     }
-    foreach ($daycares as $daycare) {
-        if (isset($daycare->id) && $daycare->id === $id) {
-            return $daycare;
-        }
-    }
-    return null; // Si no se encuentra
+  }
+  return null; // Si no se encuentra
 }
 $foundDaycare = null;
 if (isset($a->daycareID) && !empty($a->daycareID)) {
-    $foundDaycare = findDaycareById($daycares, $a->daycareID);
+  $foundDaycare = findDaycareById($daycares, $a->daycareID);
 }
 // Si no se encuentra, usar el primer daycare disponible
 if (!$foundDaycare && !empty($daycares) && isset($daycares[0])) {
-    $foundDaycare = $daycares[0];
-    if (isset($a) && method_exists($a, 'setDaycare')) {
-        $a->setDaycare($daycares[0]->id);
-        $_SESSION['activeDaycare'] = $daycares[0]->id;
-    }
+  $foundDaycare = $daycares[0];
+  if (isset($a) && method_exists($a, 'setDaycare')) {
+    $a->setDaycare($daycares[0]->id);
+    $_SESSION['activeDaycare'] = $daycares[0]->id;
+  }
 }
 ?>
 
@@ -36,8 +37,8 @@ if (!$foundDaycare && !empty($daycares) && isset($daycares[0])) {
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
-  <link rel="stylesheet" href="css/acuarela_theme.css?v=<?= time() ?>" />
-  <link rel="stylesheet" href="css/styles.css?v=<?= time() ?>" />
+  <link rel="stylesheet" href="css/acuarela_theme.css?v=3.0" />
+  <link rel="stylesheet" href="css/styles.css?v=3.0" />
   <link rel="shortcut icon" href="img/favicon.png" />
   <script>
     let userMainT = "<?= $a->token ?>";
@@ -58,7 +59,7 @@ if (!$foundDaycare && !empty($daycares) && isset($daycares[0])) {
     // Example usage
     let daycareId = 1; // Replace with the ID you are looking for
     let foundDaycare = findDaycareById(daycares, "<?= isset($a->daycareID) ? $a->daycareID : '' ?>");
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       // El botón de logout siempre debe apuntar a cerrar sesión
       const logoutLink = document.querySelector('.logout a');
       if (logoutLink) {
