@@ -1,3 +1,9 @@
+# Configuración PHP para reducir logs innecesarios
+# Solo reportar Warnings y Errors, no Notices
+php_value error_reporting 22527
+php_flag display_errors Off
+php_flag log_errors On
+
 RewriteEngine On
 RewriteBase /
 

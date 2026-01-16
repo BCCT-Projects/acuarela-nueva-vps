@@ -370,13 +370,53 @@ class acuarela
 	}
 	function query($url, $body = "")
 	{
+		// Cache implementation
+		$cacheTime = 10800; // 3 hours cache
+		$cacheDir = __DIR__ . '/../cache/';
+
+		// Ensure cache directory exists
+		if (!file_exists($cacheDir)) {
+			@mkdir($cacheDir, 0755, true);
+		}
+
+		$cacheKey = md5($this->domain . $url . json_encode($body));
+		$cacheFile = $cacheDir . $cacheKey . '.json';
+
+		// Check if cache file exists and is fresh
+		if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheTime)) {
+			$cachedContent = @file_get_contents($cacheFile);
+			if ($cachedContent) {
+				return json_decode($cachedContent);
+			}
+		}
+
+		// Perform actual request
 		$endpoint = $this->domain . $url;
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $endpoint);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		// Add timeout to prevent hanging forever
+		curl_setopt($ch, CURLOPT_TIMEOUT, 6);
 		$output = curl_exec($ch);
+
+		if (curl_errno($ch)) {
+			// If external request fails loopback or similar
+			error_log("Acuarela cURL Error: " . curl_error($ch));
+			// Try to return old cache if exists even if expired
+			if (file_exists($cacheFile)) {
+				curl_close($ch);
+				return json_decode(file_get_contents($cacheFile));
+			}
+		}
+
 		$request = json_decode($output);
 		curl_close($ch);
+
+		// Save to cache if valid response
+		if ($output && $request) {
+			@file_put_contents($cacheFile, $output);
+		}
+
 		return $request;
 	}
 	function getInfoGeneral()

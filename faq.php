@@ -1,5 +1,3 @@
-<?php $faqs = $a->getFaq(); ?>
-
 <!-- FAQ -->
 <section class="faq" id="faq">
     <h2>Preguntas frecuentes</h2>
