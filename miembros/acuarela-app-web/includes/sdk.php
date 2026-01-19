@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/src/Mandrill.php';
+// Usar el servicio de cifrado compartido para evitar conflictos de declaración de clases
+require_once __DIR__ . '/../../includes/CryptoService.php';
 
 class Acuarela
 {
@@ -21,18 +23,21 @@ class Acuarela
         // Cargar configuración desde variables de entorno
         $this->domain = Env::get('ACUARELA_API_URL', 'https://acuarelacore.com/api/');
         $this->domainWP = Env::get('WP_API_URL', 'https://application.bilingualchildcaretraining.com/wp-json/wp/v2');
-        $this->domainWPA = Env::get('WP_ADMIN_API_URL', 'https://adminwebacuarela.bilingualchildcaretraining.com/wp-json/wp/v2');
+        $this->domainWPA = Env::get(
+            'WP_ADMIN_API_URL',
+            'https://adminwebacuarela.bilingualchildcaretraining.com/wp-json/wp/v2'
+        );
         $this->mandrillApiKey = Env::get('MANDRILL_API_KEY');
 
         $this->userID = $_SESSION["user"]->acuarelauser->id;
         $this->token = $_SESSION["userLogged"]->user->token;
 
         // Si no hay activeDaycare en sesión, usar el primer daycare del usuario
-        // EXCEPTO si estamos en la página de selección de daycare (para permitir que el usuario elija)
+// EXCEPTO si estamos en la página de selección de daycare (para permitir que el usuario elija)
         if (!isset($_SESSION['activeDaycare']) || empty($_SESSION['activeDaycare'])) {
             if (isset($_SESSION["user"]->daycares) && !empty($_SESSION["user"]->daycares)) {
                 // Solo establecer automáticamente si NO estamos en la página de selección
-                // y si solo hay un daycare (si hay múltiples, el usuario debe elegir)
+// y si solo hay un daycare (si hay múltiples, el usuario debe elegir)
                 if (!isset($_SESSION['selecting_daycare']) && count($_SESSION["user"]->daycares) == 1) {
                     $_SESSION['activeDaycare'] = $_SESSION["user"]->daycares[0]->id;
                 }
@@ -452,8 +457,18 @@ class Acuarela
     }
 
 
-    function send_notification($from, $to, $toname, $mergevariables, $subject, $template, $mandrillApiKey, $fromName = "Mandrill Message", $async = false)
-    {
+    function send_notification(
+        $from,
+        $to,
+        $toname,
+        $mergevariables,
+        $subject,
+        $template,
+        $mandrillApiKey,
+        $fromName =
+        "Mandrill Message",
+        $async = false
+    ) {
         $result = '';
         try {
             if ($from == "") {
@@ -529,7 +544,16 @@ class Acuarela
             'HORA' => $time,
             'FECHA' => $date
         ];
-        return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-in', $this->mandrillApiKey, "Acuarela");
+        return $this->send_notification(
+            'info@acuarela.app',
+            $mail,
+            $nameParent,
+            $this->transformMergeVars($mergeVars),
+            $subject,
+            'check-in',
+            $this->mandrillApiKey,
+            "Acuarela"
+        );
     }
     function sendCheckout($nameKid, $nameParent, $nameDaycare, $nameAcudiente, $time, $date, $mail, $subject = 'Check out')
     {
@@ -541,14 +565,29 @@ class Acuarela
             'HORA' => $time,
             'FECHA' => $date
         ];
-        return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-out', $this->mandrillApiKey, "Acuarela");
+        return $this->send_notification(
+            'info@acuarela.app',
+            $mail,
+            $nameParent,
+            $this->transformMergeVars($mergeVars),
+            $subject,
+            'check-out',
+            $this->mandrillApiKey,
+            "Acuarela"
+        );
     }
 
     /**
      * Envía email de activación a un nuevo asistente para que cree su contraseña
      */
-    function sendActivacionAsistente($email, $nombreCompleto, $asistenteId, $nombreDaycare, $subject = 'Bienvenido a Acuarela - Activa tu cuenta')
-    {
+    function sendActivacionAsistente(
+        $email,
+        $nombreCompleto,
+        $asistenteId,
+        $nombreDaycare,
+        $subject = 'Bienvenido a
+Acuarela - Activa tu cuenta'
+    ) {
         // Detectar si estamos en dev o producción basado en el host actual
         $host = $_SERVER['HTTP_HOST'] ?? 'bilingualchildcaretraining.com';
         $isDev = (strpos($host, 'dev.') !== false);
@@ -568,7 +607,16 @@ class Acuarela
             'DAYCARE' => $nombreDaycare,
             'LINK' => $linkActivacion
         ];
-        return $this->send_notification('info@acuarela.app', $email, $nombreCompleto, $this->transformMergeVars($mergeVars), $subject, 'activacion-asistente', $this->mandrillApiKey, "Acuarela");
+        return $this->send_notification(
+            'info@acuarela.app',
+            $email,
+            $nombreCompleto,
+            $this->transformMergeVars($mergeVars),
+            $subject,
+            'activacion-asistente',
+            $this->mandrillApiKey,
+            "Acuarela"
+        );
     }
 
     /**
@@ -659,10 +707,14 @@ class Acuarela
             "content-type: multipart/form-data ",
         ];
 
-        $postFields = [
-            "files" => new CURLFile($file['tmp_name'], $file['type'], $file['name']),
-        ];
+        // Anonimizar nombre de archivo para proteger privacidad (evitar nombres como "Foto_Juan_Perez.jpg")
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        // Generar nombre aleatorio: timestamp + hash
+        $randomName = uniqid() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
 
+        $postFields = [
+            "files" => new CURLFile($file['tmp_name'], $file['type'], $randomName),
+        ];
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -880,7 +932,7 @@ class Acuarela
     function initCrypto()
     {
         try {
-            // Obtener clave de cifrado de variable de entorno  
+            // Obtener clave de cifrado de variable de entorno
             $encryptionKey = Env::get('DATA_ENCRYPTION_KEY');
 
             if (!$encryptionKey) {
@@ -1036,8 +1088,7 @@ class Acuarela
             'emotional_health',
             'suspected_abuse',
             'pediatrician',
-            'pediatrician_email',
-            'pediatrician_number'
+            // 'pediatrician_email', // NO CIFRAR por validación de Strapi
         ];
 
         foreach ($textFields as $field) {
@@ -1051,11 +1102,27 @@ class Acuarela
         $arrayFields = ['allergies', 'medicines', 'accidents', 'vacination', 'ointments', 'incidents'];
 
         foreach ($arrayFields as $field) {
-            if (isset($data[$field]) && is_array($data[$field]) && !empty($data[$field])) {
+            // Cifrar incluso si está vacío para devolver un string cifrado de "[]"
+            // Strapi espera un string en este campo, si enviamos array [], falla con 400 Bad Request
+            if (isset($data[$field]) && is_array($data[$field])) {
                 $data[$field] = $this->crypto->encryptArray($data[$field]);
             }
         }
 
+        // Cifrado granular para healthcheck (Strapi exige Array, no String cifrado)
+        if (isset($data['healthcheck']) && is_array($data['healthcheck'])) {
+            foreach ($data['healthcheck'] as &$check) {
+                // Campos internos a cifrar
+                $checkFields = ['temperature', 'report', 'bodychild'];
+                foreach ($checkFields as $cf) {
+                    if (isset($check[$cf]) && !$this->crypto->isEncrypted($check[$cf])) {
+                        $check[$cf] = $this->crypto->encrypt($check[$cf]);
+                    }
+                }
+            }
+            // Nota: daily_fecha se mantiene en texto plano para búsquedas/índices si fuera necesario,
+            // o se agrega a $checkFields si la política lo exige estricto.
+        }
         return $data;
     }
 
@@ -1082,8 +1149,8 @@ class Acuarela
             'emotional_health',
             'suspected_abuse',
             'pediatrician',
-            'pediatrician_email',
-            'pediatrician_number'
+            // 'pediatrician_email', // NO CIFRAR por validación de Strapi
+            // 'pediatrician_number'
         ];
 
         foreach ($textFields as $field) {
@@ -1102,9 +1169,41 @@ class Acuarela
             if (isset($healthInfo->$field)) {
                 try {
                     $healthInfo->$field = $this->crypto->decryptArray($healthInfo->$field);
+
+                    // Si es 'incidents', convertir cada elemento a objeto
+                    // Esto es necesario porque decryptArray devuelve arrays asociativos
+                    // pero las vistas esperan objetos (stdClass)
+                    if ($field === 'incidents' && is_array($healthInfo->$field)) {
+                        foreach ($healthInfo->$field as &$inc) {
+                            if (is_array($inc)) {
+                                $inc = (object) $inc;
+                            }
+                        }
+                    }
                 } catch (Exception $e) {
                     error_log("Error decrypting healthInfo.$field: " . $e->getMessage());
                     $healthInfo->$field = [];
+                }
+            }
+        }
+
+        // Descifrado granular para healthcheck
+        if (isset($healthInfo->healthcheck) && is_array($healthInfo->healthcheck)) {
+            foreach ($healthInfo->healthcheck as &$check) {
+                // Convertir a objeto si es array (consistencia)
+                if (is_array($check)) {
+                    $check = (object) $check;
+                }
+
+                $checkFields = ['temperature', 'report', 'bodychild'];
+                foreach ($checkFields as $cf) {
+                    if (isset($check->$cf) && $this->crypto->isEncrypted($check->$cf)) {
+                        try {
+                            $check->$cf = $this->crypto->decrypt($check->$cf);
+                        } catch (Exception $e) {
+                            error_log("Error decrypting healthcheck.$cf: " . $e->getMessage());
+                        }
+                    }
                 }
             }
         }

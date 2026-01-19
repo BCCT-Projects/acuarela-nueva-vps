@@ -6,8 +6,13 @@ session_start();
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-include "../../includes/sdk.php";
+include "../../includes/config.php";
 $a = new Acuarela();
+
+// Inicializar servicio de cifrado explícitamente para asegurar que podamos descifrar
+if (method_exists($a, 'initCrypto')) {
+    $a->initCrypto();
+}
 
 header('Content-Type: application/json');
 

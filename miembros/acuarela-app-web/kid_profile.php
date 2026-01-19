@@ -2,6 +2,21 @@
 include "includes/header.php";
 $kid = $a->getChildren($_GET['id']);
 
+// Descifrar datos del niño (nombre, apellido, fecha de nacimiento)
+$kid = $a->decryptChildData($kid);
+
+// Descifrar datos de los padres (teléfonos)
+if (isset($kid->acuarelausers) && is_array($kid->acuarelausers)) {
+    foreach ($kid->acuarelausers as $key => $parent) {
+        $kid->acuarelausers[$key] = $a->decryptParentData($parent);
+    }
+}
+
+// Descifrar datos de salud (evita que el PHP falle al tratar strings cifrados como arrays)
+if (isset($kid->healthinfo)) {
+    $kid->healthinfo = $a->decryptHealthData($kid->healthinfo);
+}
+
 // Obtener estado COPPA
 $coppaStatus = 'pending'; // Default
 if (isset($kid->id)) {
@@ -50,7 +65,6 @@ foreach ($healthInfoDefaults as $key => $default) {
 <script>
     let activities = <?= json_encode($kid->childrenactivities) ?>;
     let kidData = <?= json_encode($kid) ?>;
-    console.log(kidData);
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -370,9 +384,17 @@ foreach ($healthInfoDefaults as $key => $default) {
                                 </div>
                             </div>
                         </div>
-                        <a class="saludinfoadd saludinfoadd-shadow"
-                            href="/miembros/acuarela-app-web/agregar-salud/<?= $kid->_id ?>"><i
-                                class="acuarela acuarela-Agregar"></i> Agregar datos de salud </a>
+                        <?php if ($coppaStatus === 'granted'): ?>
+                            <a class="saludinfoadd saludinfoadd-shadow"
+                                href="/miembros/acuarela-app-web/agregar-salud/<?= $kid->_id ?>"><i
+                                    class="acuarela acuarela-Agregar"></i> Agregar datos de salud </a>
+                        <?php else: ?>
+                            <p
+                                style="text-align: center; color: #e65252; padding: 15px; background: #ffe5e5; border-radius: 8px; margin: 15px 0;">
+                                <i class="acuarela acuarela-Advertencia"></i> No se puede modificar información de salud
+                                porque el consentimiento COPPA está <strong><?= $coppaLabel ?></strong>.
+                            </p>
+                        <?php endif; ?>
 
                         <div class="saludincidentes">
                             <h3 class="saludincidentes-title">Incidentes</h3>
@@ -441,9 +463,11 @@ foreach ($healthInfoDefaults as $key => $default) {
                             <?php else: ?>
                                 <p>No hay incidentes registrados.</p>
                             <?php endif; ?>
-                            <a class="saludinfoadd"
-                                href="/miembros/acuarela-app-web/agregar-reporte/<?= $kid->_id ?>"><i
-                                    class="acuarela acuarela-Agregar"></i> Agregar nuevo reporte </a>
+                            <?php if ($coppaStatus === 'granted'): ?>
+                                <a class="saludinfoadd"
+                                    href="/miembros/acuarela-app-web/agregar-reporte/<?= $kid->_id ?>"><i
+                                        class="acuarela acuarela-Agregar"></i> Agregar nuevo reporte </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -474,12 +498,24 @@ foreach ($healthInfoDefaults as $key => $default) {
                             </table>
                         </div>
                     </div>
-                    <div class="health-buttoms">
-                        <button id="btnView-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable"> Ver
-                            reporte </button>
-                        <button id="btnAgregar-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable">
-                            Agregar reporte </button>
-                    </div>
+                    <?php if ($coppaStatus === 'granted'): ?>
+                        <div class="health-buttoms">
+                            <button id="btnView-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable"> Ver
+                                reporte </button>
+                            <button id="btnAgregar-reporte" class="btn btn-action-secondary enfasis btn-big btn-disable">
+                                Agregar reporte </button>
+                        </div>
+                        <p id="calendar-help-text"
+                            style="text-align: center; color: #6c757d; font-size: 14px; margin-top: 10px; transition: opacity 0.3s;">
+                            <i class="acuarela acuarela-Informacion"></i> Selecciona un día en el calendario para continuar
+                        </p>
+                    <?php else: ?>
+                        <p
+                            style="text-align: center; color: #e65252; padding: 15px; background: #ffe5e5; border-radius: 8px; margin: 15px;">
+                            <i class="acuarela acuarela-Advertencia"></i> No se puede registrar información de Health Check
+                            porque el consentimiento COPPA está <strong><?= $coppaLabel ?></strong>.
+                        </p>
+                    <?php endif; ?>
                 </div>
 
                 <div id="actividades" class="tab-content">
@@ -499,55 +535,77 @@ foreach ($healthInfoDefaults as $key => $default) {
                 </div>
 
                 <div id="pagos" class="tab-content">
-                    <ul>
-                        <?php
-                        for ($i = 0; $i < count($kid->movements); $i++) {
-                            $pay = $kid->movements[$i];
-                            ?>
-                            <li>
-                                <h4><?= $pay->name ?></h4>
-                                <span class="status" style="color:<?= $pay->status ? "#3fb072"
-                                    : "#f5aa16" ?>;">
-                                    <?= $pay->status ? "PAGO APROBADO" : "PAGO PENDIENTE" ?>
-                                </span>
-                                <span class="date">
-                                    <?php
-                                    // Crea un objeto DateTime desde la cadena ISO 8601
-                                    $payDate = new DateTime($pay->date);
-                                    // Formatea la fecha al formato MM-DD-YYYY
-                                    $payDate_formateada = $payDate->format('m-d-Y');
-                                    echo $payDate_formateada;
-                                    ?>
-                                </span>
-                                <span class="amount">
-                                    $<?= $pay->amount ?>
-                                </span>
-                            </li>
+                    <?php if (!empty($kid->movements) && count($kid->movements) > 0): ?>
+                        <ul>
                             <?php
-                        }
-                        ?>
-
-                    </ul>
+                            for ($i = 0; $i < count($kid->movements); $i++) {
+                                $pay = $kid->movements[$i];
+                                ?>
+                                <li>
+                                    <h4><?= $pay->name ?></h4>
+                                    <span class="status" style="color:<?= $pay->status ? "#3fb072"
+                                        : "#f5aa16" ?>;">
+                                        <?= $pay->status ? "PAGO APROBADO" : "PAGO PENDIENTE" ?>
+                                    </span>
+                                    <span class="date">
+                                        <?php
+                                        // Crea un objeto DateTime desde la cadena ISO 8601
+                                        $payDate = new DateTime($pay->date);
+                                        // Formatea la fecha al formato MM-DD-YYYY
+                                        $payDate_formateada = $payDate->format('m-d-Y');
+                                        echo $payDate_formateada;
+                                        ?>
+                                    </span>
+                                    <span class="amount">
+                                        $<?= $pay->amount ?>
+                                    </span>
+                                </li>
+                                <?php
+                            }
+                            ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="acuarela acuarela-Pago" style="font-size: 64px; color: #d0d0d0;"></i>
+                            <p style="color: #6c757d; font-size: 18px; margin-top: 20px; font-weight: 500;">
+                                No hay pagos registrados
+                            </p>
+                            <p style="color: #999; font-size: 14px; margin-top: 8px;">
+                                Los movimientos financieros aparecerán aquí
+                            </p>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- <div id="registro" class="tab-content"></div> -->
                 <div id="Adjuntos" class="tab-content ">
-                    <ul>
-                        <?php
-                        for ($i = 0; $i < count($kid->files); $i++) {
-                            $file = $kid->files[$i];
-                            ?>
-                            <li>
-                                <a href="https://acuarelacore.com/api<?= $file->file->url ?>">
-                                    <i class="acuarela acuarela-Nota"></i>
-                                    <h4><?= $file->name ?></h4>
-                                </a>
-                            </li>
+                    <?php if (!empty($kid->files) && count($kid->files) > 0): ?>
+                        <ul>
                             <?php
-                        }
-                        ?>
-
-                    </ul>
+                            for ($i = 0; $i < count($kid->files); $i++) {
+                                $file = $kid->files[$i];
+                                ?>
+                                <li>
+                                    <a href="https://acuarelacore.com/api<?= $file->file->url ?>">
+                                        <i class="acuarela acuarela-Nota"></i>
+                                        <h4><?= $file->name ?></h4>
+                                    </a>
+                                </li>
+                                <?php
+                            }
+                            ?>
+                        </ul>
+                    <?php else: ?>
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="acuarela acuarela-Nota" style="font-size: 64px; color: #d0d0d0;"></i>
+                            <p style="color: #6c757d; font-size: 18px; margin-top: 20px; font-weight: 500;">
+                                No hay documentos adjuntos
+                            </p>
+                            <p style="color: #999; font-size: 14px; margin-top: 8px;">
+                                Los archivos subidos aparecerán aquí
+                            </p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -710,6 +768,7 @@ foreach ($healthInfoDefaults as $key => $default) {
                         btnAddreport.setAttribute("data-fecha", fechaSeleccionada);
                     }
 
+
                     const existeFecha = kidData.healthinfo.healthcheck.some(entry => entry.daily_fecha === fechaSeleccionada);
 
                     btnAddreport.disabled = !existeFecha ? false : true;
@@ -723,6 +782,13 @@ foreach ($healthInfoDefaults as $key => $default) {
                         btnViewreport.disabled = true;
                         btnViewreport.classList.remove("active");
                         btnViewreport.removeAttribute("data-fecha");
+                    }
+
+                    // Ocultar mensaje de ayuda cuando se selecciona un día válido
+                    const helpText = document.getElementById("calendar-help-text");
+                    if (helpText && (!btnAddreport.disabled || !btnViewreport.disabled)) {
+                        helpText.style.opacity = "0";
+                        setTimeout(() => helpText.style.display = "none", 300);
                     }
                 });
             });
