@@ -71,6 +71,22 @@ foreach ($consents as $consent) {
         $realName = isset($child->name) ? $child->name : '';
         $realLastname = isset($child->lastname) ? $child->lastname : '';
 
+        // DESENCRIPTAR NOMBRES SI ESTÁN cifrados
+        if (isset($a->crypto) && $a->crypto) {
+            try {
+                if ($a->crypto->isEncrypted($realName)) {
+                    $realName = $a->crypto->decrypt($realName);
+                }
+                if ($a->crypto->isEncrypted($realLastname)) {
+                    $realLastname = $a->crypto->decrypt($realLastname);
+                }
+            } catch (Exception $e) {
+                error_log("Error decrypting child name in revocation: " . $e->getMessage());
+                // Continuar con el siguiente si hay error descifrando
+                continue;
+            }
+        }
+
         // Construir nombre completo real (normalizado)
         $fullRealName = trim(strtolower($realName . ' ' . $realLastname));
         $onlyRealName = trim(strtolower($realName));

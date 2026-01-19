@@ -5,9 +5,25 @@ include "../includes/sdk.php";
 $a = new Acuarela();
 $result = $a->getChildren(isset($_GET['id']) ? $_GET['id'] : "");
 
-// Enriquecer con estado COPPA
+// Descifrar datos sensibles de los niños
 if (isset($result->response) && is_array($result->response)) {
     foreach ($result->response as &$child) {
+        // Descifrar datos del niño
+        $child = $a->decryptChildData($child);
+
+        // Descifrar datos de salud si existen
+        if (isset($child->healthinfo)) {
+            $child->healthinfo = $a->decryptHealthData($child->healthinfo);
+        }
+
+        // Descifrar datos de padres si existen
+        if (isset($child->acuarelausers) && is_array($child->acuarelausers)) {
+            foreach ($child->acuarelausers as &$parent) {
+                $parent = $a->decryptParentData($parent);
+            }
+        }
+
+        // Enriquecer con estado COPPA
         $child->coppa_status = 'pending'; // Default as pending is safer
 
         if (isset($child->id)) {

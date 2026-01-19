@@ -14,6 +14,7 @@ class Acuarela
     public $defaultInitialDate;
     public $defaultFinalDate;
     private $mandrillApiKey;
+    public $crypto; // CryptoService instance for encryption at rest
 
     function __construct()
     {
@@ -173,8 +174,96 @@ class Acuarela
     }
     function deleteElement($type, $id)
     {
+        // Si es una inscripción, hacer borrado en cascada
+        if ($type === 'inscripciones') {
+            return $this->deleteInscripcionCascade($id);
+        }
+
+        // Para otros tipos, borrado simple
         $resp = $this->queryStrapi("$type/$id", "", "DELETE");
         return $resp;
+    }
+
+    /**
+     * Borra una inscripción y todos los datos relacionados del niño
+     */
+    function deleteInscripcionCascade($inscripcionId)
+    {
+        try {
+            // 1. Obtener la inscripción para sacar el child_id
+            $inscripcion = $this->queryStrapi("inscripciones/$inscripcionId");
+
+            if (!$inscripcion || !isset($inscripcion->child)) {
+                error_log("Inscripción no encontrada o sin child: $inscripcionId");
+                return ['ok' => false, 'error' => 'Inscripción no encontrada'];
+            }
+
+            $childId = is_object($inscripcion->child) ? $inscripcion->child->id : $inscripcion->child;
+
+            error_log("Borrando inscripción $inscripcionId y niño $childId en cascada");
+
+            // 2. Borrar consentimientos parentales
+            $consents = $this->queryStrapi("parental-consents?child_id=$childId");
+            if (is_array($consents)) {
+                foreach ($consents as $consent) {
+                    if (isset($consent->id)) {
+                        error_log("Borrando consentimiento: " . $consent->id);
+                        $this->queryStrapi("parental-consents/" . $consent->id, "", "DELETE");
+                    }
+                }
+            }
+
+            // 3. Borrar información de salud (healthinfos)
+            $healthInfos = $this->queryStrapi("healthinfos?child=$childId");
+            if (is_array($healthInfos)) {
+                foreach ($healthInfos as $healthInfo) {
+                    if (isset($healthInfo->id)) {
+                        error_log("Borrando healthinfo: " . $healthInfo->id);
+                        $this->queryStrapi("healthinfos/" . $healthInfo->id, "", "DELETE");
+                    }
+                }
+            }
+
+            // 4. Remover de grupos (no borrar el grupo, solo quitar relación)
+            $grupos = $this->queryStrapi("groups?children_contains=$childId");
+            if (is_array($grupos)) {
+                foreach ($grupos as $grupo) {
+                    if (isset($grupo->id) && isset($grupo->children)) {
+                        // Filtrar el niño del array de children
+                        $newChildren = array_filter($grupo->children, function ($child) use ($childId) {
+                            $id = is_object($child) ? $child->id : $child;
+                            return $id != $childId;
+                        });
+
+                        // Actualizar el grupo sin este niño
+                        $this->queryStrapi("groups/" . $grupo->id, [
+                            'children' => array_values($newChildren)
+                        ], "PUT");
+                    }
+                }
+            }
+
+            // 5. Borrar el niño (children)
+            error_log("Borrando child: $childId");
+            $this->queryStrapi("children/$childId", "", "DELETE");
+
+            // 6. Finalmente borrar la inscripción
+            error_log("Borrando inscripción: $inscripcionId");
+            $resp = $this->queryStrapi("inscripciones/$inscripcionId", "", "DELETE");
+
+            return [
+                'ok' => true,
+                'message' => 'Niño e inscripción borrados correctamente',
+                'deleted' => [
+                    'child' => $childId,
+                    'inscripcion' => $inscripcionId
+                ]
+            ];
+
+        } catch (Exception $e) {
+            error_log("Error en deleteInscripcionCascade: " . $e->getMessage());
+            return ['ok' => false, 'error' => $e->getMessage()];
+        }
     }
     function getInscripciones($id = "", $daycare = null)
     {
@@ -777,6 +866,250 @@ class Acuarela
         // Usar el endpoint correcto: aviso-coppas (plural)
         $resp = $this->queryStrapi("aviso-coppas?_sort=notice_published_date:DESC");
         return $resp;
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * ENCRYPTION AT REST - Methods for Data Protection
+     * ═══════════════════════════════════════════════════════════════
+     */
+
+    /**
+     * Inicializa el servicio de cifrado
+     */
+    function initCrypto()
+    {
+        try {
+            // Obtener clave de cifrado de variable de entorno  
+            $encryptionKey = Env::get('DATA_ENCRYPTION_KEY');
+
+            if (!$encryptionKey) {
+                // En desarrollo, mostrar warning
+                error_log('WARNING: DATA_ENCRYPTION_KEY not set. Encryption disabled.');
+                $this->crypto = null;
+                return;
+            }
+
+            require_once __DIR__ . '/../../includes/CryptoService.php';
+            $this->crypto = new CryptoService($encryptionKey);
+        } catch (Exception $e) {
+            error_log('CryptoService initialization error: ' . $e->getMessage());
+            $this->crypto = null;
+        }
+    }
+
+    /**
+     * Cifra campos sensibles de un niño antes de enviar a Strapi
+     */
+    function encryptChildData($data)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto) {
+            return $data;
+        }
+
+        $fieldsToEncrypt = ['name', 'lastname', 'birthday'];
+
+        foreach ($fieldsToEncrypt as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra campos sensibles de un niño después de recibir de Strapi
+     */
+    function decryptChildData($child)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto || !$child) {
+            return $child;
+        }
+
+        $isArray = is_array($child);
+        if ($isArray) {
+            $child = (object) $child;
+        }
+
+        $fieldsToDecrypt = ['name', 'lastname', 'birthday'];
+
+        foreach ($fieldsToDecrypt as $field) {
+            if (isset($child->$field)) {
+                if ($this->crypto->isEncrypted($child->$field)) {
+                    try {
+                        $child->$field = $this->crypto->decrypt($child->$field);
+                    } catch (Exception $e) {
+                        error_log("Error decrypting child.$field: " . $e->getMessage());
+                    }
+                }
+            }
+        }
+
+        return $isArray ? (array) $child : $child;
+    }
+
+    /**
+     * Cifra campos sensibles de padres antes de enviar
+     */
+    function encryptParentData($data)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto) {
+            return $data;
+        }
+
+        $fieldsToEncrypt = ['phone'];
+
+        foreach ($fieldsToEncrypt as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra campos sensibles de padres después de recibir
+     */
+    function decryptParentData($parent)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto || !$parent) {
+            return $parent;
+        }
+
+        $isArray = is_array($parent);
+        if ($isArray) {
+            $parent = (object) $parent;
+        }
+
+        $fieldsToDecrypt = ['phone'];
+
+        foreach ($fieldsToDecrypt as $field) {
+            if (isset($parent->$field) && $this->crypto->isEncrypted($parent->$field)) {
+                try {
+                    $parent->$field = $this->crypto->decrypt($parent->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting parent.$field: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $isArray ? (array) $parent : $parent;
+    }
+
+    /**
+     * Cifra información de salud antes de enviar
+     */
+    function encryptHealthData($data)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto) {
+            return $data;
+        }
+
+        $textFields = [
+            'physical_health',
+            'emotional_health',
+            'suspected_abuse',
+            'pediatrician',
+            'pediatrician_email',
+            'pediatrician_number'
+        ];
+
+        foreach ($textFields as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        $arrayFields = ['allergies', 'medicines', 'accidents', 'vacination', 'ointments', 'incidents'];
+
+        foreach ($arrayFields as $field) {
+            if (isset($data[$field]) && is_array($data[$field]) && !empty($data[$field])) {
+                $data[$field] = $this->crypto->encryptArray($data[$field]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra información de salud después de recibir
+     */
+    function decryptHealthData($healthInfo)
+    {
+        if (!isset($this->crypto)) {
+            $this->initCrypto();
+        }
+
+        if (!$this->crypto || !$healthInfo) {
+            return $healthInfo;
+        }
+
+        $isArray = is_array($healthInfo);
+        if ($isArray) {
+            $healthInfo = (object) $healthInfo;
+        }
+
+        $textFields = [
+            'physical_health',
+            'emotional_health',
+            'suspected_abuse',
+            'pediatrician',
+            'pediatrician_email',
+            'pediatrician_number'
+        ];
+
+        foreach ($textFields as $field) {
+            if (isset($healthInfo->$field) && $this->crypto->isEncrypted($healthInfo->$field)) {
+                try {
+                    $healthInfo->$field = $this->crypto->decrypt($healthInfo->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting healthInfo.$field: " . $e->getMessage());
+                }
+            }
+        }
+
+        $arrayFields = ['allergies', 'medicines', 'accidents', 'vacination', 'ointments', 'incidents'];
+
+        foreach ($arrayFields as $field) {
+            if (isset($healthInfo->$field)) {
+                try {
+                    $healthInfo->$field = $this->crypto->decryptArray($healthInfo->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting healthInfo.$field: " . $e->getMessage());
+                    $healthInfo->$field = [];
+                }
+            }
+        }
+
+        return $isArray ? (array) $healthInfo : $healthInfo;
     }
 
 }

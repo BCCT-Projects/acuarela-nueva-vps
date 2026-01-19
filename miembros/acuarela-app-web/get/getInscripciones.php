@@ -5,6 +5,19 @@ include "../includes/sdk.php";
 $a = new Acuarela();
 $posts = $a->getInscripciones("", $a->daycareID);
 
+// Descifrar datos sensibles de niños en inscripciones
+if (is_array($posts)) {
+    foreach ($posts as &$post) {
+        // Descifrar datos del niño
+        $post = $a->decryptChildData($post);
+
+        // Si hay un objeto child, descifrarlo también
+        if (isset($post->child) && is_object($post->child)) {
+            $post->child = $a->decryptChildData($post->child);
+        }
+    }
+}
+
 // Enriquecer con estado de consentimiento COPPA
 if (is_array($posts)) {
     foreach ($posts as &$post) {

@@ -15,11 +15,24 @@ include "consent/initiate.php";
 error_log("--- Inicio createInscripcion.php ---");
 
 // 1. Crear Inscripción en Strapi (mantener status original)
-$dataObj = json_decode($data);
-error_log("Payload recibido para: " . ($dataObj->name ?? 'Unknown'));
+$dataObj = json_decode($data, true); // Decodificar como array
+error_log("Payload recibido para: " . ($dataObj['name'] ?? 'Unknown'));
+
+// Cifrar datos sensibles del niño antes de enviar
+$dataObj = $a->encryptChildData($dataObj);
+
+// Si hay datos de padres, cifrarlos también
+if (isset($dataObj['parents']) && is_array($dataObj['parents'])) {
+    foreach ($dataObj['parents'] as $index => $parent) {
+        $dataObj['parents'][$index] = $a->encryptParentData($parent);
+    }
+}
+
+// Re-codificar para enviar
+$data = json_encode($dataObj);
 
 // Si es borrador, lo dejamos pasar normal sin flujo COPPA
-if (isset($dataObj->status) && $dataObj->status == 'Borrador') {
+if (isset($dataObj['status']) && $dataObj['status'] == 'Borrador') {
     $inscripcion = $a->postInscripcion($data);
     echo json_encode($inscripcion);
     exit;
@@ -27,7 +40,7 @@ if (isset($dataObj->status) && $dataObj->status == 'Borrador') {
 
 // Si es "Finalizado" (o cualquier otro estado), creamos el niño normalmente
 // El consentimiento se registra en la tabla "parental_consents" solamente
-error_log("Creando niño en Strapi con status: " . ($dataObj->status ?? 'Desconocido'));
+error_log("Creando niño en Strapi con status: " . ($dataObj['status'] ?? 'Desconocido'));
 $respInscripcion = $a->postInscripcion($data);
 
 // Debug detallado de la respuesta
@@ -61,36 +74,51 @@ if ($childId) {
     $parentName = 'Tutor';
 
     // Opción 1: Campo directo email_tutor_1
-    if (isset($dataObj->email_tutor_1) && !empty($dataObj->email_tutor_1)) {
-        $parentEmail = $dataObj->email_tutor_1;
-        $parentName = $dataObj->nombre_tutor_1 ?? 'Tutor';
+    if (isset($dataObj['email_tutor_1']) && !empty($dataObj['email_tutor_1'])) {
+        $parentEmail = $dataObj['email_tutor_1'];
+        $parentName = $dataObj['nombre_tutor_1'] ?? 'Tutor';
     }
     // Opción 2: Array de parents
-    elseif (isset($dataObj->parents) && is_array($dataObj->parents) && count($dataObj->parents) > 0) {
-        $parentEmail = $dataObj->parents[0]->email ?? '';
-        $parentName = $dataObj->parents[0]->name ?? 'Tutor';
+    elseif (isset($dataObj['parents']) && is_array($dataObj['parents']) && count($dataObj['parents']) > 0) {
+        $parentEmail = $dataObj['parents'][0]['email'] ?? '';
+        $parentName = $dataObj['parents'][0]['name'] ?? 'Tutor';
     }
     // Opción 3: Email genérico
-    elseif (isset($dataObj->email) && !empty($dataObj->email)) {
-        $parentEmail = $dataObj->email;
+    elseif (isset($dataObj['email']) && !empty($dataObj['email'])) {
+        $parentEmail = $dataObj['email'];
     }
     // Opción 4: email_tutor_2
-    elseif (isset($dataObj->email_tutor_2) && !empty($dataObj->email_tutor_2)) {
-        $parentEmail = $dataObj->email_tutor_2;
-        $parentName = $dataObj->nombre_tutor_2 ?? 'Tutor';
+    elseif (isset($dataObj['email_tutor_2']) && !empty($dataObj['email_tutor_2'])) {
+        $parentEmail = $dataObj['email_tutor_2'];
+        $parentName = $dataObj['nombre_tutor_2'] ?? 'Tutor';
     }
 
     error_log("Parent Email encontrado: '$parentEmail'");
     error_log("Parent Name encontrado: '$parentName'");
 
     // Datos adicionales para el template "Invitaciones"
-    $childName = ($dataObj->name ?? '') . ' ' . ($dataObj->lastname ?? '');
-    $childName = trim($childName);
-    $daycareId = $dataObj->daycare ?? null;
+    // IMPORTANTE: Descifrar el nombre antes de usarlo en el email
+    $childNamePlain = ($dataObj['name'] ?? '') . ' ' . ($dataObj['lastname'] ?? '');
+    $childNamePlain = trim($childNamePlain);
+
+    // Si el nombre está cifrado, descifrarlo para el email
+    if (isset($a->crypto) && $a->crypto && $a->crypto->isEncrypted($dataObj['name'] ?? '')) {
+        try {
+            $firstName = $a->crypto->decrypt($dataObj['name']);
+            $lastName = isset($dataObj['lastname']) ? $a->crypto->decrypt($dataObj['lastname']) : '';
+            $childNamePlain = trim($firstName . ' ' . $lastName);
+        } catch (Exception $e) {
+            error_log("Error decrypting child name for email: " . $e->getMessage());
+            // Si falla, usar un nombre genérico
+            $childNamePlain = "su hijo/a";
+        }
+    }
+
+    $daycareId = $dataObj['daycare'] ?? null;
 
     // 2. Iniciar Flujo de Consentimiento
     error_log("Iniciando flujo COPPA para ChildID: $childId, Email: $parentEmail");
-    $consentResult = initiateCoppaConsent($childId, $parentEmail, $parentName, $childName, $daycareId, $a);
+    $consentResult = initiateCoppaConsent($childId, $parentEmail, $parentName, $childNamePlain, $daycareId, $a);
     error_log("Resultado flujo COPPA: " . json_encode($consentResult));
 
     $finalResponse = [];

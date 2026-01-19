@@ -1,5 +1,6 @@
 <?php
 require_once 'src/Mandrill.php';
+require_once 'CryptoService.php';
 class acuarela
 {
     public $domain = "https://acuarelacore.com/api/";
@@ -14,6 +15,7 @@ class acuarela
     public $client_secret = "7c28db40807ee2e2459a9629f084d037ee7edc0c95";
     public $refresh_token = "1000.ecf5734d91ad7ba8474aaac5e019ec8f.6148872828accaaf6896a2d98af189f0";
     public $token;
+    public $crypto; // CryptoService instance for encryption at rest
 
     function __construct()
     {
@@ -23,6 +25,9 @@ class acuarela
         // $this->getgruposdeedad = "";
         // $this->getmomentoaprendizaje = "";
         // $this->getformas = "";
+
+        // Inicializar servicio de cifrado
+        $this->initCrypto();
     }
     function performCurlRequest($url, $method, $data, $headers)
     {
@@ -1699,5 +1704,287 @@ class acuarela
         curl_close($curl);
 
         return $response;
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════
+     * ENCRYPTION AT REST - Methods for Data Protection
+     * ═══════════════════════════════════════════════════════════════
+     */
+
+    /**
+     * Inicializa el servicio de cifrado
+     */
+    function initCrypto()
+    {
+        try {
+            // Cargar archivo .env manualmente
+            $envPath = __DIR__ . '/../acuarela-app-web/.env';
+
+            if (file_exists($envPath)) {
+                $envContent = file_get_contents($envPath);
+                $lines = explode("\n", $envContent);
+
+                foreach ($lines as $line) {
+                    $line = trim($line);
+
+                    // Ignorar comentarios y líneas vacías
+                    if (empty($line) || strpos($line, '#') === 0) {
+                        continue;
+                    }
+
+                    // Parsear línea KEY=VALUE
+                    if (strpos($line, '=') !== false) {
+                        list($key, $value) = explode('=', $line, 2);
+                        $key = trim($key);
+                        $value = trim($value);
+
+                        // Guardar en $_ENV y getenv()
+                        $_ENV[$key] = $value;
+                        putenv("$key=$value");
+                    }
+                }
+            }
+
+            // Obtener clave de cifrado de variable de entorno
+            $encryptionKey = getenv('DATA_ENCRYPTION_KEY');
+
+            if (!$encryptionKey) {
+                // En desarrollo, mostrar warning
+                if (
+                    isset($_SERVER['SERVER_NAME']) &&
+                    ($_SERVER['SERVER_NAME'] === 'localhost' || strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false)
+                ) {
+                    error_log('WARNING: DATA_ENCRYPTION_KEY not set. Encryption disabled.');
+                    $this->crypto = null;
+                    return;
+                }
+
+                // En producción, lanzar error
+                throw new Exception('DATA_ENCRYPTION_KEY environment variable is not set');
+            }
+
+            $this->crypto = new CryptoService($encryptionKey);
+        } catch (Exception $e) {
+            error_log('CryptoService initialization error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Cifra campos sensibles de un niño antes de enviar a Strapi
+     * 
+     * @param array $data Datos del niño
+     * @return array Datos con campos sensibles cifrados
+     */
+    function encryptChildData($data)
+    {
+        if (!$this->crypto) {
+            return $data; // Si crypto no está inicializado, retornar sin cambios
+        }
+
+        $fieldsToEncrypt = ['name', 'lastname', 'birthday'];
+
+        foreach ($fieldsToEncrypt as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                // Solo cifrar si no está ya cifrado
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra campos sensibles de un niño después de recibir de Strapi
+     * 
+     * @param object|array $child Datos del niño
+     * @return object|array Datos con campos descifrados
+     */
+    function decryptChildData($child)
+    {
+        if (!$this->crypto || !$child) {
+            return $child;
+        }
+
+        $isArray = is_array($child);
+        if ($isArray) {
+            $child = (object) $child;
+        }
+
+        $fieldsToDecrypt = ['name', 'lastname', 'birthday'];
+
+        foreach ($fieldsToDecrypt as $field) {
+            if (isset($child->$field)) {
+                // Solo descifrar si el valor ESTÁ cifrado (compatibilidad con datos viejos)
+                if ($this->crypto->isEncrypted($child->$field)) {
+                    try {
+                        $child->$field = $this->crypto->decrypt($child->$field);
+                    } catch (Exception $e) {
+                        error_log("Error decrypting child.$field: " . $e->getMessage());
+                        // En caso de error, dejar el valor sin cambios
+                    }
+                }
+            }
+        }
+
+        return $isArray ? (array) $child : $child;
+    }
+
+    /**
+     * Cifra campos sensibles de padres antes de enviar
+     * 
+     * @param array $data Datos del padre/madre
+     * @return array Datos con campos cifrados
+     */
+    function encryptParentData($data)
+    {
+        if (!$this->crypto) {
+            return $data;
+        }
+
+        // SOLO teléfono - email NO se cifra (se usa para login)
+        $fieldsToEncrypt = ['phone'];
+
+        foreach ($fieldsToEncrypt as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra campos sensibles de padres después de recibir
+     * 
+     * @param object|array $parent Datos del padre/madre
+     * @return object|array Datos descifrados
+     */
+    function decryptParentData($parent)
+    {
+        if (!$this->crypto || !$parent) {
+            return $parent;
+        }
+
+        $isArray = is_array($parent);
+        if ($isArray) {
+            $parent = (object) $parent;
+        }
+
+        $fieldsToDecrypt = ['phone'];
+
+        foreach ($fieldsToDecrypt as $field) {
+            if (isset($parent->$field) && $this->crypto->isEncrypted($parent->$field)) {
+                try {
+                    $parent->$field = $this->crypto->decrypt($parent->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting parent.$field: " . $e->getMessage());
+                }
+            }
+        }
+
+        return $isArray ? (array) $parent : $parent;
+    }
+
+    /**
+     * Cifra información de salud antes de enviar
+     * 
+     * @param array $data Datos de salud
+     * @return array Datos cifrados
+     */
+    function encryptHealthData($data)
+    {
+        if (!$this->crypto) {
+            return $data;
+        }
+
+        // Campos de texto a cifrar
+        $textFields = [
+            'physical_health',
+            'emotional_health',
+            'suspected_abuse',
+            'pediatrician',
+            'pediatrician_email',
+            'pediatrician_number'
+        ];
+
+        foreach ($textFields as $field) {
+            if (isset($data[$field]) && !empty($data[$field])) {
+                if (!$this->crypto->isEncrypted($data[$field])) {
+                    $data[$field] = $this->crypto->encrypt($data[$field]);
+                }
+            }
+        }
+
+        // Arrays a cifrar (convertir a JSON cifrado)
+        $arrayFields = ['allergies', 'medicines', 'accidents', 'vacination', 'ointments', 'incidents'];
+
+        foreach ($arrayFields as $field) {
+            if (isset($data[$field]) && is_array($data[$field]) && !empty($data[$field])) {
+                $data[$field] = $this->crypto->encryptArray($data[$field]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Descifra información de salud después de recibir
+     * 
+     * @param object|array $healthInfo Datos de salud
+     * @return object|array Datos descifrados
+     */
+    function decryptHealthData($healthInfo)
+    {
+        if (!$this->crypto || !$healthInfo) {
+            return $healthInfo;
+        }
+
+        $isArray = is_array($healthInfo);
+        if ($isArray) {
+            $healthInfo = (object) $healthInfo;
+        }
+
+        // Campos de texto
+        $textFields = [
+            'physical_health',
+            'emotional_health',
+            'suspected_abuse',
+            'pediatrician',
+            'pediatrician_email',
+            'pediatrician_number'
+        ];
+
+        foreach ($textFields as $field) {
+            if (isset($healthInfo->$field) && $this->crypto->isEncrypted($healthInfo->$field)) {
+                try {
+                    $healthInfo->$field = $this->crypto->decrypt($healthInfo->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting healthInfo.$field: " . $e->getMessage());
+                }
+            }
+        }
+
+        // Arrays cifrados
+        $arrayFields = ['allergies', 'medicines', 'accidents', 'vacination', 'ointments', 'incidents'];
+
+        foreach ($arrayFields as $field) {
+            if (isset($healthInfo->$field)) {
+                try {
+                    $healthInfo->$field = $this->crypto->decryptArray($healthInfo->$field);
+                } catch (Exception $e) {
+                    error_log("Error decrypting healthInfo.$field: " . $e->getMessage());
+                    // En caso de error, usar array vacío
+                    $healthInfo->$field = [];
+                }
+            }
+        }
+
+        return $isArray ? (array) $healthInfo : $healthInfo;
     }
 }

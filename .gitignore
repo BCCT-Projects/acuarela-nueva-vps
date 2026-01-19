@@ -4,3 +4,6 @@
 Thumbs.db
 error_log
 cache/
+
+# Environment variables - NEVER commit!
+.env
