@@ -4,6 +4,10 @@
 Thumbs.db
 error_log
 cache/
+miembros/cache/
+admin/wp-admin/log/
+logs/
+*.log
 
 # Environment variables - NEVER commit!
 .env

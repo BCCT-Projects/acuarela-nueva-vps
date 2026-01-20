@@ -51,7 +51,18 @@ RUN { \
     echo 'date.timezone = America/New_York'; \
 } > /usr/local/etc/php/conf.d/production.ini
 
-# Copiar el código al contenedor (sin archivos de desarrollo)
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copiar archivos de dependencias primero (optimización de cache)
+COPY --chown=www-data:www-data miembros/acuarela-app-web/composer.json miembros/acuarela-app-web/composer.lock* /var/www/html/miembros/acuarela-app-web/
+
+# Instalar dependencias de Composer (producción)
+WORKDIR /var/www/html/miembros/acuarela-app-web
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
+
+# Copiar el resto del código al contenedor (sin archivos de desarrollo)
+WORKDIR /var/www/html
 COPY --chown=www-data:www-data . /var/www/html/
 
 # Copiar configuración personalizada de Apache

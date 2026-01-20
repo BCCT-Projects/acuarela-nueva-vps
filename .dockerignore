@@ -1,71 +1,21 @@
-# Git
-.git/
+# Ignorar archivos innecesarios en el build de Docker
+.git
 .gitignore
-.github/
-
-# IDE / Editor
-.vscode/
-.cursor/
-.cursorignore
-.cursorrules
-.idea/
-*.swp
-*.swo
-*~
-
-# Docs y desarrollo
-docs/
-README.md
 *.md
-!composer.md
-
-# Archivos de configuración local
-.env.local
-.env.*.local
-sftp.json
-
-# Logs y cache
-logs/
-*.log
-cache/
-error_log
-
-# Archivos temporales y test
-test.html
-test_*.php
-temp_*.html
-*.tmp
-*.bak
-
-# Node (si los hubiera)
+docs/
 node_modules/
-package-lock.json
-
-# Docker
-Dockerfile
+miembros/acuarela-app-web/vendor/
+.env.example.txt
+temp_prod.html
+Reporte_criterios_retencion.md
 Dockerfile.production
-docker-compose.yml
-docker-compose.production.yml
-.dockerignore
-rebuild-docker.*
-
-# SCSS (solo sube CSS compilado)
-scss/
-*.scss
-
-# Sistema operativo
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Videos grandes (usar CDN)
-videos/
-*.mp4
-*.avi
-*.mov
-
-# Backups
-*.sql
-*.sql.gz
-backup/
-backups/
+.antigravity*
+# Logs y Cache
+logs/
+cache/
+miembros/cache/
+admin/wp-admin/log/
+error_log
+wp_debug.log
+**/logs/
+**/cache/

@@ -13,6 +13,7 @@ services:
     volumes:
       # Solo logs y uploads (NO montar todo el código)
       - ./logs:/var/log/apache2:rw
+      - ./miembros/cron/logs:/var/www/html/miembros/cron/logs:rw
       - acuarela_uploads:/var/www/html/uploads:rw
       - php_sessions:/tmp:rw
     environment:

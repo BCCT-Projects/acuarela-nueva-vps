@@ -1,0 +1,37 @@
+[
+    {
+        "name": "purge_local_logs",
+        "type": "file",
+        "path": "../../logs/*.log",
+        "retention_days": 90,
+        "action": "delete"
+    },
+    {
+        "name": "purge_root_error_log",
+        "type": "file",
+        "path": "../../error_log",
+        "retention_days": 30,
+        "action": "delete"
+    },
+    {
+        "name": "purge_api_cache",
+        "type": "file",
+        "path": "../../cache/*.json",
+        "retention_days": 7,
+        "action": "delete"
+    },
+    {
+        "name": "purge_miembros_cache",
+        "type": "file",
+        "path": "../../miembros/cache/wp/*.json",
+        "retention_days": 7,
+        "action": "delete"
+    },
+    {
+        "name": "purge_admin_logs",
+        "type": "file",
+        "path": "../../admin/wp-admin/log/*.log",
+        "retention_days": 60,
+        "action": "delete"
+    }
+]

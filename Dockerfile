@@ -30,7 +30,18 @@ RUN echo "display_errors = On" >> /usr/local/etc/php/conf.d/docker-php-custom.in
     && echo "upload_max_filesize = 20M" >> /usr/local/etc/php/conf.d/docker-php-custom.ini \
     && echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/docker-php-custom.ini
 
-# Copiar el código al contenedor
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copiar archivos de dependencias primero (para aprovechar cache de Docker)
+COPY miembros/acuarela-app-web/composer.json miembros/acuarela-app-web/composer.lock* /var/www/html/miembros/acuarela-app-web/
+
+# Instalar dependencias de Composer (sin scripts ni dev dependencies)
+WORKDIR /var/www/html/miembros/acuarela-app-web
+RUN composer install --no-dev --no-scripts --optimize-autoloader
+
+# Copiar el resto del código al contenedor
+WORKDIR /var/www/html
 COPY . /var/www/html/
 
 # Copiar configuración personalizada de Apache

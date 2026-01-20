@@ -650,9 +650,13 @@ foreach ($healthInfoDefaults as $key => $default) {
         const btnViewreport = document.getElementById("btnView-reporte");
 
         // Deshabilitar los botones al inicio
-        btnAddreport.disabled = false;
-        btnAddreport.classList.add("active");
-        btnViewreport.disabled = true;
+        if (btnAddreport) {
+            btnAddreport.disabled = false;
+            btnAddreport.classList.add("active");
+        }
+        if (btnViewreport) {
+            btnViewreport.disabled = true;
+        }
 
         const today = new Date();
         let currentYear = today.getFullYear();
@@ -789,22 +793,28 @@ foreach ($healthInfoDefaults as $key => $default) {
 
                     const existeFecha = kidData.healthinfo.healthcheck.some(entry => entry.daily_fecha === fechaSeleccionada);
 
-                    btnAddreport.disabled = !existeFecha ? false : true;
-                    btnAddreport.classList.toggle("active", !existeFecha);
+                    if (btnAddreport) {
+                        btnAddreport.disabled = !existeFecha ? false : true;
+                        btnAddreport.classList.toggle("active", !existeFecha);
+                    }
 
                     if (existeFecha) {
-                        btnViewreport.disabled = false;
-                        btnViewreport.classList.add("active");
-                        btnViewreport.setAttribute("data-fecha", fechaSeleccionada);
+                        if (btnViewreport) {
+                            btnViewreport.disabled = false;
+                            btnViewreport.classList.add("active");
+                            btnViewreport.setAttribute("data-fecha", fechaSeleccionada);
+                        }
                     } else {
-                        btnViewreport.disabled = true;
-                        btnViewreport.classList.remove("active");
-                        btnViewreport.removeAttribute("data-fecha");
+                        if (btnViewreport) {
+                            btnViewreport.disabled = true;
+                            btnViewreport.classList.remove("active");
+                            btnViewreport.removeAttribute("data-fecha");
+                        }
                     }
 
                     // Ocultar mensaje de ayuda cuando se selecciona un día válido
                     const helpText = document.getElementById("calendar-help-text");
-                    if (helpText && (!btnAddreport.disabled || !btnViewreport.disabled)) {
+                    if (helpText && ((btnAddreport && !btnAddreport.disabled) || (btnViewreport && !btnViewreport.disabled))) {
                         helpText.style.opacity = "0";
                         setTimeout(() => helpText.style.display = "none", 300);
                     }
@@ -890,24 +900,29 @@ foreach ($healthInfoDefaults as $key => $default) {
 
 
         // Evento para mostrar el Lightbox de agregar reporte
-        btnAddreport.addEventListener("click", function () {
-            if (!btnAddreport.disabled) {
-                const fechaSeleccionada = btnAddreport.getAttribute("data-fecha");
-                if (fechaSeleccionada) {
-                    showLightboxAddHealthCkeck(fechaSeleccionada);
+        // Evento para mostrar el Lightbox de agregar reporte
+        if (btnAddreport) {
+            btnAddreport.addEventListener("click", function () {
+                if (!btnAddreport.disabled) {
+                    const fechaSeleccionada = btnAddreport.getAttribute("data-fecha");
+                    if (fechaSeleccionada) {
+                        showLightboxAddHealthCkeck(fechaSeleccionada);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Evento para mostrar el Lightbox de ver reporte
-        btnViewreport.addEventListener("click", function () {
-            if (!btnViewreport.disabled) {
-                const fechaSeleccionada = btnViewreport.getAttribute("data-fecha");
-                if (fechaSeleccionada) {
-                    showLightboxViewHealthCkeck(fechaSeleccionada);
+        if (btnViewreport) {
+            btnViewreport.addEventListener("click", function () {
+                if (!btnViewreport.disabled) {
+                    const fechaSeleccionada = btnViewreport.getAttribute("data-fecha");
+                    if (fechaSeleccionada) {
+                        showLightboxViewHealthCkeck(fechaSeleccionada);
+                    }
                 }
-            }
-        });
+            });
+        }
 
 
         // Lógica para Reenviar Consentimiento COPPA
@@ -917,35 +932,72 @@ foreach ($healthInfoDefaults as $key => $default) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (!confirm('¿Enviar un nuevo correo de solicitud de consentimiento? Esto generará un nuevo token e invalidará enlaces anteriores.')) return;
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¿Enviar un nuevo correo de solicitud de consentimiento? Esto generará un nuevo token e invalidará enlaces anteriores.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0cb5c3',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, enviar',
+                    cancelButtonText: 'Cancelar',
+                    background: "#f0feff",
+                    color: "#333"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const originalText = btnResend.innerHTML;
+                        btnResend.disabled = true;
+                        btnResend.innerHTML = 'Enviando...';
 
-                const originalText = this.innerHTML;
-                this.disabled = true;
-                this.innerHTML = 'Enviando...';
+                        const childId = btnResend.getAttribute('data-child-id');
 
-                const childId = this.getAttribute('data-child-id');
-
-                fetch('set/consent/resend_request.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ child_id: childId })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('✅ Correo enviado exitosamente.');
-                        } else {
-                            alert('❌ Error: ' + (data.message || 'Desconocido'));
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        alert('❌ Error de conexión.');
-                    })
-                    .finally(() => {
-                        btnResend.disabled = false;
-                        btnResend.innerHTML = originalText;
-                    });
+                        fetch('set/consent/resend_request.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ child_id: childId })
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Éxito',
+                                        text: '✅ Correo enviado exitosamente.',
+                                        icon: 'success',
+                                        confirmButtonText: 'Entendido',
+                                        confirmButtonColor: '#0cb5c3',
+                                        background: "#f0feff",
+                                        color: "#333"
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: '❌ Error: ' + (data.message || 'Desconocido'),
+                                        icon: 'error',
+                                        confirmButtonText: 'Entendido',
+                                        confirmButtonColor: '#0cb5c3',
+                                        background: "#f0feff",
+                                        color: "#333"
+                                    });
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: '❌ Error de conexión.',
+                                    icon: 'error',
+                                    confirmButtonText: 'Entendido',
+                                    confirmButtonColor: '#0cb5c3',
+                                    background: "#f0feff",
+                                    color: "#333"
+                                });
+                            })
+                            .finally(() => {
+                                btnResend.disabled = false;
+                                btnResend.innerHTML = originalText;
+                            });
+                    }
+                });
             });
         }
     });

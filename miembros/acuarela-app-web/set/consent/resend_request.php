@@ -21,6 +21,9 @@ try {
     // Usamos el helper del SDK que ya maneja todas las relaciones (parents, healthinfo, etc.)
     $childData = $a->getChildren($childId);
 
+    // Decrypt child data (name, lastname, etc.)
+    $childData = $a->decryptChildData($childData);
+
     if (!$childData || isset($childData->statusCode)) {
         throw new Exception("No se encontró el niño.");
     }
