@@ -1,6 +1,12 @@
 <?php
 require_once 'src/Mandrill.php';
 require_once 'CryptoService.php';
+
+// Cargar variables de entorno desde el root (subiendo un nivel desde miembros/includes -> miembros -> root/includes)
+// Ajuste de ruta: sdk.php está en miembros/includes. El nuevo env.php está en includes/ (root).
+// Ruta relativa desde miembros/includes: ../../includes/env.php
+require_once __DIR__ . '/../../includes/env.php';
+
 class acuarela
 {
     public $domain = "https://acuarelacore.com/api/";
@@ -10,15 +16,24 @@ class acuarela
     public $getgruposdeedad = "";
     public $getmomentoaprendizaje = "";
     public $getformas = "";
-    private $openaiApiKey = "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";
-    public $client_id = "1000.4CBCGSPLAUZ10CRM6XQYU2Z5JQBT9L";
-    public $client_secret = "7c28db40807ee2e2459a9629f084d037ee7edc0c95";
-    public $refresh_token = "1000.ecf5734d91ad7ba8474aaac5e019ec8f.6148872828accaaf6896a2d98af189f0";
+
+    // Credenciales cargadas desde .env
+    private $openaiApiKey;
+    public $client_id;
+    public $client_secret;
+    public $refresh_token;
+
     public $token;
     public $crypto; // CryptoService instance for encryption at rest
 
     function __construct()
     {
+        // Cargar credenciales desde variables de entorno
+        $this->openaiApiKey = Env::get('OPENAI_API_KEY');
+        $this->client_id = Env::get('ZOHO_CLIENT_ID');
+        $this->client_secret = Env::get('ZOHO_CLIENT_SECRET');
+        $this->refresh_token = Env::get('ZOHO_REFRESH_TOKEN');
+
         // Optimizacion: Carga diferida. No llamar APIs en el constructor.
         // Se deben llamar explicitamente cuando se necesiten con sus metodos respectivos:
         // $a->getgruposdeedad(); 
@@ -66,6 +81,18 @@ class acuarela
     {
         $result = '';
         try {
+            // Si la API key pasada es nula o vacía, intentar usar la del entorno, o mantener la lógica anterior si se pasaba explícitamente
+            // Pero en este caso, la llamada original pasaba el string hardcodeado. Vamos a priorizar el argumento si viene, o usar ENV si falla/es default.
+
+            // Nota: El código legacy pasaba la key como argumento desde fuera ($this->send_notification(..., 'maRkSS...')).
+            // Para asegurar que use la del ENV, podemos sobreescribirlo o usar Env::get('MANDRILL_API_KEY') si $mandrillApiKey es igual al viejo valor hardcodeado o vacío.
+
+            // Mejor práctica: Si $mandrillApiKey es el valor hardcodeado viejo, usar el nuevo ENV.
+            if ($mandrillApiKey == 'maRkSStgpCapJoSmwHOZDg' || empty($mandrillApiKey)) {
+                $mandrillApiKey = Env::get('MANDRILL_API_KEY');
+            }
+
+
             if ($from == "") {
                 $from = 'info@bilingualchildcaretraining.com';
             }
@@ -119,7 +146,7 @@ class acuarela
 
             $ip_pool = 'Main Pool';
             $send_at = date("Y-m-d");
-            $result = $mandrill->messages->sendTemplate($template_name, $template_content, $message, $async, $ip_pool, $send_at);
+            $result = $mandrill->messages->sendTemplate($template_name, $template_content, (object) $message, $async, $ip_pool, $send_at);
             $answer = true;
         } catch (Mandrill_Error $e) {
             $result = 'Error de envío: ' . get_class($e) . ' - ' . $e->getMessage();

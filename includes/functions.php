@@ -1,5 +1,8 @@
 <?php
 require_once 'src/Mandrill.php';
+// Cargar variables de entorno desde includes/env.php
+require_once __DIR__ . '/env.php';
+
 class acuarela
 {
 	public $domain = "https://acuarelaadmin.acuarela.app/wp-json/wp/v2/";
@@ -8,13 +11,20 @@ class acuarela
 	public $politics = array();
 	public $about = array();
 
-	public $client_id = "1000.4CBCGSPLAUZ10CRM6XQYU2Z5JQBT9L";
-	public $client_secret = "7c28db40807ee2e2459a9629f084d037ee7edc0c95";
-	public $refresh_token = "1000.ecf5734d91ad7ba8474aaac5e019ec8f.6148872828accaaf6896a2d98af189f0";
+	// Variables cargadas desde .env
+	public $client_id;
+	public $client_secret;
+	public $refresh_token;
+
 	public $token;
 
 	function __construct()
 	{
+		// Cargar credenciales desde variables de entorno
+		$this->client_id = Env::get('ZOHO_CLIENT_ID');
+		$this->client_secret = Env::get('ZOHO_CLIENT_SECRET');
+		$this->refresh_token = Env::get('ZOHO_REFRESH_TOKEN');
+
 		$this->generalInfo = $this->getInfoGeneral();
 		$this->politics = $this->gPolitics();
 		$this->about = $this->gAbout();
@@ -33,6 +43,11 @@ class acuarela
 	{
 		$result = '';
 		try {
+			// Usar API key del entorno si viene la antigua hardcodeada o está vacía
+			if ($mandrillApiKey == 'maRkSStgpCapJoSmwHOZDg' || empty($mandrillApiKey)) {
+				$mandrillApiKey = Env::get('MANDRILL_API_KEY');
+			}
+
 			if ($from == "") {
 				$from = 'info@acuarela.app';
 			}
@@ -110,11 +125,14 @@ class acuarela
 			'COUNTRY' => $country,
 			'CITY' => $city
 		];
-		$this->send_notification('info@acuarela.app', $mail, $name, $this->transformMergeVars($mergeVars), $subject, 'obtener-demo', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		$this->send_notification('info@acuarela.app', 'empleo@acuarela.app', 'Admin', $this->transformMergeVars($mergevariables), 'Nuevo contacto desde página web', 'obtener-demo-admin', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		// Usamos Env::get para la key de Mandrill (aunque send_notification ya lo maneja internamente, es bueno pasarlo explícitamente si queremos limpiar el código de keys hardcodeadas aquí también)
+		$apiKey = Env::get('MANDRILL_API_KEY');
+		$this->send_notification('info@acuarela.app', $mail, $name, $this->transformMergeVars($mergeVars), $subject, 'obtener-demo', $apiKey, "Acuarela");
+		$this->send_notification('info@acuarela.app', 'empleo@acuarela.app', 'Admin', $this->transformMergeVars($mergevariables), 'Nuevo contacto desde página web', 'obtener-demo-admin', $apiKey, "Acuarela");
 	}
 	function sendEmailDeleteRequest($mail, $requestType, $reason, $subject = 'Confirmación de recepción de tu solicitud sobre datos personales')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		try {
 			// Definir los destinatarios y sus plantillas
 			$emailsToSend = [
@@ -134,7 +152,7 @@ class acuarela
 				// 		'EMAIL' => $mail,
 				// 		'REQUESTTYPE' => $requestType,
 				// 		'REASON' => $reason,
-
+				// 
 				// 	]
 				// ],
 				[
@@ -173,7 +191,7 @@ class acuarela
 					$this->transformMergeVars($emailData['mergeVars']),
 					$emailData['subject'],
 					$emailData['template'],
-					'maRkSStgpCapJoSmwHOZDg',
+					$apiKey,
 					"Acuarela"
 				);
 
@@ -209,14 +227,15 @@ class acuarela
 	}
 	function sendEndRegisterDaycare($name, $pass, $email, $subject = 'Registro finalizado')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NOMBRE' => $name,
 			'PASS' => $pass
 		];
-		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		$b = $this->send_notification('info@acuarela.app', 'daniela@bilingualchildcaretraining.com', '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		$c = $this->send_notification('info@acuarela.app', 'karen@bilingualchildcaretraining.com', '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		// $d = $this->send_notification('info@acuarela.app','dreinovcorp@gmail.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare','maRkSStgpCapJoSmwHOZDg',"Acuarela");
+		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', $apiKey, "Acuarela");
+		$b = $this->send_notification('info@acuarela.app', 'daniela@bilingualchildcaretraining.com', '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', $apiKey, "Acuarela");
+		$c = $this->send_notification('info@acuarela.app', 'karen@bilingualchildcaretraining.com', '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', $apiKey, "Acuarela");
+		// $d = $this->send_notification('info@acuarela.app','dreinovcorp@gmail.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare',$apiKey,"Acuarela");
 		$resp['a'] = $a;
 		$resp['b'] = $b;
 		$resp['c'] = $c;
@@ -225,14 +244,15 @@ class acuarela
 	}
 	function sendEndRegisterDaycareCheckout($name, $pass, $email, $subject = 'Registro finalizado')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NOMBRE' => $name,
 			'PASS' => $pass,
 			'CHECKOUT' => 1
 		];
-		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		// $c = $this->send_notification('info@acuarela.app','karen@bilingualchildcaretraining.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare','maRkSStgpCapJoSmwHOZDg',"Acuarela");
-		// $d = $this->send_notification('info@acuarela.app','dreinovcorp@gmail.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare','maRkSStgpCapJoSmwHOZDg',"Acuarela");
+		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-de-daycare', $apiKey, "Acuarela");
+		// $c = $this->send_notification('info@acuarela.app','karen@bilingualchildcaretraining.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare',$apiKey,"Acuarela");
+		// $d = $this->send_notification('info@acuarela.app','dreinovcorp@gmail.com','',$this->transformMergeVars($mergeVars),$subject,'registro-finalizado-de-daycare',$apiKey,"Acuarela");
 		$resp['a'] = $a;
 		// $resp['c'] = $c;
 		// $resp['d'] = $d;
@@ -240,26 +260,29 @@ class acuarela
 	}
 	function sendEndRegisterAsistente($name, $pass, $email, $subject = 'Registro finalizado')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NOMBRE' => $name,
 			'PASS' => $pass
 		];
-		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-asistentes', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		$a = $this->send_notification('info@acuarela.app', $email, '', $this->transformMergeVars($mergeVars), $subject, 'registro-finalizado-asistentes', $apiKey, "Acuarela");
 		$resp['a'] = $a;
 		return $resp;
 	}
 
 	function sendDemoActiveEmail($name, $mail, $pass, $subject = '¡Tu Demo está listo!')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'FNAME' => $name,
 			'EMAIL' => $mail,
 			'THEPASS' => $pass,
 		];
-		$this->send_notification('info@acuarela.app', $mail, $name, $this->transformMergeVars($mergeVars), $subject, 'activaci-n-demo', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		$this->send_notification('info@acuarela.app', $mail, $name, $this->transformMergeVars($mergeVars), $subject, 'activaci-n-demo', $apiKey, "Acuarela");
 	}
 	function sendCheckin($nameKid, $nameParent, $nameDaycare, $nameAcudiente, $time, $date, $mail, $subject = 'Check in')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NOMBRENINO' => $nameKid,
 			'NOMBREPADRE' => $nameParent,
@@ -268,10 +291,11 @@ class acuarela
 			'HORA' => $time,
 			'FECHA' => $date
 		];
-		return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-in', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-in', $apiKey, "Acuarela");
 	}
 	function sendCheckout($nameKid, $nameParent, $nameDaycare, $nameAcudiente, $time, $date, $mail, $subject = 'Check out')
 	{
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NOMBRENINO' => $nameKid,
 			'NOMBREPADRE' => $nameParent,
@@ -280,7 +304,7 @@ class acuarela
 			'HORA' => $time,
 			'FECHA' => $date
 		];
-		return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-out', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		return $this->send_notification('info@acuarela.app', $mail, $nameParent, $this->transformMergeVars($mergeVars), $subject, 'check-out', $apiKey, "Acuarela");
 	}
 	function sendInvitationAdmin(
 		$name,
@@ -291,6 +315,7 @@ class acuarela
 		$phone,
 		$subject = 'Nueva invitación recibida'
 	) {
+		$apiKey = Env::get('MANDRILL_API_KEY');
 		$mergeVars = [
 			'NAME' => $name,
 			'DAYCARE' => $daycare,
@@ -300,9 +325,9 @@ class acuarela
 			'PHONE' => $phone
 		];
 		$resp = array();
-		$a = $this->send_notification('info@acuarela.app', 'info@bilingualchildcaretraining.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		$b = $this->send_notification('info@acuarela.app', 'marcela@bilingualchildcaretraining.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
-		$d = $this->send_notification('info@acuarela.app', 'dreinovcorp@gmail.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', 'maRkSStgpCapJoSmwHOZDg', "Acuarela");
+		$a = $this->send_notification('info@acuarela.app', 'info@bilingualchildcaretraining.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', $apiKey, "Acuarela");
+		$b = $this->send_notification('info@acuarela.app', 'marcela@bilingualchildcaretraining.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', $apiKey, "Acuarela");
+		$d = $this->send_notification('info@acuarela.app', 'dreinovcorp@gmail.com', $name, $this->transformMergeVars($mergeVars), $subject, 'invitation-admin', $apiKey, "Acuarela");
 		$resp['a'] = $a;
 		$resp['b'] = $b;
 

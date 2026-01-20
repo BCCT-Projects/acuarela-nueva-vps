@@ -8,7 +8,6 @@ ini_set('display_errors', 0); // SEGURIDAD: No mostrar errores en producción
 ini_set('log_errors', 1);
 ob_start();
 include '../includes/config.php';
-require_once __DIR__ . '/../acuarela-app-web/includes/env.php';
 
 header('Content-Type: application/json');
 
@@ -131,7 +130,7 @@ try {
         $a->transformMergeVars($mergeVars),
         "Tu código de verificación - Auto-login",
         'portal-miembros-2fa',
-        Env::get('MANDRILL_API_KEY', 'maRkSStgpCapJoSmwHOZDg'),
+        '',
         "Acuarela App"
     );
 

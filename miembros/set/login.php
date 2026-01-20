@@ -2,7 +2,6 @@
 error_reporting(0);
 ob_start();
 include '../includes/config.php';
-require_once '../acuarela-app-web/includes/env.php';
 
 // Normaliza los datos
 $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
@@ -54,6 +53,8 @@ if (isset($userLogin->id)) {
     ];
 
     try {
+
+
         $a->send_notification(
             'info@acuarela.app',
             $email,
@@ -61,12 +62,14 @@ if (isset($userLogin->id)) {
             $a->transformMergeVars($mergeVars),
             "Tu código de verificación",
             'portal-miembros-2fa', // NOMBRE DEL TEMPLATE A CREAR
-            Env::get('MANDRILL_API_KEY', 'maRkSStgpCapJoSmwHOZDg'),
+            '', // Dejar vacío para que use Env::get automáticamente
             "Bilingual Childcare Training"
         );
     } catch (Exception $e) {
-        error_log("Error mandrill: " . $e->getMessage());
-        // Falla silenciosa o retorno de error
+        error_log("Error al enviar email 2FA: " . $e->getMessage());
+
+        // Retornar error más descriptivo
+        ob_clean();
         echo json_encode(['getError' => true, 'message' => 'Error al enviar email de verificación.']);
         exit;
     }

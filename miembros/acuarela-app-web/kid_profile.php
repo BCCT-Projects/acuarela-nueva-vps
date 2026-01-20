@@ -86,6 +86,24 @@ foreach ($healthInfoDefaults as $key => $default) {
     <div class="content">
         <div class="contentninx">
             <div class="contentcent">
+
+                <!-- DATA CLASSIFICATION BANNER (ISO 27001 / COPPA) -->
+                <div
+                    style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px 20px; margin-bottom: 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.9rem;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <div>
+                        <strong>DATOS SENSIBLES / SENSITIVE DATA:</strong>
+                        Acceso monitoreado. Protegido por COPPA.
+                        <span class="badge badge-<?= $coppaClass ?>"
+                            style="margin-left: 10px; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; text-transform: uppercase; background: #fff; border: 1px solid currentColor;">COPPA:
+                            <?= $coppaLabel ?></span>
+                    </div>
+                </div>
+
                 <div class="basicinfo">
                     <div class="txt">
                         <div class="txt_data">

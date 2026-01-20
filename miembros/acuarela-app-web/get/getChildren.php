@@ -3,7 +3,10 @@
 session_start();
 include "../includes/sdk.php";
 $a = new Acuarela();
+
 $result = $a->getChildren(isset($_GET['id']) ? $_GET['id'] : "");
+
+
 
 // Descifrar datos sensibles de los niños
 if (isset($result->response) && is_array($result->response)) {
@@ -36,5 +39,6 @@ if (isset($result->response) && is_array($result->response)) {
         }
     }
 }
+
 
 echo json_encode($result);

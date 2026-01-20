@@ -92,9 +92,20 @@ try {
         throw new Exception("Usuario no encontrado");
     }
 
-    // Establecer sesión
+    // Establecer sesión con estructura correcta para SDK
+    $jwt = $tempData['token_data']['jwt'] ?? $tempData['token_data']['token'] ?? '';
+
+    if (empty($jwt)) {
+        error_log("WARNING SSO: No se encontró JWT en token_data. Keys disponibles: " . implode(',', array_keys($tempData['token_data'])));
+    }
+
+    $userLoggedObj = new stdClass();
+    $userLoggedObj->user = new stdClass();
+    $userLoggedObj->user->token = $jwt;
+    $userLoggedObj->jwt = $jwt; // Backup location
+
     $_SESSION['user'] = $userInfo;
-    $_SESSION['userLogged'] = true;
+    $_SESSION['userLogged'] = $userLoggedObj;
     $_SESSION['userAll'] = $userInfoAll[0] ?? $userInfo;
 
     // Establecer daycare activo
