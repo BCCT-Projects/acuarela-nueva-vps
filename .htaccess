@@ -22,6 +22,7 @@ RewriteRule ^g/([^/]*)/$ get/$1.php?lang=es [L,QSA]
 
 # Rutas de miembros (login/registro)
 RewriteRule ^miembros/?$ miembros/index.php [L,QSA]
+RewriteRule ^miembros/autologin/?$ miembros/autologin.php [L,QSA]
 RewriteRule ^miembros/crear-cuenta/?$ miembros/register.php [L,QSA]
 RewriteRule ^miembros/recuperar-contrasena/?$ miembros/forgot_pass.php [L,QSA]
 RewriteRule ^miembros/cerrar-sesion/?$ miembros/cerrar-sesion.php [L,QSA]

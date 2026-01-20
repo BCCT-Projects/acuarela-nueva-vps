@@ -1,7 +1,8 @@
 # Política de Cifrado en Reposo - Acuarela
 
-**Versión:** 1.0
-**Fecha de Vigencia:** Enero 2026
+**Versión:** 1.2  
+**Fecha de Vigencia:** Enero 2026  
+**Última Actualización:** 19 de Enero 2026  
 **Estado:** Activa
 
 ---
@@ -23,11 +24,13 @@ Se ha definido una estrategia de protección granular basada en la sensibilidad 
 
 Los siguientes campos se consideran de **Alta Sensibilidad** y se almacenan cifrados:
 
-| Tipo de Dato | Campos Específicos | Justificación |
-| :--- | :--- | :--- |
-| **Identidad del Menor** | `birthday` (Fecha Nacimiento) | Dato crítico para identificación única. |
-| **Salud del Menor** | `healthinfos` (Alergias, medicamentos, incidentes) | Información médica sensible (HIPAA compliant approach). |
-| **Contacto Padres** | `phone` (Teléfono) | Dato de contacto directo primario. |
+| Tipo de Dato | Campos Específicos | Método de Cifrado | Justificación |
+| :--- | :--- | :--- | :--- |
+| **Identidad del Menor** | `name`, `lastname`, `birthday` | Cifrado Completo | Identidad completa protegida. Garantiza anonimato total en BD. |
+| **Salud del Menor - Historial** | `allergies`, `medicines`, `vacination`, `accidents`, `ointments`, `incidents` | Cifrado Completo (Array → String) | Información médica sensible general (HIPAA compliant approach). |
+| **Salud del Menor - Observaciones** | `physical_health`, `emotional_health`, `suspected_abuse`, `pediatrician` (nombre) | Cifrado Completo | Notas clínicas y observaciones médicas. |
+| **Salud del Menor - Health Check** | `temperature`, `report`, `bodychild` | **Cifrado Granular** (Valores dentro de objetos) | Registros diarios de salud. **Nota:** `daily_fecha` se mantiene en plano para índices/calendario. |
+| **Contacto Padres** | `phone`, `work_phone` | Cifrado Completo | Dato de contacto directo primario y laboral. |
 
 ### 2.2 Datos Protegidos Mediante Anonimización
 
@@ -43,9 +46,10 @@ Se ha decidido explícitamente **NO cifrar** los siguientes datos tras un análi
 
 | Tipo de Dato | Justificación de Riesgo Aceptado | Control Compensatorio |
 | :--- | :--- | :--- |
-| **Nombre del Menor** (`name`, `lastname`) | Necesario para indexación y búsquedas rápidas en base de datos. El cifrado impediría funciones críticas de búsqueda de alumnos por parte del personal. | Control de acceso estricto a nivel de aplicación (Roles y Permisos). |
-| **Email de Padres** | **Riesgo Sistémico:** Cifrar el email (que es el ID de usuario) rompería la integración con sistemas externos de autenticación (Auth0/Firebase) y servicios de correo transaccional (Mandrill). | El email se trata como identificador público dentro del sistema. Se protege mediante TLS en tránsito. |
-| **Archivos Binarios (Cuerpo)** | **Complejidad Técnica y Operativa:** Cifrar el contenido binario de imágenes impediría el uso de funcionalidades nativas del CMS (redimensionado, miniaturas, optimización CDN). El impacto en el rendimiento (tiempos de carga) y la complejidad de mantenimiento se considera desproporcionado al riesgo. | **Anonimización de nombres** (ver 2.2) y restricción de acceso a carpetas de uploads mediante configuración del servidor web. |
+| **Email de Padres** | **Riesgo Sistémico:** Cifrar el email (que es el ID de usuario) rompería la integración con sistemas externos de autenticación (Auth0/Firebase) y servicios de correo transaccional. | El email se trata como identificador público dentro del sistema. Se protege mediante TLS en tránsito. |
+| **Datos de Pediatra** | **Validación y Naturaleza Pública:** El email del pediatra (`pediatrician_email`) requiere validación de formato estricta en base de datos. Además, son datos de contacto profesional (Tarjetas de presentación), no PII confidencial del menor. | Se almacenan en texto plano (`pediatrician_email`, `pediatrician_number`). |
+| **Fecha de Health Check** | **Requerimiento Operativo:** `daily_fecha` debe permanecer en texto plano para permitir búsquedas, ordenamiento y visualización de calendario sin necesidad de descifrado masivo. | Solo la fecha es visible; el contenido médico (temperatura, síntomas) está cifrado. |
+| **Archivos Binarios (Contenido)** | **Complejidad Técnica y Operativa:** Cifrar el contenido binario de imágenes impediría el uso de funcionalidades nativas del CMS (redimensionado, miniaturas, optimización CDN). | **Anonimización de nombres** (ver 2.2) y restricción de acceso a carpetas de uploads. |
 
 ## 3. Estándar Técnico de Cifrado
 
@@ -60,11 +64,27 @@ Todo cifrado realizado bajo esta política utiliza el siguiente estándar cripto
 
 ### 3.2 Implementación
 
-El cifrado se realiza a **nivel de aplicación** (Application Update Layer) antes de que los datos sean enviados a la base de datos.
+El cifrado se realiza a **nivel de aplicación** (Application Layer Encryption) antes de que los datos sean enviados a la base de datos.
 
 - **Servicio:** `CryptoService.php` (Helper centralizado).
 - **Flujo de Escritura:** `Dato Plano` -> `CryptoService::encrypt()` -> `Base de Datos`.
 - **Flujo de Lectura:** `Base de Datos` -> `CryptoService::decrypt()` -> `Vista de Usuario`.
+
+#### 3.2.1 Cifrado Granular (Health Check)
+
+Para campos estructurados que Strapi valida como `Array` (ej: `healthcheck`), se implementa **cifrado granular**:
+
+- La estructura del array se mantiene visible para la base de datos.
+- Los valores sensibles dentro de cada objeto se cifran individualmente.
+- **Ejemplo:**
+
+  ```json
+  // Antes del cifrado:
+  [{"temperature": "38", "report": "Fiebre", "daily_fecha": "2026-01-19"}]
+  
+  // Después del cifrado:
+  [{"temperature": "Xy9z...==", "report": "Ab3d...==", "daily_fecha": "2026-01-19"}]
+  ```
 
 ## 4. Gestión de Llaves (Key Management)
 
@@ -82,5 +102,26 @@ El cifrado se realiza a **nivel de aplicación** (Application Update Layer) ante
 
 - En caso de sospecha de compromiso de la clave, se deberá ejecutar el procedimiento de **Rotación de Claves de Emergencia** (re-cifrado masivo de la base de datos con nueva clave).
 
+## 5. Controles de Acceso COPPA
+
+Además del cifrado en reposo, se implementan controles de acceso basados en el estado del **Consentimiento Parental (COPPA)**:
+
+### 5.1 Restricciones de Modificación
+
+Los siguientes módulos están **bloqueados** si el consentimiento parental no está en estado `granted` (Aprobado):
+
+- ❌ Agregar/Editar Datos de Salud (`agregar-salud.php`)
+- ❌ Agregar Incidentes de Salud (`agregar-reporte.php`)
+- ❌ Registrar Health Check Diario (Calendario de salud)
+
+### 5.2 Implementación Técnica
+
+- **Validación Backend:** Los endpoints PHP verifican el estado COPPA antes de procesar solicitudes.
+- **Validación Frontend:** Los botones de acción se ocultan y se muestra un mensaje informativo cuando el consentimiento no está aprobado.
+- **Mensaje al Usuario:**  
+  > ⚠️ No se puede modificar información de salud porque el consentimiento COPPA está **[Pendiente/Revocado]**.
+
 ---
-**Aprobado por:** Equipo de Ingeniería y Seguridad Acuarela.
+
+**Aprobado por:** Manuel Martinez
+**Última revisión:** 19 de Enero 2026

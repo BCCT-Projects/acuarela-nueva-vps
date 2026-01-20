@@ -86,7 +86,7 @@ class acuarela
 
 			$ip_pool = 'Main Pool';
 			$send_at = date("Y-m-d");
-			$result = $mandrill->messages->sendTemplate($template_name, $template_content, $message, $async, $ip_pool, $send_at);
+			$result = $mandrill->messages->sendTemplate($template_name, $template_content, (object) $message, $async, $ip_pool, $send_at);
 			$answer = true;
 		} catch (Mandrill_Error $e) {
 			$result = 'Error de envío: ' . get_class($e) . ' - ' . $e->getMessage();
