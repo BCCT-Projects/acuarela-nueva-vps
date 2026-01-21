@@ -32,7 +32,10 @@ $translations = [
         'back_to_app' => 'Volver a la aplicación',
         'revocation_title' => '¿Desea Revocar el Consentimiento?',
         'revocation_desc' => 'Si desea retirar su consentimiento para el procesamiento de datos de su hijo(a), puede hacerlo en cualquier momento usando nuestra herramienta de revocación.',
-        'revocation_btn' => 'Solicitar Revocación'
+        'revocation_btn' => 'Solicitar Revocación',
+        'dsar_section_title' => '7. Sus Derechos de Privacidad (DSAR)',
+        'dsar_text' => 'Además de los derechos específicos de COPPA, usted tiene derecho a solicitar acceso, rectificación, portabilidad o eliminación de su información personal y la de sus hijos bajo otras normativas de privacidad aplicables.',
+        'dsar_btn' => 'Acceder al Portal de Solicitudes (DSAR)'
     ],
     'en' => [
         'title' => 'COPPA Privacy Notice',
@@ -58,7 +61,10 @@ $translations = [
         'back_to_app' => 'Back to Application',
         'revocation_title' => 'Want to Revoke Consent?',
         'revocation_desc' => 'If you wish to withdraw your consent for processing your child\'s data, you can do so at any time using our revocation tool.',
-        'revocation_btn' => 'Request Revocation'
+        'revocation_btn' => 'Request Revocation',
+        'dsar_section_title' => '7. Your Privacy Rights (DSAR)',
+        'dsar_text' => 'In addition to specific COPPA rights, you have the right to request access, rectification, portability, or deletion of your personal information and that of your children under other applicable privacy regulations.',
+        'dsar_btn' => 'Access Request Portal (DSAR)'
     ]
 ];
 
@@ -431,6 +437,37 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                 font-size: 1.4rem;
             }
         }
+
+        /* DSAR Box Styles */
+        .coppa-dsar-box {
+            background: linear-gradient(135deg, rgba(12, 181, 195, 0.05) 0%, rgba(12, 181, 195, 0.02) 100%);
+            border: 2px solid rgba(12, 181, 195, 0.2);
+            border-radius: 16px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        .btn-dsar {
+            display: inline-flex;
+            align-items: center;
+            background: var(--cielo);
+            color: white !important;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px rgba(12, 181, 195, 0.3);
+        }
+
+        .btn-dsar:hover {
+            background: #099ca8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(12, 181, 195, 0.4);
+            color: white !important;
+        }
     </style>
 </head>
 
@@ -572,6 +609,22 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <!-- 7. Sección DSAR -->
+                    <div class="coppa-subsection coppa-dsar-box">
+                        <h3 class="coppa-subsection__title"><?= $t['dsar_section_title'] ?></h3>
+                        <div class="coppa-subsection__content">
+                            <p><?= $t['dsar_text'] ?></p>
+                            <a href="dsar.php?lang=<?= $lang ?>" class="btn-dsar">
+                                <?= $t['dsar_btn'] ?>
+                                <svg style="width:16px; height:16px; margin-left:8px; vertical-align:middle;"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
 
                 </section>
 
