@@ -29,8 +29,8 @@ class Acuarela
         );
         $this->mandrillApiKey = Env::get('MANDRILL_API_KEY');
 
-        $this->userID = $_SESSION["user"]->acuarelauser->id;
-        $this->token = $_SESSION["userLogged"]->user->token;
+        $this->userID = isset($_SESSION["user"]->acuarelauser->id) ? $_SESSION["user"]->acuarelauser->id : null;
+        $this->token = isset($_SESSION["userLogged"]->user->token) ? $_SESSION["userLogged"]->user->token : null;
 
         // Si no hay activeDaycare en sesión, usar el primer daycare del usuario
 // EXCEPTO si estamos en la página de selección de daycare (para permitir que el usuario elija)
@@ -176,6 +176,64 @@ class Acuarela
     {
         $resp = $this->queryStrapi("estados-y-ciudades");
         return $resp;
+    }
+
+    /**
+     * Obtiene las solicitudes DSAR asociadas a usuarios de un daycare específico
+     */
+    function getDaycareDSARs($daycareID)
+    {
+        if (empty($daycareID))
+            return [];
+
+        // OPTIMIZACIÓN: Filtrar directamente por el campo 'daycare' en dsar-requests
+        // Esto asume que el campo 'daycare' fue creado y poblado en Strapi
+        $dsars = $this->queryStrapi("dsar-requests?daycare.id=$daycareID&_sort=created_at:DESC");
+
+        // Fallback: si devuelve vacío, podría ser que el campo se llame 'daycare' directo sin .id
+        if (empty($dsars)) {
+            $dsars = $this->queryStrapi("dsar-requests?daycare=$daycareID&_sort=created_at:DESC");
+        }
+
+        if (empty($dsars) || !is_array($dsars))
+            return [];
+
+        // Recolectar IDs de usuarios para traer sus nombres en una sola consulta eficiente
+        $userIds = [];
+        foreach ($dsars as $dsar) {
+            if (isset($dsar->linked_user)) {
+                $uid = is_object($dsar->linked_user) ? $dsar->linked_user->id : $dsar->linked_user;
+                if ($uid)
+                    $userIds[] = $uid;
+            }
+        }
+
+        $userIds = array_unique($userIds);
+        $usersMap = [];
+
+        if (!empty($userIds)) {
+            // Traer solo los usuarios necesarios
+            $idsQuery = implode('&id_in=', $userIds);
+            $users = $this->queryStrapi("acuarelausers?id_in=$idsQuery");
+
+            if ($users && is_array($users)) {
+                foreach ($users as $u) {
+                    $usersMap[$u->id] = $u;
+                }
+            }
+        }
+
+        // Asignar user_details usando el mapa
+        foreach ($dsars as $dsar) {
+            if (isset($dsar->linked_user)) {
+                $uid = is_object($dsar->linked_user) ? $dsar->linked_user->id : $dsar->linked_user;
+                if (isset($usersMap[$uid])) {
+                    $dsar->user_details = $usersMap[$uid];
+                }
+            }
+        }
+
+        return $dsars;
     }
     function deleteElement($type, $id)
     {
@@ -532,6 +590,39 @@ class Acuarela
             throw $e;
         }
         return $result;
+    }
+
+    /**
+     * Envía un correo electrónico simple usando Mandrill
+     */
+    function sendEmail($to, $subject, $body, $title = "Acuarela Notificación")
+    {
+        try {
+            $mandrill = new Mandrill($this->mandrillApiKey);
+            $message = array(
+                'html' => $body,
+                'text' => strip_tags($body),
+                'subject' => $subject,
+                'from_email' => 'info@acuarela.app',
+                'from_name' => $title,
+                'to' => array(
+                    array(
+                        'email' => $to,
+                        'type' => 'to'
+                    )
+                ),
+                'important' => false,
+                'track_opens' => true,
+                'track_clicks' => true,
+            );
+            $async = false;
+            $ip_pool = 'Main Pool';
+            $send_at = null;
+            return $mandrill->messages->send($message, $async, $ip_pool, $send_at);
+        } catch (Mandrill_Error $e) {
+            error_log('Error enviando email: ' . get_class($e) . ' - ' . $e->getMessage());
+            return false;
+        }
     }
 
     function sendCheckin($nameKid, $nameParent, $nameDaycare, $nameAcudiente, $time, $date, $mail, $subject = 'Check in')

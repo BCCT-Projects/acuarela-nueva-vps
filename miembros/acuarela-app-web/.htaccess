@@ -34,6 +34,7 @@ RewriteBase /miembros/acuarela-app-web/
 
 # PÁGINAS PÚBLICAS DE PRIVACIDAD (COPPA) - Debe ir antes de las condiciones generales
 RewriteRule ^privacy/coppa$ privacy/coppa.php [L,QSA]
+RewriteRule ^privacy/dsar$ privacy/dsar.php [L,QSA]
 
 # DEBUG TEMPORAL - Permitir acceso directo
 RewriteRule ^debug_session\.php$ debug_session.php [L]
@@ -73,6 +74,7 @@ RewriteRule ^editar-grupo/([^/]*)$ edit_grupo.php?activeTab=4&id=$1 [L,QSA]
 RewriteRule ^agregar-salud/([^/]*)$ agregar-salud.php?activeTab=2&id=$1 [L,QSA]
 RewriteRule ^agregar-reporte/([^/]*)$ agregar-reporte.php?activeTab=2&id=$1 [L,QSA]
 RewriteRule ^marketplace/([a-zA-Z0-9_-]+)$ stripeConfig.php?activeTab=8&stripeid=$1 [L,QSA]
+RewriteRule ^privacy_requests$ privacy_requests.php?activeTab=10 [L,QSA]
 
 # ACTIVACIÓN DE CUENTA (página pública para asistentes)
 RewriteRule ^activar-cuenta$ activar_cuenta.php [L,QSA]

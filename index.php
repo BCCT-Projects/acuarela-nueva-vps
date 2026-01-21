@@ -264,134 +264,229 @@
   </section>
 
 
-  <!-- PREGUNTAS FRECUENTES -->
-  <?php include 'faq.php'; ?>
 
 
-  <!-- 
-  <?php
-  $sections = $a->getHomeSections();
-  for ($i = 0; $i < count($sections); $i++) {
-    $section = $sections[$i];
-    ?>
-   <?php if ($i % 2 == 0) { ?>
-    <section class="add-on add-on--left">
-      <img class="add-on__img" src="<?= $section->acf->imagen ?>" />
-      <div class="add-on__texts">
-        <h2 class="add-on__title">
-          <?= $section->title->rendered ?>
-        </h2>
-        <p class="add-on__description">
-        <?= $section->content->rendered ?>
-        </p>
-        <button
-          class="btn btn--primary"
-          onclick="window.location.href='/planes-precios'"
-        >
-          <span class="btn__text"> <?= $section->acf->texto_boton ?> </span>
-        </button>
-      </div>
-    </section>
-   <?php } else { ?>
-    <section class="add-on">
-      <div class="add-on__texts">
-        <h2 class="add-on__title">
-          <?= $section->title->rendered ?>
-        </h2>
-        <p class="add-on__description">
-        <?= $section->content->rendered ?>
-        </p>
-        <button
-          class="btn btn--primary"
-          onclick="window.location.href='/planes-precios'"
-        >
-          <span class="btn__text"> <?= $section->acf->texto_boton ?> </span>
-        </button>
-      </div>
-      <img class="add-on__img" src="<?= $section->acf->imagen ?>" />
-    </section>
-   <?php } ?>
-   <?php } ?> -->
-  <!-- SECCIÓN PRIVACIDAD Y SEGURIDAD (COPPA) - PREMIUM REDESIGN V2 -->
-  <section class="privacy-section" style="position: relative; overflow: visible; padding: 100px 20px 120px; background: linear-gradient(180deg, #FFFFFF 0%, #FAFCFF 100%);">
+  <!-- SECCIÓN DERECHOS DE PRIVACIDAD (DSAR) -->
+  <section class="dsar-section" style="position: relative; overflow: visible; padding: 80px 20px; background: linear-gradient(135deg, #F0F9FF 0%, #FAFCFF 100%);">
     
-    <!-- Decoración de fondo sutil -->
-    <div style="position: absolute; top: 15%; left: -120px; width: 400px; height: 400px; background: rgba(113, 85, 164, 0.04); border-radius: 50%; filter: blur(80px); pointer-events: none;"></div>
-    <div style="position: absolute; bottom: 5%; right: -80px; width: 300px; height: 300px; background: rgba(12, 181, 195, 0.06); border-radius: 50%; filter: blur(60px); pointer-events: none;"></div>
+    <div class="container" style="max-width: 1200px; margin: 0 auto; position: relative; z-index: 2;">
+        
+        <!-- Título -->
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h2 style="color: #0CB5C3; font-size: 2.2rem; font-weight: 800; margin: 0 0 15px 0; font-family: 'Outfit', -apple-system, sans-serif;">
+                Tus Datos, Tu Control
+            </h2>
+            <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 700px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
+                Ejercer tus derechos de privacidad es simple y transparente.
+            </p>
+        </div>
 
-    <div class="container" style="max-width: 1080px; margin: 0 auto; position: relative; z-index: 2;">
-        <div class="privacy-card" style="display: flex; flex-direction: row; align-items: center; gap: 60px; background: white; border-radius: 32px; padding: 60px 70px; box-shadow: 0 25px 60px -15px rgba(20, 10, 76, 0.08); border: 1px solid rgba(255,255,255,0.8);">
+        <!-- Grid Horizontal de 3 Columnas -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 45px;">
             
-            <!-- Icono Grande / Ilustración -->
-            <div class="privacy-icon-wrapper" style="flex: 0 0 auto;">
-                <div style="width: 110px; height: 110px; background: #FFF5F5; border-radius: 28px; display: flex; align-items: center; justify-content: center; transform: rotate(-5deg); box-shadow: 0 10px 30px rgba(250, 111, 92, 0.15);">
-                    <!-- Icono Escudo Seguro SVG Inline -->
-                    <svg width="58" height="58" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transform: rotate(5deg);">
-                        <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#FA6F5C" fill-opacity="0.1" stroke="#FA6F5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M9 12L11 14L15 10" stroke="#FA6F5C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Card 1: Acceso -->
+            <div class="dsar-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(12, 181, 195, 0.1); border: 2px solid rgba(12, 181, 195, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(12, 181, 195, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                 </div>
+                <h3 style="color: #0CB5C3; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Acceder a tus Datos
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Solicita una copia completa de la información personal que tenemos sobre ti.
+                </p>
             </div>
 
-            <!-- Contenido Texto -->
-            <div class="privacy-content" style="flex: 1; text-align: left;">
-                <h2 style="color: #7155A4; font-size: 2.3rem; font-weight: 800; margin: 0 0 16px 0; font-family: 'Outfit', -apple-system, sans-serif; letter-spacing: -0.5px; line-height: 1.2;">
-                    Control Parental y Privacidad
-                </h2>
-                <p style="color: #4A4A68; font-size: 1.25rem; line-height: 1.7; margin-bottom: 35px; font-family: 'Outfit', sans-serif; font-weight: 400;">
-                    En Acuarela, la seguridad de los niños es innegociable. Cumplimos rigurosamente con la ley <strong>COPPA</strong> y te damos herramientas directas para gestionar o revocar el consentimiento de datos en cualquier momento.
-                </p>
-                
-                <div class="privacy-actions" style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
-                     <a href="/miembros/acuarela-app-web/privacy/coppa.php" class="btn-privacy-outline" style="background: transparent; border: 2px solid #0CB5C3; color: #0CB5C3; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; transition: all 0.2s;">
-                        Ver Política COPPA
-                    </a>
-                    <a href="/miembros/acuarela-app-web/privacy/revocation_request.php" class="btn-privacy-action" style="background: #FA6F5C; border: 2px solid #FA6F5C; color: white; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 20px rgba(250, 111, 92, 0.3); transition: all 0.2s; display: inline-flex; align-items: center;">
-                        <span>Solicitar Revocación</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 10px;"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
-                    </a>
+            <!-- Card 2: Corrección -->
+            <div class="dsar-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(113, 85, 164, 0.1); border: 2px solid rgba(113, 85, 164, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #7155A4 0%, #5a4483 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(113, 85, 164, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
                 </div>
+                <h3 style="color: #7155A4; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Corregir Información
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Actualiza o corrige cualquier dato personal que esté incorrecto o desactualizado.
+                </p>
+            </div>
+
+            <!-- Card 3: Eliminación -->
+            <div class="dsar-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(250, 111, 92, 0.1); border: 2px solid rgba(250, 111, 92, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #FA6F5C 0%, #E03E52 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(250, 111, 92, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                </div>
+                <h3 style="color: #FA6F5C; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Eliminar tus Datos
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Solicita la eliminación permanente de tu información personal de nuestros sistemas.
+                </p>
             </div>
 
         </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 15px 40px rgba(12, 181, 195, 0.12); border: 2px solid rgba(12, 181, 195, 0.1);">
+            <h3 style="color: #111827; font-size: 1.6rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                ¿Listo para ejercer tus derechos?
+            </h3>
+            <p style="color: #6B7280; font-size: 1.1rem; line-height: 1.6; margin: 0 0 25px 0; font-family: 'Outfit', sans-serif;">
+                Completa nuestro formulario seguro para procesar tu solicitud.
+            </p>
+            <a href="/miembros/acuarela-app-web/privacy/dsar.php" class="btn-dsar-main" style="display: inline-flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); color: white; padding: 16px 40px; font-weight: 700; font-size: 1.15rem; border-radius: 50px; text-decoration: none; box-shadow: 0 10px 25px rgba(12, 181, 195, 0.35); transition: all 0.3s;">
+                <span>Iniciar Solicitud</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+
     </div>
     
     <style>
-        /* Responsive Fixes */
-        @media (max-width: 900px) {
-            .privacy-card {
-                flex-direction: column !important;
-                text-align: center !important;
-                padding: 50px 30px !important;
-                gap: 40px !important;
-            }
-            .privacy-content {
-                text-align: center !important;
-            }
-            .privacy-actions {
-                justify-content: center;
-                width: 100%;
-                flex-direction: column;
-            }
-            .btn-privacy-outline, .btn-privacy-action {
-                width: 100%;
-                justify-content: center;
-                max-width: 350px;
-            }
+        .dsar-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15) !important;
         }
-        .btn-privacy-outline:hover {
-            border-color: #099ca8 !important;
-            color: #099ca8 !important;
-            background: #F0FEFF !important;
+        .btn-dsar-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(12, 181, 195, 0.45) !important;
         }
-        .btn-privacy-action:hover {
-            background: #E03E52 !important;
-            border-color: #E03E52 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 12px 25px rgba(250, 111, 92, 0.4) !important;
+        @media (max-width: 992px) {
+            .dsar-section > .container > div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
   </section>
+
+  <!-- SECCIÓN CONTROL PARENTAL (COPPA) -->
+  <section class="coppa-section" style="position: relative; overflow: visible; padding: 80px 20px; background: linear-gradient(135deg, #FFF5F5 0%, #FAFCFF 100%);">
+    
+    <div class="container" style="max-width: 1200px; margin: 0 auto; position: relative; z-index: 2;">
+        
+        <!-- Título -->
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h2 style="color: #7155A4; font-size: 2.2rem; font-weight: 800; margin: 0 0 15px 0; font-family: 'Outfit', -apple-system, sans-serif;">
+                Protección de Menores (COPPA)
+            </h2>
+            <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 700px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
+                Control total sobre los datos de tus hijos según la ley COPPA.
+            </p>
+        </div>
+
+        <!-- Grid Horizontal de 3 Columnas -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 45px;">
+            
+            <!-- Card 1: Cumplimiento -->
+            <div class="coppa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(113, 85, 164, 0.1); border: 2px solid rgba(113, 85, 164, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #7155A4 0%, #5a4483 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(113, 85, 164, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <h3 style="color: #7155A4; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Cumplimiento COPPA
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Protegemos la información de menores de 13 años según la ley federal.
+                </p>
+            </div>
+
+            <!-- Card 2: Consentimiento -->
+            <div class="coppa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(250, 111, 92, 0.1); border: 2px solid rgba(250, 111, 92, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #FA6F5C 0%, #E03E52 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(250, 111, 92, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </div>
+                <h3 style="color: #FA6F5C; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Consentimiento Parental
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Los padres deben autorizar explícitamente la recopilación de información.
+                </p>
+            </div>
+
+            <!-- Card 3: Revocación -->
+            <div class="coppa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(12, 181, 195, 0.1); border: 2px solid rgba(12, 181, 195, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(12, 181, 195, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <h3 style="color: #0CB5C3; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Revocación Inmediata
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Puedes revocar el consentimiento y eliminar datos en cualquier momento.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 15px 40px rgba(113, 85, 164, 0.12); border: 2px solid rgba(113, 85, 164, 0.1);">
+            <h3 style="color: #111827; font-size: 1.6rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                Gestiona el Consentimiento de tus Hijos
+            </h3>
+            <p style="color: #6B7280; font-size: 1.1rem; line-height: 1.6; margin: 0 0 25px 0; font-family: 'Outfit', sans-serif;">
+                Revisa nuestra política COPPA o revoca el consentimiento.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                <a href="/miembros/acuarela-app-web/privacy/coppa.php" class="btn-coppa-outline" style="display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 2px solid #7155A4; color: #7155A4; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; transition: all 0.3s;">
+                    <span>Ver Política COPPA</span>
+                </a>
+                <a href="/miembros/acuarela-app-web/privacy/revocation_request.php" class="btn-coppa-main" style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #FA6F5C 0%, #E03E52 100%); color: white; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; box-shadow: 0 10px 25px rgba(250, 111, 92, 0.35); transition: all 0.3s;">
+                    <span>Revocar Consentimiento</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+    
+    <style>
+        .coppa-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        .btn-coppa-outline:hover {
+            background: #7155A4 !important;
+            color: white !important;
+            transform: translateY(-3px);
+        }
+        .btn-coppa-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(250, 111, 92, 0.45) !important;
+        }
+        @media (max-width: 992px) {
+            .coppa-section > .container > div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+  </section>
+
+  <!-- PREGUNTAS FRECUENTES -->
+  <?php include 'faq.php'; ?>
 
 </main>
 <?php include 'includes/footer.php'; ?>
