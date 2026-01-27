@@ -11,3 +11,7 @@ logs/
 
 # Environment variables - NEVER commit!
 .env
+
+# SSL Certificates - NEVER commit private keys
+certs/
+certs/

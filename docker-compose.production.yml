@@ -16,6 +16,9 @@ services:
       - ./miembros/cron/logs:/var/www/html/miembros/cron/logs:rw
       - acuarela_uploads:/var/www/html/uploads:rw
       - php_sessions:/tmp:rw
+      # Certificados SSL (Cloudflare Origin)
+      - ./certs/acuarela.crt:/etc/ssl/certs/acuarela.crt:ro
+      - ./certs/acuarela.key:/etc/ssl/certs/acuarela.key:ro
     environment:
       - APACHE_DOCUMENT_ROOT=/var/www/html
       - APACHE_RUN_USER=www-data

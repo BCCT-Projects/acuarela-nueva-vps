@@ -26,8 +26,8 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Habilitar módulos de Apache necesarios
-RUN a2enmod rewrite headers expires ssl deflate
+# Habilitar módulos de Apache necesarios (incluyendo remoteip para Cloudflare)
+RUN a2enmod rewrite headers expires ssl deflate remoteip
 
 # Configurar Apache para permitir .htaccess
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
