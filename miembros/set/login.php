@@ -2,6 +2,9 @@
 error_reporting(0);
 ob_start();
 include '../includes/config.php';
+require_once __DIR__ . '/../cron/AuditLogger.php';
+
+$logger = new AuditLogger();
 
 // Normaliza los datos
 $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
@@ -13,7 +16,7 @@ if (!$email || !$password) {
 }
 $email = strtolower(trim($email));
 
-$_SESSION["estanoesunacontrasena"] = $password;
+// SECURITY FIX: Removed password storage in session (was $_SESSION["estanoesunacontrasena"])
 $userLogin = $a->loginBilingualUser($email, $password);
 
 // Asegurar que los daycares estén disponibles en la respuesta
@@ -45,6 +48,13 @@ if (isset($userLogin->id)) {
     unset($_SESSION['userLogged']);
     unset($_SESSION['userAll']);
 
+    // Log 2FA Initiation
+    $logger->log('LOGIN_CHALLENGE', [
+        'email' => $email,
+        'user_id' => $userLogin->id,
+        'message' => 'Credentials verified, 2FA code sent'
+    ]);
+
     // Enviar correo con el código
     // Usamos el template 'portal-miembros-2fa' (deberás crearlo en Mandrill o usar uno genérico por ahora)
     $mergeVars = [
@@ -63,10 +73,15 @@ if (isset($userLogin->id)) {
             "Tu código de verificación",
             'portal-miembros-2fa', // NOMBRE DEL TEMPLATE A CREAR
             '', // Dejar vacío para que use Env::get automáticamente
-            "Bilingual Childcare Training"
+            "Bilingual Childcare Training",
+            true // ASYNC = true para no bloquear el login esperando respuesta de Mandrill
         );
     } catch (Exception $e) {
         error_log("Error al enviar email 2FA: " . $e->getMessage());
+        $logger->log('LOGIN_ERROR', [
+            'email' => $email,
+            'error' => 'Failed to send 2FA email: ' . $e->getMessage()
+        ]);
 
         // Retornar error más descriptivo
         ob_clean();
@@ -78,6 +93,12 @@ if (isset($userLogin->id)) {
     ob_clean(); // Limpiar cualquier output previo (warnings, espacios, etc)
     echo json_encode(['require_2fa' => true]);
     exit;
+} else {
+    // Log Failed Login
+    $logger->log('LOGIN_FAILED', [
+        'email' => $email,
+        'reason' => 'Invalid credentials or user not found'
+    ]);
 }
 
 // Los daycares deberían estar en $_SESSION["user"] después del login

@@ -30,8 +30,10 @@ class AuditLogger
         // Write to log file
         file_put_contents($this->logFile, $line, FILE_APPEND);
 
-        // Output to stdout for CLI feedback
-        echo "[" . $entry['timestamp'] . "] [" . $entry['mode'] . "] " . $event . ": " .
-            ($details['message'] ?? json_encode($details)) . PHP_EOL;
+        // Output to stdout ONLY for CLI (not web requests)
+        if (php_sapi_name() === 'cli') {
+            echo "[" . $entry['timestamp'] . "] [" . $entry['mode'] . "] " . $event . ": " .
+                ($details['message'] ?? json_encode($details)) . PHP_EOL;
+        }
     }
 }

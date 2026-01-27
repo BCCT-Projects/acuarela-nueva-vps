@@ -6,10 +6,29 @@ $a = new Acuarela();
 
 $result = $a->getChildren(isset($_GET['id']) ? $_GET['id'] : "");
 
-
-
 // Descifrar datos sensibles de los niños
 if (isset($result->response) && is_array($result->response)) {
+
+    // PERFORMANCE FIX: Get ALL consents for this daycare in ONE query
+    // Instead of N queries (one per child), we do 1 query and match locally
+    $allConsents = [];
+    try {
+        // Get all parental consents, sorted by createdAt desc
+        $consentsResult = $a->queryStrapi("parental-consents?daycare=" . $a->daycareID . "&_sort=createdAt:desc");
+        if (is_array($consentsResult)) {
+            // Index by child_id for O(1) lookup
+            foreach ($consentsResult as $consent) {
+                $childId = $consent->child_id ?? null;
+                if ($childId && !isset($allConsents[$childId])) {
+                    // Only keep the most recent consent per child (first one due to sort)
+                    $allConsents[$childId] = $consent->consent_status ?? 'pending';
+                }
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Error fetching consents: " . $e->getMessage());
+    }
+
     foreach ($result->response as &$child) {
         // Descifrar datos del niño
         $child = $a->decryptChildData($child);
@@ -27,14 +46,14 @@ if (isset($result->response) && is_array($result->response)) {
         }
 
         // Enriquecer con estado COPPA
-        $child->coppa_status = 'pending'; // Default as pending is safer
+        // GRANDFATHER CLAUSE: Default to null (legacy kid, pre-COPPA)
+        // null = implicitly approved (kid existed before COPPA implementation)
+        $child->coppa_status = null;
 
         if (isset($child->id)) {
-            $childId = $child->id;
-            // Buscar consentimiento
-            $consents = $a->queryStrapi("parental-consents?child_id=$childId&_sort=createdAt:desc&_limit=1");
-            if (is_array($consents) && count($consents) > 0) {
-                $child->coppa_status = $consents[0]->consent_status ?? 'pending';
+            // O(1) lookup from our pre-fetched index
+            if (isset($allConsents[$child->id])) {
+                $child->coppa_status = $allConsents[$child->id];
             }
         }
     }

@@ -1204,8 +1204,12 @@ const getChildren = async () => {
 
         listItem.querySelector(".image").addEventListener("click", () => {
           // COPPA Restriction Check
-          const coppaStatus = kid.coppa_status || 'pending';
-          if (coppaStatus !== 'granted') {
+          // GRANDFATHER CLAUSE: Kids without coppa_status (legacy) are implicitly approved
+          const coppaStatus = kid.coppa_status; // Don't default to 'pending'
+
+          // Only block if coppa_status EXISTS and is NOT 'granted'
+          // Legacy kids (null/undefined) are allowed through
+          if (coppaStatus && coppaStatus !== 'granted') {
             let msg = "No se puede registrar asistencia porque el consentimiento COPPA está pendiente de aprobación.";
             if (coppaStatus === 'revoked') msg = "No se puede registrar asistencia porque el consentimiento COPPA ha sido revocado.";
 
@@ -3282,7 +3286,9 @@ const getGrupos = async () => {
 
 // Validación Global COPPA para checkboxes de selección
 window.validateCoppaSelection = (event, status) => {
-  if (status && status !== 'granted') {
+  // GRANDFATHER CLAUSE: 'legacy' (null/undefined in DB) and 'granted' are allowed
+  // Only block 'pending' and 'revoked' statuses
+  if (status && status !== 'granted' && status !== 'legacy') {
     event.preventDefault();
     event.stopPropagation();
     let msg = "No se puede seleccionar este niño porque el consentimiento COPPA está pendiente de aprobación.";
@@ -3346,7 +3352,7 @@ const getInfoNewGroup = () => {
           if (!group) {
             document.querySelector(".children").innerHTML += `<li ${isCoppaLocked ? 'style="opacity:0.6;"' : ''}>
                           <input type="checkbox" name="${id}" id="${id}" ${childrenGroup.includes(id) ? `checked` : ``
-              } onclick="validateCoppaSelection(event, '${coppa_status || 'pending'}')">
+              } onclick="validateCoppaSelection(event, '${coppa_status || 'legacy'}')">
                           <label for="${id}" ${isCoppaLocked ? 'style="cursor:pointer;" title="Consentimiento COPPA requerido"' : ''}>
                                ${isCoppaLocked ? '<i class="acuarela acuarela-Bloquear" style="color:red; margin-right:5px; font-size:1.2em;"></i>' : ''}
                                ${photo

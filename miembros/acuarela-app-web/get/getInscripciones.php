@@ -18,13 +18,30 @@ if (is_array($posts)) {
     }
 }
 
+// PERFORMANCE FIX: Get ALL consents for this daycare in ONE query
+// Instead of N queries (one per inscription), we do 1 query and match locally
+$allConsents = [];
+try {
+    $consentsResult = $a->queryStrapi("parental-consents?daycare=" . $a->daycareID . "&_sort=createdAt:desc");
+    if (is_array($consentsResult)) {
+        foreach ($consentsResult as $consent) {
+            $childId = $consent->child_id ?? null;
+            if ($childId && !isset($allConsents[$childId])) {
+                $allConsents[$childId] = $consent->consent_status ?? 'pending';
+            }
+        }
+    }
+} catch (Exception $e) {
+    error_log("Error fetching consents: " . $e->getMessage());
+}
+
 // Enriquecer con estado de consentimiento COPPA
 if (is_array($posts)) {
     foreach ($posts as &$post) {
-        $post->coppa_status = 'N/A'; // Default
+        // GRANDFATHER CLAUSE: Default to null (legacy kid, pre-COPPA)
+        $post->coppa_status = null;
 
         // Intentar obtener child ID
-        // La estructura puede variar, a veces es 'child' objeto, a veces 'kid', a veces solo ID dentro de post
         $childId = null;
         if (isset($post->child) && is_object($post->child)) {
             $childId = $post->child->id;
@@ -33,12 +50,9 @@ if (is_array($posts)) {
         }
 
         if ($childId) {
-            // Buscar consentimiento para este niño
-            // Ordenar por createdAt desc para obtener el más reciente
-            $consents = $a->queryStrapi("parental-consents?child_id=$childId&_sort=createdAt:desc&_limit=1");
-
-            if (is_array($consents) && count($consents) > 0) {
-                $post->coppa_status = $consents[0]->consent_status ?? 'pending';
+            // O(1) lookup from our pre-fetched index
+            if (isset($allConsents[$childId])) {
+                $post->coppa_status = $allConsents[$childId];
             }
         }
     }
