@@ -116,13 +116,18 @@ foreach ($_SESSION['used_sso_tokens'] as $hash => $timestamp) {
     }
 }
 
-// Enviar correo con el código
+// Integrar AuditLogger
+require_once __DIR__ . '/../cron/AuditLogger.php';
+$logger = new AuditLogger();
+
+// Enviar correo con el código de manera ASÍNCRONA
 $mergeVars = [
     'CODE' => $code,
     'FNAME' => $userName
 ];
 
 try {
+    // SECURITY UPDATE: Async email sending (last param = true) to prevent login blocking
     $a->send_notification(
         'info@acuarela.app',
         $email,
@@ -131,20 +136,32 @@ try {
         "Tu código de verificación - Auto-login",
         'portal-miembros-2fa',
         '',
-        "Acuarela App"
+        "Acuarela App",
+        true // ASYNC = TRUE corrección de velocidad
     );
 
-    error_log("SSO 2FA code sent to: $email for user: $userId");
+    // Logging seguro usando AuditLogger
+    $logger->log('SSO_CHALLENGE', [
+        'email' => $email,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'status' => 'success',
+        'method' => 'portal_autologin'
+    ]);
 
     // CRÍTICO: Escribir la sesión antes de responder
     // Sin esto, la sesión podría no guardarse antes de que llegue la siguiente petición
     session_write_close();
 
-    ob_clean();
+    // Limpiar buffers antes de enviar JSON
+    // (Importante si el logger o algo más imprimió output accidentalmente)
+    while (ob_get_level())
+        ob_end_clean();
+
     echo json_encode([
         'success' => true,
         'message' => 'Código de verificación enviado',
-        'email_hint' => substr($email, 0, 3) . '***@' . substr(strstr($email, '@'), 1)
+        'email_hint' => substr($email, 0, 3) . '***@' . substr(strstr($email, '@'), 1),
+        'debug_async' => true
     ]);
 } catch (Exception $e) {
     error_log("Error sending SSO 2FA email: " . $e->getMessage());

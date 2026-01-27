@@ -16,46 +16,46 @@ if (is_array($posts)) {
             $post->child = $a->decryptChildData($post->child);
         }
     }
+    // CRITICAL FIX: Unset reference to avoid corruption in subsequent loops
+    unset($post);
 }
 
-// PERFORMANCE FIX: Get ALL consents for this daycare in ONE query
-// Instead of N queries (one per inscription), we do 1 query and match locally
-$allConsents = [];
-try {
-    $consentsResult = $a->queryStrapi("parental-consents?daycare=" . $a->daycareID . "&_sort=createdAt:desc");
-    if (is_array($consentsResult)) {
-        foreach ($consentsResult as $consent) {
-            $childId = $consent->child_id ?? null;
-            if ($childId && !isset($allConsents[$childId])) {
-                $allConsents[$childId] = $consent->consent_status ?? 'pending';
-            }
-        }
-    }
-} catch (Exception $e) {
-    error_log("Error fetching consents: " . $e->getMessage());
-}
+// Debugging (temporal)
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
 
 // Enriquecer con estado de consentimiento COPPA
 if (is_array($posts)) {
-    foreach ($posts as &$post) {
+    foreach ($posts as $key => $val) {
+        $post = &$posts[$key];
+
         // GRANDFATHER CLAUSE: Default to null (legacy kid, pre-COPPA)
-        $post->coppa_status = null;
+        $post->coppa_status = null; // Default no status
 
         // Intentar obtener child ID
         $childId = null;
+        // Robust check: object or integer/string ID matches
         if (isset($post->child) && is_object($post->child)) {
             $childId = $post->child->id;
-        } elseif (isset($post->child) && is_string($post->child)) {
+        } elseif (isset($post->child) && !is_object($post->child)) {
             $childId = $post->child;
         }
 
         if ($childId) {
-            // O(1) lookup from our pre-fetched index
-            if (isset($allConsents[$childId])) {
-                $post->coppa_status = $allConsents[$childId];
+            // SLOW BUT SAFE METHOD (Temporary rollback to verify 500 fix)
+            // Hacemos la consulta individual para ver si esto elimina el error 500
+            try {
+                $consents = $a->queryStrapi("parental-consents?child_id=$childId&_sort=createdAt:desc&_limit=1");
+                if (is_array($consents) && count($consents) > 0) {
+                    $post->coppa_status = $consents[0]->consent_status ?? 'pending';
+                }
+            } catch (Exception $e) {
+                // Silent catch
             }
         }
     }
+    unset($post);
 }
 
 echo json_encode($posts);
