@@ -62,6 +62,9 @@ RewriteRule ^miembros/acuarela-app-web/g/([^/]*)/?$ miembros/acuarela-app-web/ge
 RewriteRule ^miembros/acuarela-app-web/c/([^/]*)/?$ miembros/acuarela-app-web/cron/$1.php?lang=es [L,QSA]
 RewriteRule ^miembros/acuarela-app-web/wh/([^/]*)/?$ miembros/acuarela-app-web/webhooks/$1.php?lang=es [L,QSA]
 
+# Servicio de generación de informes (modo-inspeccion) - dentro de acuarela-app-web
+RewriteRule ^miembros/acuarela-app-web/modo-inspeccion/?$ miembros/acuarela-app-web/modo-inspeccion/index.php [L,QSA]
+
 RewriteRule ^/$ index.php [L,QSA]
 RewriteRule ^sobre-nosotros$ about.php [L,QSA]
 RewriteRule ^planes-precios$ pricing.php [L,QSA]

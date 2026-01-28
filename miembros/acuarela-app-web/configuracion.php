@@ -109,6 +109,12 @@
       <a href="/miembros/acuarela-app-web/privacy/coppa" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">
         Aviso de Privacidad COPPA
       </a>
+      <a href="/miembros/acuarela-app-web/privacy/ferpa.php" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">
+        Formulario FERPA
+      </a>
+      <a href="/miembros/acuarela-app-web/privacy/coppa.php#ferpa" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">
+        Info FERPA
+      </a>
     </p>
   </div>
 </main>

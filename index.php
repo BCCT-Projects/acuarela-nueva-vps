@@ -485,6 +485,115 @@
     </style>
   </section>
 
+  <!-- SECCIÓN DERECHOS EDUCATIVOS (FERPA) -->
+  <section class="ferpa-section" style="position: relative; overflow: visible; padding: 80px 20px; background: linear-gradient(135deg, #F5F3FF 0%, #FAFCFF 100%);">
+    <div class="container" style="max-width: 1200px; margin: 0 auto; position: relative; z-index: 2;">
+        <!-- Título -->
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h2 style="color: #0CB5C3; font-size: 2.2rem; font-weight: 800; margin: 0 0 15px 0; font-family: 'Outfit', -apple-system, sans-serif;">
+                Derechos Educativos (FERPA)
+            </h2>
+            <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 760px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
+                Solicita acceso a registros educativos del menor o pide correcciones de información inexacta.
+            </p>
+        </div>
+
+        <!-- Grid Horizontal de 3 Columnas -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 45px;">
+
+            <!-- Card 1: Acceso -->
+            <div class="ferpa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(12, 181, 195, 0.1); border: 2px solid rgba(12, 181, 195, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(12, 181, 195, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <h3 style="color: #0CB5C3; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Acceso a Registros
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Solicita ver o recibir copias de los registros educativos del menor.
+                </p>
+            </div>
+
+            <!-- Card 2: Corrección -->
+            <div class="ferpa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(113, 85, 164, 0.1); border: 2px solid rgba(113, 85, 164, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #7155A4 0%, #5a4483 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(113, 85, 164, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                </div>
+                <h3 style="color: #7155A4; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Solicitar Corrección
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Pide la corrección/enmienda de registros inexactos o engañosos.
+                </p>
+            </div>
+
+            <!-- Card 3: Política -->
+            <div class="ferpa-card" style="background: white; border-radius: 20px; padding: 35px 25px; box-shadow: 0 8px 25px rgba(250, 111, 92, 0.1); border: 2px solid rgba(250, 111, 92, 0.15); transition: all 0.3s; text-align: center;">
+                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #FA6F5C 0%, #E03E52 100%); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(250, 111, 92, 0.25);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <path d="M14 2v6h6"></path>
+                        <path d="M16 13H8"></path>
+                        <path d="M16 17H8"></path>
+                        <path d="M10 9H8"></path>
+                    </svg>
+                </div>
+                <h3 style="color: #FA6F5C; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                    Política FERPA
+                </h3>
+                <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
+                    Lee qué registros aplican y cómo funciona el proceso FERPA en Acuarela.
+                </p>
+            </div>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align: center; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 15px 40px rgba(12, 181, 195, 0.12); border: 2px solid rgba(12, 181, 195, 0.1);">
+            <h3 style="color: #111827; font-size: 1.6rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
+                ¿Necesitas ejercer un derecho FERPA?
+            </h3>
+            <p style="color: #6B7280; font-size: 1.1rem; line-height: 1.6; margin: 0 0 25px 0; font-family: 'Outfit', sans-serif;">
+                Accede a la política y envía tu solicitud desde el formulario oficial.
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                <a href="/miembros/acuarela-app-web/privacy/coppa.php#ferpa" class="btn-ferpa-outline" style="display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 2px solid #0CB5C3; color: #0CB5C3; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; transition: all 0.3s;">
+                    <span>Ver info FERPA</span>
+                </a>
+                <a href="/miembros/acuarela-app-web/privacy/ferpa.php" class="btn-ferpa-main" style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); color: white; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; box-shadow: 0 10px 25px rgba(12, 181, 195, 0.35); transition: all 0.3s;">
+                    <span>Ir al Formulario FERPA</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .ferpa-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15) !important;
+        }
+        .btn-ferpa-outline:hover {
+            background: #0CB5C3 !important;
+            color: white !important;
+            transform: translateY(-3px);
+        }
+        .btn-ferpa-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(12, 181, 195, 0.45) !important;
+        }
+        @media (max-width: 992px) {
+            .ferpa-section > .container > div:nth-child(2) {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+  </section>
+
   <!-- PREGUNTAS FRECUENTES -->
   <?php include 'faq.php'; ?>
 

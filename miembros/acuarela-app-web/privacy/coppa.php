@@ -34,8 +34,23 @@ $translations = [
         'revocation_desc' => 'Si desea retirar su consentimiento para el procesamiento de datos de su hijo(a), puede hacerlo en cualquier momento usando nuestra herramienta de revocación.',
         'revocation_btn' => 'Solicitar Revocación',
         'dsar_section_title' => '7. Sus Derechos de Privacidad (DSAR)',
-        'dsar_text' => 'Además de los derechos específicos de COPPA, usted tiene derecho a solicitar acceso, rectificación, portabilidad o eliminación de su información personal y la de sus hijos bajo otras normativas de privacidad aplicables.',
-        'dsar_btn' => 'Acceder al Portal de Solicitudes (DSAR)'
+        'dsar_text' => 'Además de los derechos específicos de COPPA, usted puede ejercer derechos de privacidad (DSAR) sobre su información personal y, cuando aplique, sobre la información vinculada a sus hijos bajo otras normativas de privacidad.',
+        'dsar_p1' => 'En el portal DSAR puede solicitar, por ejemplo:',
+        'dsar_li_1' => 'Acceso: una copia de la información personal que tenemos sobre usted.',
+        'dsar_li_2' => 'Rectificación: corregir datos personales inexactos o desactualizados.',
+        'dsar_li_3' => 'Portabilidad: obtener su información en un formato portable (cuando aplique).',
+        'dsar_li_4' => 'Eliminación: solicitar la eliminación de su información personal (cuando aplique).',
+        'dsar_p2' => 'Estas solicitudes son distintas a FERPA: DSAR aplica a privacidad general; FERPA aplica específicamente a registros educativos.',
+        'dsar_btn' => 'Acceder al Portal de Solicitudes (DSAR)',
+        'ferpa_section_title' => '8. Derechos Educativos (FERPA)',
+        'ferpa_text' => 'FERPA es una ley federal de EE. UU. que protege la privacidad de los registros educativos del estudiante. Si usted es padre o tutor verificado, puede ejercer derechos sobre los registros educativos del menor en Acuarela.',
+        'ferpa_p1' => 'A través del formulario FERPA usted puede:',
+        'ferpa_li_1' => 'Solicitar acceso a registros educativos (asistencia, actividades, reportes y comunicaciones educativas).',
+        'ferpa_li_2' => 'Solicitar corrección/enmienda de registros inexactos o engañosos, aportando la justificación correspondiente.',
+        'ferpa_p2' => 'Proceso: la solicitud se registra, pasa a revisión por el equipo autorizado y se resuelve como aprobada o rechazada con una explicación.',
+        'ferpa_p3' => 'Plazos: las solicitudes de acceso se atienden dentro de un plazo razonable (≤ 45 días).',
+        'ferpa_p4' => 'Trazabilidad: cada solicitud mantiene estado, fechas, evidencia de resolución y registros auditables.',
+        'ferpa_btn' => 'Ir al Formulario FERPA'
     ],
     'en' => [
         'title' => 'COPPA Privacy Notice',
@@ -63,8 +78,23 @@ $translations = [
         'revocation_desc' => 'If you wish to withdraw your consent for processing your child\'s data, you can do so at any time using our revocation tool.',
         'revocation_btn' => 'Request Revocation',
         'dsar_section_title' => '7. Your Privacy Rights (DSAR)',
-        'dsar_text' => 'In addition to specific COPPA rights, you have the right to request access, rectification, portability, or deletion of your personal information and that of your children under other applicable privacy regulations.',
-        'dsar_btn' => 'Access Request Portal (DSAR)'
+        'dsar_text' => 'In addition to COPPA-specific rights, you may exercise privacy rights (DSAR) over your personal information and, when applicable, information linked to your children under other privacy regulations.',
+        'dsar_p1' => 'In the DSAR portal you can request, for example:',
+        'dsar_li_1' => 'Access: a copy of the personal information we hold about you.',
+        'dsar_li_2' => 'Rectification: correct inaccurate or outdated personal data.',
+        'dsar_li_3' => 'Portability: receive your information in a portable format (when applicable).',
+        'dsar_li_4' => 'Deletion: request deletion of your personal information (when applicable).',
+        'dsar_p2' => 'These requests are different from FERPA: DSAR is general privacy; FERPA applies specifically to education records.',
+        'dsar_btn' => 'Access Request Portal (DSAR)',
+        'ferpa_section_title' => '8. Educational Rights (FERPA)',
+        'ferpa_text' => 'FERPA is a U.S. federal law that protects the privacy of student education records. If you are a verified parent/guardian, you may exercise rights over the child’s education records in Acuarela.',
+        'ferpa_p1' => 'Through the FERPA form you can:',
+        'ferpa_li_1' => 'Request access to education records (attendance, activities, development reports, and educational communications).',
+        'ferpa_li_2' => 'Request amendment of inaccurate or misleading records, including supporting justification.',
+        'ferpa_p2' => 'Process: the request is recorded, reviewed by an authorized team, and resolved as approved or denied with an explanation.',
+        'ferpa_p3' => 'Timelines: access requests are handled within a reasonable timeframe (≤ 45 days).',
+        'ferpa_p4' => 'Traceability: each request keeps status, dates, resolution evidence, and auditable logs.',
+        'ferpa_btn' => 'Go to FERPA Form'
     ]
 ];
 
@@ -615,8 +645,40 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                         <h3 class="coppa-subsection__title"><?= $t['dsar_section_title'] ?></h3>
                         <div class="coppa-subsection__content">
                             <p><?= $t['dsar_text'] ?></p>
+                            <p><?= $t['dsar_p1'] ?></p>
+                            <ul style="margin: 0 0 14px 18px; color:#4A4A68; line-height:1.6;">
+                                <li><?= $t['dsar_li_1'] ?></li>
+                                <li><?= $t['dsar_li_2'] ?></li>
+                                <li><?= $t['dsar_li_3'] ?></li>
+                                <li><?= $t['dsar_li_4'] ?></li>
+                            </ul>
+                            <p style="margin-top: 10px; color:#6B7280;"><?= $t['dsar_p2'] ?></p>
                             <a href="dsar.php?lang=<?= $lang ?>" class="btn-dsar">
                                 <?= $t['dsar_btn'] ?>
+                                <svg style="width:16px; height:16px; margin-left:8px; vertical-align:middle;"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 8. Sección FERPA -->
+                    <div class="coppa-subsection coppa-dsar-box" id="ferpa">
+                        <h3 class="coppa-subsection__title"><?= $t['ferpa_section_title'] ?></h3>
+                        <div class="coppa-subsection__content">
+                            <p><?= $t['ferpa_text'] ?></p>
+                            <p><?= $t['ferpa_p1'] ?></p>
+                            <ul style="margin: 0 0 14px 18px; color:#4A4A68; line-height:1.6;">
+                                <li><?= $t['ferpa_li_1'] ?></li>
+                                <li><?= $t['ferpa_li_2'] ?></li>
+                            </ul>
+                            <p style="margin-top: 10px;"><?= $t['ferpa_p2'] ?></p>
+                            <p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p3'] ?></p>
+                            <p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p4'] ?></p>
+                            <a href="ferpa.php?lang=<?= $lang ?>" class="btn-dsar">
+                                <?= $t['ferpa_btn'] ?>
                                 <svg style="width:16px; height:16px; margin-left:8px; vertical-align:middle;"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

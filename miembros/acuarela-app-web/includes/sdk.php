@@ -74,6 +74,12 @@ class Acuarela
         $endpoint = $this->domain . $url;
         $curl = curl_init();
 
+        // Headers: para endpoints públicos no enviar token vacío
+        $headers = array('Content-Type: application/json');
+        if (!empty($this->token)) {
+            $headers[] = 'token: ' . $this->token;
+        }
+
         $curlOptions = array(
             CURLOPT_URL => $endpoint,
             CURLOPT_RETURNTRANSFER => true,
@@ -83,10 +89,7 @@ class Acuarela
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => $method,
-            CURLOPT_HTTPHEADER => array(
-                'Content-Type: application/json',
-                'token: ' . $this->token
-            ),
+            CURLOPT_HTTPHEADER => $headers,
         );
 
         // Verificar si $body no es un string antes de hacer json_encode
@@ -234,6 +237,123 @@ class Acuarela
         }
 
         return $dsars;
+    }
+
+    /**
+     * Obtiene las solicitudes FERPA asociadas a un daycare específico
+     */
+    function getDaycareFerpaRequests($daycareID)
+    {
+        if (empty($daycareID))
+            return [];
+
+        // Filtrar por daycare y ordenar por fecha
+        $requests = $this->queryStrapi("ferpa-requests?daycare.id=$daycareID&_sort=created_at:DESC");
+
+        // Fallback simple
+        if (empty($requests)) {
+            $requests = $this->queryStrapi("ferpa-requests?daycare=$daycareID&_sort=created_at:DESC");
+        }
+
+        if (empty($requests) || !is_array($requests))
+            return [];
+
+        // Recolectar IDs de usuarios (padres) y niños (opcional) para enriquecer datos
+        $userIds = [];
+        $childIds = [];
+
+        foreach ($requests as $req) {
+            if (isset($req->requester)) {
+                $uid = is_object($req->requester) ? $req->requester->id : $req->requester;
+                if ($uid)
+                    $userIds[] = $uid;
+            }
+            // Compatibilidad: la relación con el niño puede llamarse 'child' o 'child_id'
+            if (isset($req->child) || isset($req->child_id)) {
+                $childRel = isset($req->child) ? $req->child : $req->child_id;
+                $cid = is_object($childRel) ? ($childRel->id ?? ($childRel->_id ?? null)) : $childRel;
+                if ($cid) {
+                    $childIds[] = $cid;
+                }
+            }
+        }
+
+        $userIds = array_unique($userIds);
+        $childIds = array_unique($childIds);
+
+        $usersMap = [];
+        $childrenMap = [];
+
+        // Obtener usuarios
+        if (!empty($userIds)) {
+            $idsQuery = implode('&id_in=', $userIds);
+            $users = $this->queryStrapi("acuarelausers?id_in=$idsQuery");
+            if ($users && is_array($users)) {
+                foreach ($users as $u) {
+                    $usersMap[$u->id] = $u;
+                }
+            }
+        }
+
+        // Obtener niños
+        if (!empty($childIds)) {
+            $idsQuery = implode('&id_in=', $childIds);
+            $children = $this->queryStrapi("children?id_in=$idsQuery");
+            if ($children && is_array($children)) {
+                foreach ($children as $c) {
+                    // Decrypt name if needed (using existing helper if available, or raw)
+                    // Assuming decryptChildData is in this class but maybe private or specific context
+                    // We'll just store raw for now or use decrypt if public
+                    $childrenMap[$c->id] = $this->decryptChildData($c);
+                }
+            }
+        }
+
+        // Asignar detalles
+        foreach ($requests as $req) {
+            // Requester Details
+            if (isset($req->requester)) {
+                $uid = is_object($req->requester) ? $req->requester->id : $req->requester;
+                if (isset($usersMap[$uid])) {
+                    $req->requester_details = $usersMap[$uid];
+                } elseif (is_object($req->requester)) {
+                    // Fallback: si Strapi ya populó el requester, úsalo directamente
+                    $req->requester_details = $req->requester;
+                }
+            }
+            // Child Details
+            if (isset($req->child) || isset($req->child_id)) {
+                $childRel = isset($req->child) ? $req->child : $req->child_id;
+                $cid = is_object($childRel) ? ($childRel->id ?? ($childRel->_id ?? null)) : $childRel;
+
+                if (isset($childrenMap[$cid])) {
+                    $req->child_details = $childrenMap[$cid];
+                } elseif (is_object($childRel)) {
+                    // Fallback: si Strapi ya envió el objeto niño populado, descifrarlo directamente
+                    $req->child_details = $this->decryptChildData($childRel);
+                }
+            }
+        }
+
+        return $requests;
+    }
+
+    /**
+     * Crea una nueva solicitud FERPA
+     */
+    function createFerpaRequest($data)
+    {
+        $resp = $this->queryStrapi("ferpa-requests", $data, "POST");
+        return $resp;
+    }
+
+    /**
+     * Actualiza el estado de una solicitud FERPA
+     */
+    function updateFerpaRequest($id, $data)
+    {
+        $resp = $this->queryStrapi("ferpa-requests/$id", $data, "PUT");
+        return $resp;
     }
     function deleteElement($type, $id)
     {

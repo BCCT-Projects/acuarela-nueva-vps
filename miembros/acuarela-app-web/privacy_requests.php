@@ -169,6 +169,10 @@ if ($activeDaycare) {
                     } ?>
                 </tbody>
             </table>
+            <div id="dsarPagination"
+                style="margin-top: 10px; display:none; justify-content: flex-end; align-items: center; gap: 8px; font-size: 0.9em; color:#555;">
+                <!-- Controles de paginación DSAR se inyectan via JS -->
+            </div>
         </div>
 
         <!-- Estado Vacío (Visible por defecto si no hay datos, o vía JS si el filtro no da resultados) -->
@@ -211,11 +215,14 @@ if ($activeDaycare) {
 </div>
 
 <script>
-    // Datos globales para el modal
+    // Datos globales para el modal y paginación
     const allDsars = <?php echo json_encode($dsarList); ?>;
     let currentDsarId = null;
     let currentDsar = null;
     let pendingStatusChange = null;
+    const DSAR_PAGE_SIZE = 5;
+    let dsarCurrentPage = 1;
+    let dsarCurrentFilter = 'all';
 
     const typeMapJS = {
         'access': 'Acceso a Datos',
@@ -246,49 +253,100 @@ if ($activeDaycare) {
         }
     }
 
-    // ----- Lógica de Filtrado (Cliente) -----
+    // Inicializar filtro/paginación al cargar
+    document.addEventListener('DOMContentLoaded', function () {
+        filterTable('all');
+    }
+
+    // ----- Filtrado + Paginación (Cliente) -----
     function filterTable(filterType) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`.tab-btn[data-tab="${filterType}"]`).classList.add('active');
+        dsarCurrentFilter = filterType;
+        dsarCurrentPage = 1;
+        applyDsarFilterAndPagination();
+    }
 
-        const rows = document.querySelectorAll('.dsar-row');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const status = row.getAttribute('data-status');
-            let show = false;
-
-            if (filterType === 'all') {
-                show = true;
-            } else if (filterType === 'pending') {
-                if (status === 'received' || status === 'in_review') show = true;
-            } else {
-                if (status === filterType) show = true;
-            }
-
-            row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
-        });
-
+    function applyDsarFilterAndPagination() {
+        const rows = Array.from(document.querySelectorAll('.dsar-row'));
         const tableContainer = document.getElementById('tableContainer');
         const emptyState = document.getElementById('emptyState');
         const emptyMsg = document.getElementById('emptyMsg');
+        const pagContainer = document.getElementById('dsarPagination');
 
-        if (allDsars.length === 0) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.querySelector(`.tab-btn[data-tab="${dsarCurrentFilter}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        const filtered = [];
+        rows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            let match = false;
+            if (dsarCurrentFilter === 'all') {
+                match = true;
+            } else if (dsarCurrentFilter === 'pending') {
+                if (status === 'received' || status === 'in_review') match = true;
+            } else {
+                if (status === dsarCurrentFilter) match = true;
+            }
+            if (match) filtered.push(row);
+        });
+
+        if (!allDsars || allDsars.length === 0) {
             tableContainer.style.display = 'none';
             emptyState.style.display = 'block';
             emptyMsg.textContent = "No hay solicitudes registradas en el sistema.";
+            if (pagContainer) { pagContainer.style.display = 'none'; pagContainer.innerHTML = ''; }
             return;
         }
 
-        if (visibleCount === 0) {
+        if (filtered.length === 0) {
             tableContainer.style.display = 'none';
             emptyState.style.display = 'block';
             emptyMsg.textContent = "No se encontraron solicitudes con el filtro seleccionado.";
-        } else {
-            tableContainer.style.display = 'block';
-            emptyState.style.display = 'none';
+            if (pagContainer) { pagContainer.style.display = 'none'; pagContainer.innerHTML = ''; }
+            return;
         }
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / DSAR_PAGE_SIZE));
+        if (dsarCurrentPage > totalPages) dsarCurrentPage = totalPages;
+        if (dsarCurrentPage < 1) dsarCurrentPage = 1;
+
+        rows.forEach(row => { row.style.display = 'none'; });
+        filtered.forEach((row, idx) => {
+            const start = (dsarCurrentPage - 1) * DSAR_PAGE_SIZE;
+            const end = dsarCurrentPage * DSAR_PAGE_SIZE;
+            if (idx >= start && idx < end) row.style.display = '';
+        });
+
+        tableContainer.style.display = 'block';
+        emptyState.style.display = 'none';
+
+        renderDsarPagination(totalPages);
+    }
+
+    function renderDsarPagination(totalPages) {
+        const pagContainer = document.getElementById('dsarPagination');
+        if (!pagContainer) return;
+
+        if (totalPages <= 1) {
+            pagContainer.style.display = 'none';
+            pagContainer.innerHTML = '';
+            return;
+        }
+
+        pagContainer.style.display = 'flex';
+        const disabledPrev = dsarCurrentPage === 1 ? 'opacity:0.5; cursor:default;' : '';
+        const disabledNext = dsarCurrentPage === totalPages ? 'opacity:0.5; cursor:default;' : '';
+
+        let html = '';
+        html += `<button type="button" onclick="changeDsarPage(${dsarCurrentPage - 1})" style="border:1px solid #e5e7eb; background:#fff; padding:4px 10px; border-radius:6px; ${disabledPrev}">Anterior</button>`;
+        html += `<span style="min-width:110px; text-align:center;">Página ${dsarCurrentPage} de ${totalPages}</span>`;
+        html += `<button type="button" onclick="changeDsarPage(${dsarCurrentPage + 1})" style="border:1px solid #e5e7eb; background:#fff; padding:4px 10px; border-radius:6px; ${disabledNext}">Siguiente</button>`;
+        pagContainer.innerHTML = html;
+    }
+
+    function changeDsarPage(page) {
+        dsarCurrentPage = page;
+        applyDsarFilterAndPagination();
     }
 
     // ----- Lógica del Modal -----
