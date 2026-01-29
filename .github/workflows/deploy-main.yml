@@ -12,11 +12,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout código
+      # 1. Checkout código (solo último commit = más rápido)
       - name: 📥 Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       # 2. Configurar SSH
       - name: 🔐 Setup SSH
