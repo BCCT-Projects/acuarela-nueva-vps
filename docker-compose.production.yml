@@ -1,5 +1,4 @@
 # Docker Compose para Acuarela - PRODUCCIÓN
-version: '3.8'
 
 services:
   acuarela-web:
