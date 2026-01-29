@@ -24,7 +24,7 @@
 
       <div class="banner__content-info">
         <h2 class="banner__subtitle">
-          Convierte el servicio de tu daycare en una experiencia 10/10 con la
+          Convierte el servicio de tu daycare en una experiencia 10/100 con la
           familia de herramientas digitales Acuarela.
         </h2>
         <div class="banner__buttons">

@@ -1,0 +1,69 @@
+name: 🚀 Deploy to PRODUCTION
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REPO_NAME: "acuarela-nueva-vps"
+  PROD_PATH: "/home/webadmin/acuarela"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout código
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Configurar SSH
+      - name: 🔐 Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      # 3. Sincronizar código con rsync (solo cambios)
+      - name: 🔄 Sync code to VPS
+        run: |
+          rsync -avz --delete \
+            --omit-dir-times \
+            --no-perms \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.env' \
+            --exclude='.well-known/' \
+            --exclude='vendor/' \
+            --exclude='cache/' \
+            --exclude='logs/' \
+            --exclude='error_log' \
+            --exclude='*.log' \
+            --exclude='certs/' \
+            --exclude='.vscode/' \
+            --exclude='.idea/' \
+            --exclude='*.swp' \
+            --exclude='*.swo' \
+            --exclude='DEPLOY_VERSION.txt' \
+            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.PROD_PATH }}/
+
+      # 4. Ejecutar script de deploy en el servidor
+      - name: 🚀 Execute deploy script
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ${{ env.PROD_PATH }}
+            chmod +x deploy-production.sh
+            ./deploy-production.sh
+
+      # 5. Limpiar llave SSH
+      - name: 🧹 Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
