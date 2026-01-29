@@ -259,7 +259,6 @@ function formatDate($dateStr) {
         <div class="header">
             <h1>Informe FERPA – Acceso a Registros Educativos</h1>
             <div class="meta">
-                <strong>Daycare:</strong> <?= htmlspecialchars($daycareName) ?><br>
                 <strong>Generado para:</strong> <?= htmlspecialchars($userName) ?><br>
                 <?php if ($fromDate && $toDate): ?>
                     <strong>Período:</strong> <?= htmlspecialchars($fromDate) ?> al <?= htmlspecialchars($toDate) ?><br>

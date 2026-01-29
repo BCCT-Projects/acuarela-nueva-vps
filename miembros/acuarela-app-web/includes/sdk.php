@@ -76,8 +76,15 @@ class Acuarela
 
         // Headers: para endpoints públicos no enviar token vacío
         $headers = array('Content-Type: application/json');
-        if (!empty($this->token)) {
-            $headers[] = 'token: ' . $this->token;
+        
+        // Usar token de sesión si existe, sino usar token de servicio (para modo inspección, FERPA, etc.)
+        $tokenToUse = $this->token;
+        if (empty($tokenToUse)) {
+            $tokenToUse = Env::get('STRAPI_SERVICE_TOKEN', '');
+        }
+        
+        if (!empty($tokenToUse)) {
+            $headers[] = 'token: ' . $tokenToUse;
         }
 
         $curlOptions = array(
