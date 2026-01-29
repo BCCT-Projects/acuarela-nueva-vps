@@ -27,6 +27,8 @@ jobs:
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       # 3. Sincronizar código con rsync (solo cambios)
+      # cache/ y miembros/cache/ están en .gitignore; rsync --delete los borraría en cada deploy.
+      # --filter 'p ...' protege esas carpetas en destino para no borrar el cache del servidor.
       - name: 🔄 Sync code to VPS
         run: |
           rsync -avz --delete \
@@ -50,6 +52,8 @@ jobs:
             --exclude='DEPLOY_VERSION.txt' \
             --exclude='miembros/acuarela-app-web/marketplace/stripe/' \
             --exclude='miembros/acuarela-app-web/marketplaceapp/stripe/' \
+            --filter 'p cache/' \
+            --filter 'p miembros/cache/' \
             ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.PROD_PATH }}/
 
       # 4. Ejecutar script de deploy en el servidor
