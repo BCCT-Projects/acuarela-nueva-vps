@@ -52,8 +52,8 @@ jobs:
             --exclude='DEPLOY_VERSION.txt' \
             --exclude='miembros/acuarela-app-web/marketplace/stripe/' \
             --exclude='miembros/acuarela-app-web/marketplaceapp/stripe/' \
-            --filter 'p cache/' \
-            --filter 'p miembros/cache/' \
+            --filter 'P cache/' \
+            --filter 'P miembros/cache/' \
             ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.PROD_PATH }}/
 
       # 4. Ejecutar script de deploy en el servidor
