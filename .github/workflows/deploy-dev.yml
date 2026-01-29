@@ -1,0 +1,46 @@
+name: 🚀 Deploy to DEV - Create PR
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📋 Create or Update Pull Request
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_AUTHOR: ${{ github.actor }}
+        run: |
+          PR_BODY="## Cambios listos para producción
+          
+          **Commit:** ${COMMIT_SHA}
+          **Autor:** @${COMMIT_AUTHOR}
+          **Fecha:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          
+          ### Checklist:
+          - [ ] Revisado y probado
+          - [ ] Sin errores
+          - [ ] Listo para producción"
+          
+          # Verificar si ya existe un PR abierto
+          EXISTING_PR=$(gh pr list --base main --head dev --state open --json number -q '.[0].number' 2>/dev/null || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "✅ PR #${EXISTING_PR} ya existe - los nuevos commits se agregaron automáticamente"
+          else
+            echo "📋 Creando nuevo PR..."
+            gh pr create --base main --head dev --title "🚀 Deploy: ${COMMIT_MSG}" --body "$PR_BODY" || echo "⚠️ No se pudo crear PR automáticamente."
+          fi
