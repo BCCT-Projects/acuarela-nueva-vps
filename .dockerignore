@@ -19,3 +19,7 @@ error_log
 wp_debug.log
 **/logs/
 **/cache/
+
+# SDK Stripe manual (migrado a Composer)
+miembros/acuarela-app-web/marketplace/stripe/
+miembros/acuarela-app-web/marketplaceapp/stripe/
