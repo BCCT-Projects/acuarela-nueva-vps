@@ -33,24 +33,24 @@ $translations = [
         'revocation_title' => '¿Desea Revocar el Consentimiento?',
         'revocation_desc' => 'Si desea retirar su consentimiento para el procesamiento de datos de su hijo(a), puede hacerlo en cualquier momento usando nuestra herramienta de revocación.',
         'revocation_btn' => 'Solicitar Revocación',
-        'dsar_section_title' => '7. Sus Derechos de Privacidad (DSAR)',
-        'dsar_text' => 'Además de los derechos específicos de COPPA, usted puede ejercer derechos de privacidad (DSAR) sobre su información personal y, cuando aplique, sobre la información vinculada a sus hijos bajo otras normativas de privacidad.',
-        'dsar_p1' => 'En el portal DSAR puede solicitar, por ejemplo:',
-        'dsar_li_1' => 'Acceso: una copia de la información personal que tenemos sobre usted.',
-        'dsar_li_2' => 'Rectificación: corregir datos personales inexactos o desactualizados.',
-        'dsar_li_3' => 'Portabilidad: obtener su información en un formato portable (cuando aplique).',
-        'dsar_li_4' => 'Eliminación: solicitar la eliminación de su información personal (cuando aplique).',
-        'dsar_p2' => 'Estas solicitudes son distintas a FERPA: DSAR aplica a privacidad general; FERPA aplica específicamente a registros educativos.',
-        'dsar_btn' => 'Acceder al Portal de Solicitudes (DSAR)',
-        'ferpa_section_title' => '8. Derechos Educativos (FERPA)',
-        'ferpa_text' => 'FERPA es una ley federal de EE. UU. que protege la privacidad de los registros educativos del estudiante. Si usted es padre o tutor verificado, puede ejercer derechos sobre los registros educativos del menor en Acuarela.',
-        'ferpa_p1' => 'A través del formulario FERPA usted puede:',
-        'ferpa_li_1' => 'Solicitar acceso a registros educativos (asistencia, actividades, reportes y comunicaciones educativas).',
-        'ferpa_li_2' => 'Solicitar corrección/enmienda de registros inexactos o engañosos, aportando la justificación correspondiente.',
-        'ferpa_p2' => 'Proceso: la solicitud se registra, pasa a revisión por el equipo autorizado y se resuelve como aprobada o rechazada con una explicación.',
-        'ferpa_p3' => 'Plazos: las solicitudes de acceso se atienden dentro de un plazo razonable (≤ 45 días).',
-        'ferpa_p4' => 'Trazabilidad: cada solicitud mantiene estado, fechas, evidencia de resolución y registros auditables.',
-        'ferpa_btn' => 'Ir al Formulario FERPA'
+        'dsar_section_title' => '7. Tus derechos sobre tus datos',
+        'dsar_text' => 'Además de lo que dice COPPA para menores, tú puedes pedir ver, corregir o eliminar tu información personal (y la de tus hijos cuando aplique).',
+        'dsar_p1' => 'Puedes solicitar, por ejemplo:',
+        'dsar_li_1' => 'Ver una copia de la información que tenemos sobre ti.',
+        'dsar_li_2' => 'Corregir datos que estén mal o desactualizados.',
+        'dsar_li_3' => 'Recibir tu información en un formato que puedas usar en otro servicio.',
+        'dsar_li_4' => 'Pedir que eliminemos tu información (cuando aplique).',
+        'dsar_p2' => 'Esto es distinto de los registros educativos: aquí hablamos de tu privacidad en general; los registros escolares tienen su propio formulario más abajo.',
+        'dsar_btn' => 'Ir al formulario de solicitudes',
+        'ferpa_section_title' => '8. Registros educativos de tu hijo',
+        'ferpa_text' => 'Si eres padre o tutor, puedes ver y, si hace falta, corregir los registros educativos de tu hijo en Acuarela (asistencia, actividades, reportes, etc.).',
+        'ferpa_p1' => 'Desde el formulario puedes:',
+        'ferpa_li_1' => 'Solicitar ver o recibir copia de los registros educativos.',
+        'ferpa_li_2' => 'Pedir que corrijamos algo que consideres incorrecto (con una breve explicación).',
+        'ferpa_p2' => 'Revisamos cada solicitud y te respondemos en un plazo razonable (normalmente en 45 días o menos).',
+        'ferpa_p3' => '',
+        'ferpa_p4' => '',
+        'ferpa_btn' => 'Ir al formulario de registros educativos'
     ],
     'en' => [
         'title' => 'COPPA Privacy Notice',
@@ -77,24 +77,24 @@ $translations = [
         'revocation_title' => 'Want to Revoke Consent?',
         'revocation_desc' => 'If you wish to withdraw your consent for processing your child\'s data, you can do so at any time using our revocation tool.',
         'revocation_btn' => 'Request Revocation',
-        'dsar_section_title' => '7. Your Privacy Rights (DSAR)',
-        'dsar_text' => 'In addition to COPPA-specific rights, you may exercise privacy rights (DSAR) over your personal information and, when applicable, information linked to your children under other privacy regulations.',
-        'dsar_p1' => 'In the DSAR portal you can request, for example:',
-        'dsar_li_1' => 'Access: a copy of the personal information we hold about you.',
-        'dsar_li_2' => 'Rectification: correct inaccurate or outdated personal data.',
-        'dsar_li_3' => 'Portability: receive your information in a portable format (when applicable).',
-        'dsar_li_4' => 'Deletion: request deletion of your personal information (when applicable).',
-        'dsar_p2' => 'These requests are different from FERPA: DSAR is general privacy; FERPA applies specifically to education records.',
-        'dsar_btn' => 'Access Request Portal (DSAR)',
-        'ferpa_section_title' => '8. Educational Rights (FERPA)',
-        'ferpa_text' => 'FERPA is a U.S. federal law that protects the privacy of student education records. If you are a verified parent/guardian, you may exercise rights over the child’s education records in Acuarela.',
-        'ferpa_p1' => 'Through the FERPA form you can:',
-        'ferpa_li_1' => 'Request access to education records (attendance, activities, development reports, and educational communications).',
-        'ferpa_li_2' => 'Request amendment of inaccurate or misleading records, including supporting justification.',
-        'ferpa_p2' => 'Process: the request is recorded, reviewed by an authorized team, and resolved as approved or denied with an explanation.',
-        'ferpa_p3' => 'Timelines: access requests are handled within a reasonable timeframe (≤ 45 days).',
-        'ferpa_p4' => 'Traceability: each request keeps status, dates, resolution evidence, and auditable logs.',
-        'ferpa_btn' => 'Go to FERPA Form'
+        'dsar_section_title' => '7. Your rights over your data',
+        'dsar_text' => 'Besides what COPPA says for children, you can ask to view, correct, or delete your personal information (and your children\'s when it applies).',
+        'dsar_p1' => 'You can request, for example:',
+        'dsar_li_1' => 'A copy of the information we have about you.',
+        'dsar_li_2' => 'To correct data that is wrong or outdated.',
+        'dsar_li_3' => 'Your information in a format you can use elsewhere.',
+        'dsar_li_4' => 'To delete your information (when applicable).',
+        'dsar_p2' => 'This is separate from education records: here we\'re talking about your general privacy; school records have their own form below.',
+        'dsar_btn' => 'Go to request form',
+        'ferpa_section_title' => '8. Your child\'s education records',
+        'ferpa_text' => 'If you're a parent or guardian, you can view and, when needed, correct your child's education records in Acuarela (attendance, activities, reports, etc.).',
+        'ferpa_p1' => 'From the form you can:',
+        'ferpa_li_1' => 'Request to view or get a copy of education records.',
+        'ferpa_li_2' => 'Ask us to correct something you believe is wrong (with a brief explanation).',
+        'ferpa_p2' => 'We review each request and respond within a reasonable time (usually 45 days or less).',
+        'ferpa_p3' => '',
+        'ferpa_p4' => '',
+        'ferpa_btn' => 'Go to education records form'
     ]
 ];
 
@@ -675,8 +675,8 @@ if (!$coppaNotice || !isset($coppaNotice->response) || empty($coppaNotice->respo
                                 <li><?= $t['ferpa_li_2'] ?></li>
                             </ul>
                             <p style="margin-top: 10px;"><?= $t['ferpa_p2'] ?></p>
-                            <p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p3'] ?></p>
-                            <p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p4'] ?></p>
+                            <?php if (!empty($t['ferpa_p3'])): ?><p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p3'] ?></p><?php endif; ?>
+                            <?php if (!empty($t['ferpa_p4'])): ?><p style="margin-top: 10px; color:#6B7280;"><?= $t['ferpa_p4'] ?></p><?php endif; ?>
                             <a href="ferpa.php?lang=<?= $lang ?>" class="btn-dsar">
                                 <?= $t['ferpa_btn'] ?>
                                 <svg style="width:16px; height:16px; margin-left:8px; vertical-align:middle;"

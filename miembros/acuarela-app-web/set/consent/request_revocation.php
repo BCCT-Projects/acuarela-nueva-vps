@@ -1,12 +1,14 @@
 <?php
 // set/consent/request_revocation.php
+// Endpoint público: no exigir sesión (los padres solicitan revocación sin estar logueados)
 session_start();
 
 // PREVENIR ERRORES HTML EN RESPUESTA JSON
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-include "../../includes/config.php";
+// Cargar solo SDK (no config.php, que redirige a login si no hay sesión)
+require_once __DIR__ . '/../../includes/sdk.php';
 $a = new Acuarela();
 
 // Inicializar servicio de cifrado explícitamente para asegurar que podamos descifrar

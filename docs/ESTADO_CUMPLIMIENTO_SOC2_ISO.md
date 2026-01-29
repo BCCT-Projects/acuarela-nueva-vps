@@ -90,13 +90,17 @@ Este documento certifica el estado actual de la implementación de seguridad y c
 
 ### 🔄 DOMINIO 6 – GESTIÓN DE CAMBIOS
 **Objetivo:** Asegurar que los cambios de código no introduzcan vulnerabilidades.
-*   **Estado:** ✅ Flujo Controlado.
+*   **Estado:** ✅ Flujo controlado con CI/CD (GitHub Actions).
 *   **📝 Descripción del Cumplimiento:**
-    Los cambios en el entorno productivo no se realizan de forma manual o improvisada. Existe un proceso de implementación automatizado que garantiza que el código que corre en producción es idéntico a la versión aprobada en el repositorio. Utilizamos contenedores Docker para encapsular la aplicación, asegurando que las dependencias y configuraciones sean inmutables y consistentes entre despliegues.
+    Los cambios en el entorno productivo no se realizan de forma manual o improvisada. Se ha implementado un **despliegue continuo (CI/CD)** con GitHub Actions que garantiza un flujo trazable y repetible: (1) commits en la rama `dev` generan automáticamente un Pull Request hacia `main`; (2) al aceptar el PR y hacer merge a `main`, el workflow sincroniza el código con la VPS vía rsync (solo cambios) y ejecuta en el servidor el script `deploy-production.sh`, que reconstruye la imagen Docker cuando hay cambios relevantes o levanta contenedores sin rebuild cuando no los hay. El código en producción es idéntico a la versión aprobada en el repositorio. Se utilizan contenedores Docker para encapsular la aplicación y se protegen las carpetas de cache del servidor (`cache/`, `miembros/cache/`) para que no se borren en cada deploy, manteniendo el rendimiento del cache de API.
 *   **📍 Evidencia Documental (Docs):**
     *   `docs/PROTOCOLO_DESPLIEGUE_SEGURO.md` (Procedimiento estándar de despliegue)
-*   **📂 Evidencia en Código (Scripts):**
-    *   **Despliegue:** `deploy-production.sh` (Script de automatización inmutable).
+    *   `docs/DESPLIEGUE_CONTINUO_GITHUB_ACTIONS.md` (Flujo CI/CD con GitHub Actions)
+*   **📂 Evidencia en Código (Workflows y Scripts):**
+    *   **Workflow dev (PR automático):** `.github/workflows/deploy-dev.yml`
+    *   **Workflow main (sync + deploy):** `.github/workflows/deploy-main.yml`
+    *   **Script en servidor:** `deploy-production.sh` (build condicional y levantado de contenedores)
+    *   **Estado último deploy:** `.deploy_state` (commit desplegado)
 *   **Cumplimiento:** SOC 2 CC8.1, ISO 27001 A.8.32.
 
 ### 👶 DOMINIO 7 – PRIVACIDAD (COPPA / CCPA / FERPA)

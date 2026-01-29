@@ -277,7 +277,7 @@
                 Tus Datos, Tu Control
             </h2>
             <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 700px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
-                Ejercer tus derechos de privacidad es simple y transparente.
+                Tú decides qué hacemos con tu información. Es fácil y transparente.
             </p>
         </div>
 
@@ -380,10 +380,10 @@
         <!-- Título -->
         <div style="text-align: center; margin-bottom: 50px;">
             <h2 style="color: #7155A4; font-size: 2.2rem; font-weight: 800; margin: 0 0 15px 0; font-family: 'Outfit', -apple-system, sans-serif;">
-                Protección de Menores (COPPA)
+                Protección de tus hijos
             </h2>
             <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 700px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
-                Control total sobre los datos de tus hijos según la ley COPPA.
+                Control total sobre la información de tus hijos.
             </p>
         </div>
 
@@ -399,10 +399,10 @@
                     </svg>
                 </div>
                 <h3 style="color: #7155A4; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
-                    Cumplimiento COPPA
+                    Protección
                 </h3>
                 <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
-                    Protegemos la información de menores de 13 años según la ley federal.
+                    Protegemos la información de los menores de 13 años.
                 </p>
             </div>
 
@@ -449,11 +449,11 @@
                 Gestiona el Consentimiento de tus Hijos
             </h3>
             <p style="color: #6B7280; font-size: 1.1rem; line-height: 1.6; margin: 0 0 25px 0; font-family: 'Outfit', sans-serif;">
-                Revisa nuestra política COPPA o revoca el consentimiento.
+                Consulta nuestra política o revoca el consentimiento cuando quieras.
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                 <a href="/miembros/acuarela-app-web/privacy/coppa.php" class="btn-coppa-outline" style="display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 2px solid #7155A4; color: #7155A4; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; transition: all 0.3s;">
-                    <span>Ver Política COPPA</span>
+                    <span>Ver política de privacidad</span>
                 </a>
                 <a href="/miembros/acuarela-app-web/privacy/revocation_request.php" class="btn-coppa-main" style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #FA6F5C 0%, #E03E52 100%); color: white; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; box-shadow: 0 10px 25px rgba(250, 111, 92, 0.35); transition: all 0.3s;">
                     <span>Revocar Consentimiento</span>
@@ -491,10 +491,10 @@
         <!-- Título -->
         <div style="text-align: center; margin-bottom: 50px;">
             <h2 style="color: #0CB5C3; font-size: 2.2rem; font-weight: 800; margin: 0 0 15px 0; font-family: 'Outfit', -apple-system, sans-serif;">
-                Derechos Educativos (FERPA)
+                Registros educativos de tu hijo
             </h2>
             <p style="color: #4A4A68; font-size: 1.15rem; line-height: 1.6; max-width: 760px; margin: 0 auto; font-family: 'Outfit', sans-serif;">
-                Solicita acceso a registros educativos del menor o pide correcciones de información inexacta.
+                Consulta o corrige los registros escolares de tu hijo cuando lo necesites.
             </p>
         </div>
 
@@ -545,10 +545,10 @@
                     </svg>
                 </div>
                 <h3 style="color: #FA6F5C; font-size: 1.3rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
-                    Política FERPA
+                    Información
                 </h3>
                 <p style="color: #6B7280; font-size: 1rem; line-height: 1.6; margin: 0; font-family: 'Outfit', sans-serif;">
-                    Lee qué registros aplican y cómo funciona el proceso FERPA en Acuarela.
+                    Te explicamos qué puedes solicitar y cómo lo gestionamos.
                 </p>
             </div>
         </div>
@@ -556,17 +556,17 @@
         <!-- CTA -->
         <div style="text-align: center; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 15px 40px rgba(12, 181, 195, 0.12); border: 2px solid rgba(12, 181, 195, 0.1);">
             <h3 style="color: #111827; font-size: 1.6rem; font-weight: 700; margin: 0 0 12px 0; font-family: 'Outfit', sans-serif;">
-                ¿Necesitas ejercer un derecho FERPA?
+                ¿Quieres ver o corregir los registros de tu hijo?
             </h3>
             <p style="color: #6B7280; font-size: 1.1rem; line-height: 1.6; margin: 0 0 25px 0; font-family: 'Outfit', sans-serif;">
-                Accede a la política y envía tu solicitud desde el formulario oficial.
+                Entra a la política o envía tu solicitud desde el formulario.
             </p>
             <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
                 <a href="/miembros/acuarela-app-web/privacy/coppa.php#ferpa" class="btn-ferpa-outline" style="display: inline-flex; align-items: center; gap: 10px; background: transparent; border: 2px solid #0CB5C3; color: #0CB5C3; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; transition: all 0.3s;">
-                    <span>Ver info FERPA</span>
+                    <span>Ver información</span>
                 </a>
                 <a href="/miembros/acuarela-app-web/privacy/ferpa.php" class="btn-ferpa-main" style="display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #0CB5C3 0%, #099ca8 100%); color: white; padding: 14px 32px; font-weight: 700; font-size: 1.1rem; border-radius: 50px; text-decoration: none; box-shadow: 0 10px 25px rgba(12, 181, 195, 0.35); transition: all 0.3s;">
-                    <span>Ir al Formulario FERPA</span>
+                    <span>Ir al formulario</span>
                 </a>
             </div>
         </div>
