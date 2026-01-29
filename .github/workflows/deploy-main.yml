@@ -48,6 +48,8 @@ jobs:
             --exclude='*.swp' \
             --exclude='*.swo' \
             --exclude='DEPLOY_VERSION.txt' \
+            --exclude='miembros/acuarela-app-web/marketplace/stripe/' \
+            --exclude='miembros/acuarela-app-web/marketplaceapp/stripe/' \
             ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.VPS_HOST }}:${{ env.PROD_PATH }}/
 
       # 4. Ejecutar script de deploy en el servidor
@@ -58,9 +60,13 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          envs: GITHUB_SHA
           script: |
             cd ${{ env.PROD_PATH }}
+            # Convertir formato de línea a LF (Linux) si es necesario
+            sed -i 's/\r$//' deploy-production.sh
             chmod +x deploy-production.sh
+            export GITHUB_SHA="${{ github.sha }}"
             ./deploy-production.sh
 
       # 5. Limpiar llave SSH
