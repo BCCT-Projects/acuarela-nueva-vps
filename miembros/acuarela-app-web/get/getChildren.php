@@ -23,26 +23,24 @@ if (isset($result->response) && is_array($result->response)) {
                 $parent = $a->decryptParentData($parent);
             }
         }
+    }
+    unset($child);
 
-        // Enriquecer con estado COPPA
-        // GRANDFATHER CLAUSE: Default to null (legacy kid, pre-COPPA)
-        $child->coppa_status = null;
-
-        if (isset($child->id)) {
-            $childId = $child->id;
-            // SLOW BUT SAFE: Individual query to prevent 500 error from massive URL
-            try {
-                $consents = $a->queryStrapi("parental-consents?child_id=$childId&_sort=createdAt:desc&_limit=1");
-                if (is_array($consents) && count($consents) > 0) {
-                    // Kid has an explicit consent record - use its status
-                    $child->coppa_status = $consents[0]->consent_status ?? 'pending';
-                }
-            } catch (Exception $e) {
-                // Silent failure
-            }
+    // Enriquecer con estado COPPA (una sola petición para todos los niños)
+    $childIds = [];
+    foreach ($result->response as $c) {
+        if (isset($c->id)) {
+            $childIds[] = $c->id;
         }
     }
-    unset($child); // Break reference safely
+    $coppaMap = $a->getLatestParentalConsentsForChildIds($childIds);
+    foreach ($result->response as &$child) {
+        $child->coppa_status = null;
+        if (isset($child->id)) {
+            $child->coppa_status = $coppaMap[(string)$child->id] ?? null;
+        }
+    }
+    unset($child);
 }
 
 

@@ -19,5 +19,9 @@ if (isset($obj->status) && $obj->status == 'Finalizado') {
 }
 
 $inscripcion = $a->putInscripcion($data);
+if ($a->daycareID) {
+    $a->invalidateStrapiCache("inscripciones?daycare=" . $a->daycareID);
+    $a->invalidateStrapiCache("children/?daycare=" . $a->daycareID);
+}
 echo json_encode($inscripcion);
 ?>

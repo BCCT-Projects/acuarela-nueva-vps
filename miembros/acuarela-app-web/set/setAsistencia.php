@@ -23,6 +23,8 @@ if ($type) {
     if ($type === 'checkin') {
         try {
             $result = $a->checkIn($jsonData);
+            // Invalidar caché de niños para que Asistencia muestre el niño en daycare de inmediato
+            $a->invalidateStrapiCache("children/?daycare=" . $a->daycareID);
             echo json_encode($result);
         } catch (Exception $e) {
             http_response_code(500);
@@ -31,6 +33,8 @@ if ($type) {
     } elseif ($type === 'checkout') {
         try {
             $result = $a->checkOut($jsonData);
+            // Invalidar caché de niños para que Asistencia muestre el niño en casa de inmediato
+            $a->invalidateStrapiCache("children/?daycare=" . $a->daycareID);
             echo json_encode($result);
         } catch (Exception $e) {
             http_response_code(500);

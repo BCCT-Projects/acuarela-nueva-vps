@@ -93,33 +93,12 @@ if (isset($userLogin->id)) {
     ob_clean(); // Limpiar cualquier output previo (warnings, espacios, etc)
     echo json_encode(['require_2fa' => true]);
     exit;
-} else {
-    // Log Failed Login
-    $logger->log('LOGIN_FAILED', [
-        'email' => $email,
-        'reason' => 'Invalid credentials or user not found'
-    ]);
 }
 
-// Los daycares deberían estar en $_SESSION["user"] después del login
-// Verificar diferentes estructuras posibles
-if (!isset($userLogin->daycares) || empty($userLogin->daycares)) {
-    // Intentar obtener de la sesión directamente
-    if (isset($_SESSION["user"]->daycares) && !empty($_SESSION["user"]->daycares)) {
-        $userLogin->daycares = $_SESSION["user"]->daycares;
-    }
-    // Si la sesión tiene estructura response
-    elseif (isset($_SESSION["user"]->response) && is_array($_SESSION["user"]->response) && !empty($_SESSION["user"]->response)) {
-        $sessionUser = $_SESSION["user"]->response[0];
-        if (isset($sessionUser->daycares) && !empty($sessionUser->daycares)) {
-            $userLogin->daycares = $sessionUser->daycares;
-        }
-    }
-    // Si aún no tiene, intentar desde userInfoAll
-    elseif (isset($_SESSION["userAll"]->daycares) && !empty($_SESSION["userAll"]->daycares)) {
-        $userLogin->daycares = $_SESSION["userAll"]->daycares;
-    }
-}
-
-echo json_encode($userLogin);
+$logger->log('LOGIN_FAILED', [
+    'email' => $email,
+    'reason' => 'Invalid credentials or user not found'
+]);
+ob_clean();
+echo json_encode(['status' => 'error', 'message' => 'Email o contraseña incorrectos']);
 

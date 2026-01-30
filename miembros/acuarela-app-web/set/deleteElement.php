@@ -13,5 +13,9 @@
     }
 
     $posts = $a->deleteElement($type, $id);
+    if ($a->daycareID && in_array($type, ['children', 'inscripciones'], true)) {
+        $a->invalidateStrapiCache("children/?daycare=" . $a->daycareID);
+        $a->invalidateStrapiCache("inscripciones?daycare=" . $a->daycareID);
+    }
     echo json_encode($posts);
 ?>
