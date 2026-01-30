@@ -2,8 +2,16 @@
 
 $curl = curl_init();
 
+$id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$merchantIdInPayPal = filter_input(INPUT_GET, 'merchantIdInPayPal', FILTER_SANITIZE_STRING);
+$merchantId = filter_input(INPUT_GET, 'merchantId', FILTER_SANITIZE_STRING);
+
+if (!$id || !$merchantIdInPayPal || !$merchantId) {
+   die("Missing required parameters");
+}
+
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://acuarelacore.com/api/daycares/'.$_GET['id'],
+  CURLOPT_URL => 'https://acuarelacore.com/api/daycares/'.$id,
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_ENCODING => '',
   CURLOPT_MAXREDIRS => 10,
@@ -11,13 +19,13 @@ curl_setopt_array($curl, array(
   CURLOPT_FOLLOWLOCATION => true,
   CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
   CURLOPT_CUSTOMREQUEST => 'PUT',
-  CURLOPT_POSTFIELDS =>'{
-    "paypal":{
-    "merchantIdInPayPal":"'.$_GET['merchantIdInPayPal'].'",
-"merchantId":"'.$_GET['merchantId'].'",
-"isset":true
-    }
-}',
+  CURLOPT_POSTFIELDS => json_encode([
+    "paypal" => [
+        "merchantIdInPayPal" => $merchantIdInPayPal,
+        "merchantId" => $merchantId,
+        "isset" => true
+    ]
+  ]),
   CURLOPT_HTTPHEADER => array(
     'token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtYWlsIjoiZGFuaXpxdWkyM0BnbWFpbC5jb20iLCJpZCI6IjYyNWY0MDMxNzE2MzE2ZDgxZGI4ZDkyMCIsIm5hbWUiOiJEYW5pZWxhIiwicGhvbmUiOiIzMTI0NTcyNzc3IiwiaWF0IjoxNjUxMDI2OTI3LCJleHAiOjE2NTEyODYxMjd9.hXH9Hx4ctmY4RfRqNn8zAbUIaSl2mIrqbSjV_lRpWLo',
     'Content-Type: application/json'

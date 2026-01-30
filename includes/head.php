@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="fonts/acuarelaicon/style.css" />
   <link rel="stylesheet" href="css/styles.css?v=2.0" />
   <link rel="stylesheet" type="text/css" href="./css/glider.css">
+  <link rel="stylesheet" href="css/faq.css?v=1.0" />
 
   <!-- Global site tag (gtag.js) - Google Analytics - Cargado de forma asíncrona -->
   <script>
