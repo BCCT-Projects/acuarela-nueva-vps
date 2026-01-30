@@ -8,6 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../../includes/sdk.php";
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
+require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
 require_once __DIR__ . '/../../includes/env.php';
 
 $a = new Acuarela();
@@ -256,14 +257,18 @@ try {
     $a->updateFerpaRequest($id, $updateData);
 
     // 8. Auditoría (evento requerido FERPA)
-    $logger->log('ferpa_access_granted', [
-        'request_id' => $id,
-        'daycare_id' => $daycareId,
-        'parent_email' => $parentEmail,
-        'ninos' => $ninos,
-        'actividades' => $actividades,
         'asistencia' => $asistencia,
         'asistentes' => $asistentes,
+    ]);
+    SecurityAuditLogger::log('ferpa_access_granted', SecurityAuditLogger::SEVERITY_INFO, [
+        'request_id' => $id,
+        'daycare_id' => $daycareId,
+        'reports' => [
+            'ninos' => $ninos,
+            'actividades' => $actividades,
+            'asistencia' => $asistencia,
+            'asistentes' => $asistentes
+        ]
     ]);
 
     echo json_encode(['success' => true, 'message' => 'Enlace de informes enviado al padre.']);

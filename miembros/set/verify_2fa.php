@@ -1,6 +1,7 @@
 <?php
 include '../includes/config.php';
 require_once __DIR__ . '/../cron/AuditLogger.php';
+require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
 
 $logger = new AuditLogger();
 
@@ -43,8 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Log Success
         $logger->log('LOGIN_SUCCESS', [
             'email' => $email,
+            'email' => $email,
             'message' => '2FA Verified successfully'
         ]);
+        SecurityAuditLogger::log('auth_login_success', SecurityAuditLogger::SEVERITY_INFO, ['email' => $email]);
 
         // Limpiar temp
         unset($_SESSION['temp_2fa']);
@@ -55,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'email' => $email,
             'reason' => 'Invalid code or expired'
         ]);
+        SecurityAuditLogger::log('auth_login_failed', SecurityAuditLogger::SEVERITY_WARN, ['email' => $email, 'reason' => 'Invalid 2FA code']);
         echo json_encode(['ok' => false, 'message' => 'Código incorrecto o expirado']);
     }
 } else {

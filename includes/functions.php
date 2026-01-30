@@ -2,6 +2,7 @@
 require_once 'src/Mandrill.php';
 // Cargar variables de entorno desde includes/env.php
 require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/SecurityAuditLogger.php';
 
 class acuarela
 {
@@ -427,6 +428,7 @@ class acuarela
 		if (curl_errno($ch)) {
 			// If external request fails loopback or similar
 			error_log("Acuarela cURL Error: " . curl_error($ch));
+            SecurityAuditLogger::log('system_api_error', SecurityAuditLogger::SEVERITY_ERROR, ['url' => $endpoint, 'error' => curl_error($ch)]);
 			// Try to return old cache if exists even if expired
 			if (file_exists($cacheFile)) {
 				curl_close($ch);
@@ -679,6 +681,7 @@ class acuarela
 
 			if (curl_errno($curl)) {
 				error_log("Error en la solicitud cURL: " . curl_error($curl));
+                SecurityAuditLogger::log('system_api_error', SecurityAuditLogger::SEVERITY_ERROR, ['service' => 'zoho', 'error' => curl_error($curl)]);
 				curl_close($curl);
 				return false;
 			}
@@ -698,6 +701,7 @@ class acuarela
 				return true;
 			} else {
 				error_log("Error en la respuesta de Zoho: " . print_r($data, true));
+                SecurityAuditLogger::log('system_api_error', SecurityAuditLogger::SEVERITY_ERROR, ['service' => 'zoho', 'response' => $data]);
 				return false;
 			}
 		}

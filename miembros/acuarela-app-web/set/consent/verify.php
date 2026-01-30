@@ -4,6 +4,7 @@ ini_set('display_errors', 0);
 session_start();
 include "../../includes/sdk.php";
 include "get_coppa_version.php";
+require_once __DIR__ . "/../../../includes/SecurityAuditLogger.php";
 $a = new Acuarela();
 
 $token = $_GET['token'] ?? '';
@@ -100,6 +101,10 @@ if (empty($token)) {
                         $statusTitle = "¡Consentimiento Verificado!";
                         $statusMessage = "Gracias por confirmar tu consentimiento. El proceso de inscripción de tu hijo(a) ha sido completado exitosamente.";
                         $statusType = "success";
+                        SecurityAuditLogger::log('parental_consent_granted', SecurityAuditLogger::SEVERITY_INFO, [
+                            'child_id' => $realChildId,
+                            'parent_email' => $consent->parent_email ?? null
+                        ]);
                     } else {
                         $statusTitle = "Verificado con advertencia";
                         $statusMessage = "Tu consentimiento se registró, pero hubo un error al activar la inscripción automática. El personal administrativo lo resolverá manualmente.";

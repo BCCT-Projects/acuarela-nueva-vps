@@ -3,6 +3,7 @@
 ini_set('display_errors', 0);
 session_start();
 include "../../includes/sdk.php";
+require_once __DIR__ . "/../../../includes/SecurityAuditLogger.php";
 $a = new Acuarela();
 
 $rawToken = $_GET['token'] ?? '';
@@ -63,8 +64,13 @@ $respConsent = $a->queryStrapi("parental-consents/" . $consent->id, $updateConse
 // Validar que la actualización funcionó
 if (!$respConsent || (isset($respConsent->statusCode) && $respConsent->statusCode >= 400)) {
     // Si falla, registrar error silencioso logs pero no mostrar stacktrace al usuario
+    SecurityAuditLogger::log('system_error', SecurityAuditLogger::SEVERITY_ERROR, ['context' => 'consent_revocation_failure', 'consent_id' => $consent->id]);
     die("<h2>Error Técnico</h2><p>No se pudo actualizar el estado. Por favor contacte soporte.</p>");
 }
+SecurityAuditLogger::log('parental_consent_revoked', SecurityAuditLogger::SEVERITY_INFO, [
+    'child_id' => $childId,
+    'parent_email' => $consent->parent_email ?? null
+]);
 
 show_success:
 ?>
