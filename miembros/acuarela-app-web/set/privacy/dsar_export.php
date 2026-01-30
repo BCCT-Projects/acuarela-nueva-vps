@@ -15,14 +15,28 @@ if (method_exists($a, 'initCrypto')) {
 
 header('Content-Type: application/json');
 
-// Validar que quien llama sea ADMIN (Implementar lógica de auth real aquí)
-// if (!isAdmin()) die('Unauthorized');
+// Authentication Check
+if (!isset($_SESSION['userAll']) || !isset($_SESSION['userAll']->acuarelauser)) {
+    http_response_code(401);
+    die(json_encode(['error' => 'Authentication required']));
+}
 
-$userId = $_GET['user_id'] ?? '';
-$dsarId = $_GET['dsar_id'] ?? '';
+$currentUserId = $_SESSION['userAll']->acuarelauser->id;
+$userId = filter_input(INPUT_GET, 'user_id', FILTER_SANITIZE_STRING);
+$dsarId = filter_input(INPUT_GET, 'dsar_id', FILTER_SANITIZE_STRING);
 
 if (empty($userId)) {
     die(json_encode(['error' => 'User ID required']));
+}
+
+// Authorization Check: Only allow export of own data (unless we implement Admin role check)
+// Assuming IDs are string or integer, comparison should be loose or strict after casting. 
+// Strapi IDs are often strings.
+if ($userId != $currentUserId) {
+   // TODO: Add Admin role check here if admins need access to others' data via this script.
+   // For now, strictly protect user privacy.
+   http_response_code(403);
+   die(json_encode(['error' => 'Unauthorized access to this user data']));
 }
 
 $exportData = [

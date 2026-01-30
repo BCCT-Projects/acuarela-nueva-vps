@@ -1,4 +1,7 @@
-<?php $classBody ="agregarsalud"; include "includes/header.php"; $kid = $a->getChildren($_GET['id']);
+<?php $classBody ="agregarsalud"; include "includes/header.php"; 
+$kid_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$kid = ($kid_id) ? $a->getChildren($kid_id) : null;
+if (!$kid) { die("Niño no encontrado o ID inválido."); }
 ?>
 <script>
     let kidData = <?= json_encode($kid) ?>;

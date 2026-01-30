@@ -1,7 +1,11 @@
-<?php $classBody ="asistente"; include "includes/header.php"; $asistente = $a->getAsistentes($_GET['id']); ?>
+<?php $classBody ="asistente"; include "includes/header.php"; 
+$asistente_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$asistente = ($asistente_id) ? $a->getAsistentes($asistente_id) : null;
+if (!$asistente) { die("Asistente no encontrado o no autorizado"); }
+?>
 <main>
     <?php
-    $mainHeaderTitle = '<a href="/miembros/acuarela-app-web/asistentes" ><i class="acuarela acuarela-Flecha_izquierda"></i></a>'."{$asistente->name} {$asistente->lastname}" ;
+    $mainHeaderTitle = '<a href="/miembros/acuarela-app-web/asistentes" ><i class="acuarela acuarela-Flecha_izquierda"></i></a>'. htmlspecialchars("{$asistente->name} {$asistente->lastname}");
     $action = '<button type="button" onclick="openEditAsistente()" class="btn btn-action-primary enfasis btn-big">Editar Perfil</button>';
     include "templates/sectionHeader.php";
     // Crea un objeto DateTime desde la cadena ISO 8601

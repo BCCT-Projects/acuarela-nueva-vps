@@ -19,10 +19,10 @@ if (method_exists($a, 'initCrypto')) {
 
 header('Content-Type: application/json');
 
-$requestType = $_POST['request_type'] ?? '';
-$email = $_POST['requester_email'] ?? '';
-$phoneInput = $_POST['requester_phone'] ?? '';
-$details = $_POST['details'] ?? '';
+$requestType = filter_input(INPUT_POST, 'request_type', FILTER_SANITIZE_STRING);
+$email = filter_input(INPUT_POST, 'requester_email', FILTER_VALIDATE_EMAIL);
+$phoneInput = filter_input(INPUT_POST, 'requester_phone', FILTER_SANITIZE_STRING);
+$details = filter_input(INPUT_POST, 'details', FILTER_SANITIZE_STRING);
 
 // 1. Validaciones Básicas
 if (empty($email) || empty($phoneInput) || empty($requestType)) {
@@ -33,7 +33,7 @@ if (empty($email) || empty($phoneInput) || empty($requestType)) {
 // 2. Validar reCAPTCHA
 require_once __DIR__ . '/../../includes/env.php';
 $secretKey = Env::get('RECAPTCHA_SECRET_KEY');
-$captchaResponse = $_POST['g-recaptcha-response'] ?? '';
+$captchaResponse = filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_SANITIZE_STRING);
 
 if ($secretKey && !empty($captchaResponse)) {
     $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$captchaResponse}";

@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../../includes/sdk.php";
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
-require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
+require_once __DIR__ . '/../../../../includes/SecurityAuditLogger.php';
 require_once __DIR__ . '/../../includes/env.php';
 
 $a = new Acuarela();
@@ -18,19 +18,30 @@ $logger = new AuditLogger();
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
+// Authentication & Authorization Check
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser)) {
+    http_response_code(401);
+    die(json_encode(['success' => false, 'message' => 'Login required']));
+}
+$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
+if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
+    http_response_code(403);
+    die(json_encode(['success' => false, 'message' => 'No autorizado']));
+}
+
 header('Content-Type: application/json');
 
-$id = $_POST['id'] ?? null;
-$from = $_POST['from'] ?? null; // formato YYYY-MM-DD
-$to = $_POST['to'] ?? null;
+$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_STRING);
+$from = filter_input(INPUT_POST, 'from', FILTER_SANITIZE_STRING); // formato YYYY-MM-DD
+$to = filter_input(INPUT_POST, 'to', FILTER_SANITIZE_STRING);
 
-// IMPORTANTE: los checkboxes llegan como '1'/'0' (string). No usar cast directo a bool.
-$ninos = isset($_POST['ninos']) && $_POST['ninos'] === '1';
-$actividades = isset($_POST['actividades']) && $_POST['actividades'] === '1';
-$asistencia = isset($_POST['asistencia']) && $_POST['asistencia'] === '1';
-$asistentes = isset($_POST['asistentes']) && $_POST['asistentes'] === '1';
+// IMPORTANTE: los checkboxes llegan como '1'/'0' (string).
+$ninos = filter_input(INPUT_POST, 'ninos', FILTER_SANITIZE_STRING) === '1';
+$actividades = filter_input(INPUT_POST, 'actividades', FILTER_SANITIZE_STRING) === '1';
+$asistencia = filter_input(INPUT_POST, 'asistencia', FILTER_SANITIZE_STRING) === '1';
+$asistentes = filter_input(INPUT_POST, 'asistentes', FILTER_SANITIZE_STRING) === '1';
 
-$replyMessage = trim($_POST['reply_message'] ?? '');
+$replyMessage = trim(filter_input(INPUT_POST, 'reply_message', FILTER_SANITIZE_STRING) ?? '');
 
 if (!$id || !$from || !$to) {
     echo json_encode(['success' => false, 'message' => 'Faltan parámetros requeridos (id, desde, hasta).']);

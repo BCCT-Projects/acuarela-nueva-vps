@@ -1,7 +1,8 @@
 <?php
 $classBody = "inscripcion";
 include "includes/header.php";
-$inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
+$inscripcion_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$inscripcion = $inscripcion_id ? $a->getInscripciones($inscripcion_id) : "";
 ?>
 <main>
   <?php
@@ -413,7 +414,7 @@ $inscripcion = isset($_GET['id']) ? $a->getInscripciones($_GET['id']) : "";
       </div>
 
       <input type="hidden" name="daycare" id="daycare" value="<?= $a->daycareID ?>">
-      <input type="hidden" name="inscripcion" id="inscripcion" value="<?= isset($_GET['id']) ? $_GET['id'] : '' ?>">
+      <input type="hidden" name="inscripcion" id="inscripcion" value="<?= $inscripcion_id ? htmlspecialchars($inscripcion_id) : '' ?>">
     </form>
   </div>
 </main>

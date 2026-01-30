@@ -97,10 +97,7 @@
     /* border-top: 1px solid #f0f0f0; */
 }
 
-.faq-item.active .faq-item__content {
-    /* display: block; */
-    /* animation: slideDown 0.3s ease-out; */
-}
+
 
 .loading-spinner {
     text-align: center;

@@ -10,8 +10,25 @@ $marketplace = filter_input(INPUT_GET, 'marketplace', FILTER_SANITIZE_SPECIAL_CH
 $fromLogin = filter_input(INPUT_GET, 'fromLogin', FILTER_SANITIZE_SPECIAL_CHARS);
 
 if ($daycare) {
-    $_SESSION['activeDaycare'] = $daycare; // También actualizas la sesión
-    $a->setDaycare($daycare); // Esto actualiza internamente los valores
+    // Verificar que el usuario tenga permiso para acceder a este daycare
+    $allowed = false;
+    if (isset($_SESSION['user']->daycares) && is_array($_SESSION['user']->daycares)) {
+        foreach ($_SESSION['user']->daycares as $d) {
+            if ($d->id == $daycare) {
+                $allowed = true;
+                break;
+            }
+        }
+    }
+
+    if ($allowed) {
+        $_SESSION['activeDaycare'] = $daycare;
+        $a->setDaycare($daycare);
+    } else {
+        // Log unauthorized attempt or handle error
+        // Por consistencia, simplemente no hacemos el cambio si no está autorizado
+        // Opcional: error_log("Intento de acceso no autorizado al daycare $daycare por usuario " . $_SESSION['user']->id);
+    }
 }
 
 if ($inscripcion) {

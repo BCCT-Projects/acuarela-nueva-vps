@@ -9,7 +9,7 @@ ini_set('log_errors', 1);
 require_once __DIR__ . "/../../includes/sdk.php";
 // AuditLogger está en 'miembros/cron', fuera de 'acuarela-app-web'
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
-require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
+require_once __DIR__ . '/../../../../includes/SecurityAuditLogger.php';
 require_once __DIR__ . '/../../includes/env.php';
 
 $a = new Acuarela();
@@ -18,13 +18,13 @@ $logger = new AuditLogger();
 header('Content-Type: application/json');
 
 // Modo de operación: 'validate' solo valida identidad y devuelve hijos; por defecto 'submit'
-$mode = $_POST['mode'] ?? 'submit';
+$mode = filter_input(INPUT_POST, 'mode', FILTER_SANITIZE_STRING) ?? 'submit';
 
 // Verificar sesión si existe, sino intentar buscar usuario por email/teléfono
 $currentUser = null;
 $userId = null;
-$userEmail = $_POST['requester_email'] ?? '';
-$userPhone = $_POST['requester_phone'] ?? '';
+$userEmail = filter_input(INPUT_POST, 'requester_email', FILTER_VALIDATE_EMAIL);
+$userPhone = filter_input(INPUT_POST, 'requester_phone', FILTER_SANITIZE_STRING);
 
 // NOTA IMPORTANTE:
 // Este endpoint se usa desde un formulario público. Si hay sesión activa (por ejemplo, un admin logueado),
@@ -219,12 +219,32 @@ if ($mode === 'validate') {
 
 // --- Modo envío completo ---
 
-$requestType = $_POST['request_type'] ?? '';
-$childId = $_POST['child_id'] ?? ''; // OJO: Si viene vacío, puede ser manual
-$childNameManual = $_POST['child_name'] ?? '';
-$details = $_POST['details'] ?? '';
-$recordType = $_POST['record_type'] ?? '';
-$recordRef = $_POST['record_ref'] ?? '';
+// Validar reCAPTCHA
+$secretKey = Env::get('RECAPTCHA_SECRET_KEY');
+$captchaResponse = filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_SANITIZE_STRING);
+
+if ($secretKey) {
+    if (empty($captchaResponse)) {
+        echo json_encode(['success' => false, 'message' => 'Por favor complete el captcha.']);
+        exit;
+    }
+
+    $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$captchaResponse}";
+    $verifyResponse = file_get_contents($verifyUrl);
+    $responseData = json_decode($verifyResponse);
+
+    if (!$responseData->success) {
+        echo json_encode(['success' => false, 'message' => 'Validación de seguridad fallida.']);
+        exit;
+    }
+}
+
+$requestType = filter_input(INPUT_POST, 'request_type', FILTER_SANITIZE_STRING);
+$childId = filter_input(INPUT_POST, 'child_id', FILTER_SANITIZE_STRING); // OJO: Si viene vacío, puede ser manual
+$childNameManual = filter_input(INPUT_POST, 'child_name', FILTER_SANITIZE_STRING);
+$details = filter_input(INPUT_POST, 'details', FILTER_SANITIZE_STRING);
+$recordType = filter_input(INPUT_POST, 'record_type', FILTER_SANITIZE_STRING);
+$recordRef = filter_input(INPUT_POST, 'record_ref', FILTER_SANITIZE_STRING);
 
 // Si no hay ID de niño (porque vino de input manual), incluimos el nombre en la descripción
 if (empty($childId) && !empty($childNameManual)) {
@@ -266,9 +286,7 @@ if (!$newRequest || !isset($newRequest->id)) {
 
 // 6. Auditoría Local
 $event = ($requestType === 'correction') ? 'ferpa_correction_requested' : 'ferpa_access_requested';
-    'record_type' => $recordType ?: null,
-    'record_ref' => $recordRef ?: null,
-]);
+
 SecurityAuditLogger::log($event, SecurityAuditLogger::SEVERITY_INFO, [
     'request_id' => $newRequest->id,
     'request_type' => $requestType,
