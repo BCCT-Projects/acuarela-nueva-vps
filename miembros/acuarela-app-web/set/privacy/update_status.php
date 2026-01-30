@@ -9,9 +9,20 @@ $a = new Acuarela();
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 
-$id = isset($_POST['id']) ? $_POST['id'] : null;
-$status = isset($_POST['status']) ? $_POST['status'] : null;
-$replyMessage = isset($_POST['reply_message']) ? trim($_POST['reply_message']) : '';
+// Authentication & Authorization Check
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser)) {
+    http_response_code(401);
+    die(json_encode(['success' => false, 'message' => 'Login required']));
+}
+$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
+if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
+    http_response_code(403);
+    die(json_encode(['success' => false, 'message' => 'No autorizado']));
+}
+
+$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_STRING);
+$status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
+$replyMessage = trim(filter_input(INPUT_POST, 'reply_message', FILTER_SANITIZE_STRING) ?? '');
 
 if (!$id || !$status) {
     echo json_encode(['success' => false, 'message' => 'Faltan parámetros']);

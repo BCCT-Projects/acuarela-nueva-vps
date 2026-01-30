@@ -1,4 +1,8 @@
-<?php $classBody ="grupo"; include "includes/header.php"; $grupo = $a->getGrupos($_GET['id']); ?>
+<?php $classBody ="grupo"; include "includes/header.php"; 
+$grupo_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$grupo = ($grupo_id) ? $a->getGrupos($grupo_id) : null;
+if (!$grupo) { die("Grupo no encontrado"); }
+?>
 <script>
     let groupData = <?= json_encode($grupo) ?>;
     groupData.children.forEach(child => {
@@ -24,7 +28,7 @@
 <main>
   <?php
     $mainHeaderTitle = "{$grupo->name}" ;
-    $action = '<a href="/miembros/acuarela-app-web/editar-grupo/'.$_GET['id'].'" class="btn btn-action-secondary enfasis btn-big">Editar grupo</a>';
+    $action = '<a href="/miembros/acuarela-app-web/editar-grupo/'.htmlspecialchars($grupo_id).'" class="btn btn-action-secondary enfasis btn-big">Editar grupo</a>';
     include "templates/sectionHeader.php";
 ?>
   <div class="content">

@@ -5,7 +5,7 @@ session_start();
 require_once __DIR__ . "/../../includes/sdk.php";
 $a = new Acuarela();
 
-$token = $_GET['token'] ?? '';
+$token = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
 
 // Estilos básicos para la respuesta visual
 $css = "
@@ -35,7 +35,10 @@ $requests = $a->queryStrapi("dsar-requests?$queryParams");
 
 if (empty($requests) || !is_array($requests)) {
     // Verificar si ya fue verificada (buscar solo por token)
-    $allRequests = $a->queryStrapi("dsar-requests?verification_token=$token");
+    // Usar http_build_query para seguridad
+    $checkParams = http_build_query(['verification_token' => $token]);
+    $allRequests = $a->queryStrapi("dsar-requests?$checkParams");
+
     if (!empty($allRequests) && $allRequests[0]->identity_status === 'verified') {
         die("$css <div class='card'><h1 class='success'>¡Ya Verificado!</h1><p>Esta solicitud ya ha sido verificada anteriormente. Nuestro equipo está procesándola.</p><a href='../../' class='btn'>Ir al Inicio</a></div>");
     }

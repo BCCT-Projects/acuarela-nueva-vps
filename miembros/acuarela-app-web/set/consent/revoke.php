@@ -3,10 +3,10 @@
 ini_set('display_errors', 0);
 session_start();
 include "../../includes/sdk.php";
-require_once __DIR__ . "/../../../includes/SecurityAuditLogger.php";
+require_once __DIR__ . "/../../../../includes/SecurityAuditLogger.php";
 $a = new Acuarela();
 
-$rawToken = $_GET['token'] ?? '';
+$rawToken = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
 // Limpiar el token: Quedarse solo con los primeros 71 caracteres (REVOKE- + 64 hex)
 // Esto soluciona el problema de que el cliente de correo pegue texto basura al final.
 $token = substr(trim($rawToken), 0, 71);

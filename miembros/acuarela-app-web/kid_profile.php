@@ -1,6 +1,14 @@
 <?php $classBody = "kid_profile";
 include "includes/header.php";
-$kid = $a->getChildren($_GET['id']);
+$kid_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS);
+
+if (!$kid_id) {
+    // Si no hay ID válido, redirigir o mostrar error
+    header("Location: index.php");
+    exit;
+}
+
+$kid = $a->getChildren($kid_id);
 
 // Descifrar datos del niño (nombre, apellido, fecha de nacimiento)
 $kid = $a->decryptChildData($kid);

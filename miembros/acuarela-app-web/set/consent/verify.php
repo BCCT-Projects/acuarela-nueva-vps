@@ -4,10 +4,10 @@ ini_set('display_errors', 0);
 session_start();
 include "../../includes/sdk.php";
 include "get_coppa_version.php";
-require_once __DIR__ . "/../../../includes/SecurityAuditLogger.php";
+require_once __DIR__ . "/../../../../includes/SecurityAuditLogger.php";
 $a = new Acuarela();
 
-$token = $_GET['token'] ?? '';
+$token = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING);
 $statusTitle = "";
 $statusMessage = "";
 $statusType = "error"; // success | error | warning

@@ -1,7 +1,9 @@
 <?php 
     $classBody ="newgroup"; 
     include "includes/header.php";
-    $grupo = $a->getGrupos($_GET['id']);
+    $grupo_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+    $grupo = $grupo_id ? $a->getGrupos($grupo_id) : null;
+    if (!$grupo) { die("Grupo no encontrado"); }
     $post_json = json_encode($grupo->children, true);
     $post_json_escaped = htmlspecialchars($post_json, ENT_QUOTES, 'UTF-8');
 ?>

@@ -1,6 +1,10 @@
 <?php $classBody = "agregarsalud";
 include "includes/header.php";
-$kid = $a->getChildren($_GET['id']);
+$kid_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+if (!$kid_id) { die("ID no válido"); }
+
+$kid = $a->getChildren($kid_id);
 
 // Descifrar datos de salud para edición
 if (isset($kid->healthinfo)) {
@@ -17,7 +21,7 @@ if (isset($kid->id)) {
 }
 
 if ($coppaStatus !== 'granted') {
-    header("Location: /miembros/acuarela-app-web/ninxs/{$_GET['id']}");
+    header("Location: /miembros/acuarela-app-web/ninxs/{$kid_id}");
     echo "<script>alert('⚠️ No se puede modificar información de salud porque el consentimiento COPPA no está aprobado.');</script>";
     exit;
 }

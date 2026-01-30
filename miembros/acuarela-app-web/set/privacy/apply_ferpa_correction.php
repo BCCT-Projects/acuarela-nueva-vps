@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../../includes/sdk.php";
 require_once __DIR__ . "/../../includes/env.php";
-require_once __DIR__ . "/../../includes/SecurityAuditLogger.php";
+require_once __DIR__ . "/../../../../includes/SecurityAuditLogger.php";
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
 
 header('Content-Type: application/json');
@@ -25,13 +25,21 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser) || !iss
     exit;
 }
 
+// Basic Role Check (heuristic)
+$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
+if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit;
+}
+
 $adminId = $_SESSION['user']->acuarelauser->id;
 
-$id = $_POST['id'] ?? null;
-$action = $_POST['action'] ?? null; // approve|deny
-$note = trim($_POST['reply_message'] ?? '');
-$manualBefore = trim($_POST['correction_before'] ?? '');
-$manualAfter = trim($_POST['correction_after'] ?? '');
+$id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_STRING);
+$action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING); // approve|deny
+$note = trim(filter_input(INPUT_POST, 'reply_message', FILTER_SANITIZE_STRING) ?? '');
+$manualBefore = trim(filter_input(INPUT_POST, 'correction_before', FILTER_SANITIZE_STRING) ?? '');
+$manualAfter = trim(filter_input(INPUT_POST, 'correction_after', FILTER_SANITIZE_STRING) ?? '');
 
 if (!$id || !$action) {
     echo json_encode(['success' => false, 'message' => 'Faltan parámetros (id, action)']);

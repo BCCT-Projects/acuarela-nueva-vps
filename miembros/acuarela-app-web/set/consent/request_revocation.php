@@ -18,8 +18,8 @@ if (method_exists($a, 'initCrypto')) {
 
 header('Content-Type: application/json');
 
-$parentEmail = $_POST['parent_email'] ?? '';
-$childName = $_POST['child_name'] ?? '';
+$parentEmail = filter_input(INPUT_POST, 'parent_email', FILTER_VALIDATE_EMAIL);
+$childName = filter_input(INPUT_POST, 'child_name', FILTER_SANITIZE_STRING);
 
 if (empty($parentEmail) || empty($childName)) {
     echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
@@ -29,7 +29,7 @@ if (empty($parentEmail) || empty($childName)) {
 // 0. Validar reCAPTCHA
 require_once __DIR__ . '/../../includes/env.php';
 $secretKey = Env::get('RECAPTCHA_SECRET_KEY');
-$captchaResponse = $_POST['g-recaptcha-response'] ?? '';
+$captchaResponse = filter_input(INPUT_POST, 'g-recaptcha-response', FILTER_SANITIZE_STRING);
 
 if ($secretKey && !empty($captchaResponse)) {
     $verifyUrl = "https://www.google.com/recaptcha/api/siteverify?secret={$secretKey}&response={$captchaResponse}";

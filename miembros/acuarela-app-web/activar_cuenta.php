@@ -7,7 +7,7 @@ require_once 'includes/env.php';
 require_once 'includes/src/Mandrill.php';
 
 // Obtener el ID del asistente de la URL
-$asistenteId = $_GET['id'] ?? null;
+$asistenteId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
 
 if (!$asistenteId) {
     $error = "Link de activación inválido. Por favor contacta al administrador.";
