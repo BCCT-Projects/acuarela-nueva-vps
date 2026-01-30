@@ -27,8 +27,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tempData = $_SESSION['temp_2fa'];
     $email = $tempData['email'] ?? 'unknown';
 
-    // Verificar código y expiración (ej. 15 minutos)
-    if ($code == $tempData['code'] && (time() - $tempData['timestamp'] < 900)) {
+    // Verificar código y expiración (15 minutos) con comparación estricta
+    if ((string)$code === (string)$tempData['code'] && (time() - $tempData['timestamp'] < 900)) {
+
+        // Session Fixation Protection: Regenerar ID de sesión al elevar privilegios
+        session_regenerate_id(true);
 
         // RESTAURAR SESIÓN DE SEGURIDAD
         if (isset($tempData['session_backup'])) {
@@ -59,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'reason' => 'Invalid code or expired'
         ]);
         SecurityAuditLogger::log('auth_login_failed', SecurityAuditLogger::SEVERITY_WARN, ['email' => $email, 'reason' => 'Invalid 2FA code']);
+        // Retardo intencional
+        usleep(rand(200000, 500000));
         echo json_encode(['ok' => false, 'message' => 'Código incorrecto o expirado']);
     }
 } else {

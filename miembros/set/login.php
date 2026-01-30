@@ -11,7 +11,7 @@ $logger = new AuditLogger();
 $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
 $password = filter_input(INPUT_POST, 'password', FILTER_UNSAFE_RAW);
 
-if (!$email || !$password) {
+if (empty($email) || empty($password)) {
     echo json_encode(['status' => 'error', 'message' => 'Email y contraseña requeridos']);
     exit;
 }
@@ -22,7 +22,7 @@ $userLogin = $a->loginBilingualUser($email, $password);
 
 // Asegurar que los daycares estén disponibles en la respuesta
 // Si $userLogin tiene estructura response[0], extraer el objeto
-if (isset($userLogin->response) && is_array($userLogin->response) && !empty($userLogin->response)) {
+if (isset($userLogin->response) && is_array($userLogin->response) && count($userLogin->response) > 0) {
     $userLogin = $userLogin->response[0];
 }
 
@@ -103,6 +103,8 @@ $logger->log('LOGIN_FAILED', [
     'reason' => 'Invalid credentials or user not found'
 ]);
 SecurityAuditLogger::log('auth_login_failed', SecurityAuditLogger::SEVERITY_WARN, ['email' => $email, 'reason' => 'Invalid credentials']);
+// Retardo intencional para mitigar fuerza bruta (Timing Attack Mitigation)
+usleep(rand(300000, 600000));
 ob_clean();
 echo json_encode(['status' => 'error', 'message' => 'Email o contraseña incorrectos']);
 

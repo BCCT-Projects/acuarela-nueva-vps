@@ -28,7 +28,7 @@ include 'includes/header.php';
                 E-mail
             </label>
             <input type="email" placeholder="name@mail.com" name="email" id="email"
-                value="<?= isset($_GET['email']) ? $_GET['email'] : "" ?>"
+                value="<?= filter_input(INPUT_GET, 'email', FILTER_SANITIZE_EMAIL) ?: "" ?>"
                 oninput="this.value = this.value.toLowerCase()" />
         </span>
         <span>
