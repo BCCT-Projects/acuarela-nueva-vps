@@ -234,11 +234,22 @@ class Acuarela
             ]
         ];
         $resp = $this->queryStrapi("acuarelausers/register", $data, "POST");
+        if ($this->daycareID) {
+            $this->invalidateStrapiCache("acuarelausers?rols=5ff78fd55d6f2e272cfd7392&daycare=" . $this->daycareID);
+        }
         return $resp;
     }
     function editAsistente($id, $data)
     {
         $resp = $this->queryStrapi("acuarelausers/$id", $data, "PUT");
+        $this->invalidateStrapiCache("acuarelausers/$id");
+        if ($this->daycareID) {
+            /* 
+               La URL de getAsistentes usa rols fijos, así que invalidamos esa query exacta.
+               Rol de asistente: 5ff78fd55d6f2e272cfd7392
+            */
+            $this->invalidateStrapiCache("acuarelausers?rols=5ff78fd55d6f2e272cfd7392&daycare=" . $this->daycareID);
+        }
         return $resp;
     }
     function getAgeGroups()
@@ -559,8 +570,17 @@ class Acuarela
 
     function postHealthinfo($data)
     {
-        $data = json_decode($data);
-        $resp = $this->queryStrapi("healthinfos", $data, "POST");
+        $dataDecoded = json_decode($data);
+        $resp = $this->queryStrapi("healthinfos", $dataDecoded, "POST");
+        
+        // Invalidate cache
+        if (isset($dataDecoded->child)) {
+             $childId = is_object($dataDecoded->child) ? $dataDecoded->child->id : $dataDecoded->child;
+             $this->invalidateStrapiCache("healthinfos?child=$childId");
+             $this->invalidateStrapiCache("children/$childId");
+             // Also invalidate list if needed
+             if($this->daycareID) $this->invalidateStrapiCache("children/?daycare=" . $this->daycareID);
+        }
         return $resp;
     }
     function putHealthinfo($data)
@@ -570,6 +590,16 @@ class Acuarela
             return null; // Evitar enviar una petición sin ID de inscripción
         }
         $resp = $this->queryStrapi("healthinfos/$data->inscripcion", $data, "PUT");
+        
+        // Invalidate Child/Health Cache
+        if (isset($data->child)) {
+             $childId = is_object($data->child) ? $data->child->id : $data->child;
+             // Invalidate healthinfo for this child
+             $this->invalidateStrapiCache("healthinfos?child=$childId");
+             // Also invalidate child details as it might include health data ref
+             $this->invalidateStrapiCache("children/$childId");
+        }
+        
         return $resp;
     }
 
@@ -638,9 +668,15 @@ class Acuarela
         }
         return $resp;
     }
+
     function updateChildren($id, $data)
     {
         $resp = $this->queryStrapi("children/{$id}", $data, "PUT");
+        // Invalidate cache for this child
+        $this->invalidateStrapiCache("children/$id");
+        if($this->daycareID) {
+            $this->invalidateStrapiCache("children/?daycare=" . $this->daycareID);
+        }
         return $resp;
     }
     function getDaycareInfo($id)

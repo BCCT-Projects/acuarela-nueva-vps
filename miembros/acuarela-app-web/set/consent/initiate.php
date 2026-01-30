@@ -3,7 +3,7 @@
 
 // Include version helper
 require_once __DIR__ . '/get_coppa_version.php';
-require_once __DIR__ . '/../../../includes/SecurityAuditLogger.php';
+require_once __DIR__ . '/../../../../includes/SecurityAuditLogger.php';
 
 /**
  * Función helper para iniciar el proceso de consentimiento parental.
