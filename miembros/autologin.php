@@ -17,7 +17,7 @@ if (isset($_SESSION['user']) && !empty($_SESSION['user']->id)) {
 }
 
 // Obtener token de URL
-$token = $_GET['token'] ?? null;
+$token = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_STRING) ?? null;
 
 if (!$token) {
     // Sin token, mostrar error
