@@ -25,37 +25,33 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-// Enriquecer con estado de consentimiento COPPA
+// Enriquecer con estado de consentimiento COPPA (una sola petición)
 if (is_array($posts)) {
-    foreach ($posts as $key => $val) {
-        $post = &$posts[$key];
-
-        // GRANDFATHER CLAUSE: Default to null (legacy kid, pre-COPPA)
-        $post->coppa_status = null; // Default no status
-
-        // Intentar obtener child ID
+    $childIds = [];
+    foreach ($posts as $post) {
         $childId = null;
-        // Robust check: object or integer/string ID matches
         if (isset($post->child) && is_object($post->child)) {
-            $childId = $post->child->id;
+            $childId = $post->child->id ?? null;
         } elseif (isset($post->child) && !is_object($post->child)) {
             $childId = $post->child;
         }
-
         if ($childId) {
-            // SLOW BUT SAFE METHOD (Temporary rollback to verify 500 fix)
-            // Hacemos la consulta individual para ver si esto elimina el error 500
-            try {
-                $consents = $a->queryStrapi("parental-consents?child_id=$childId&_sort=createdAt:desc&_limit=1");
-                if (is_array($consents) && count($consents) > 0) {
-                    $post->coppa_status = $consents[0]->consent_status ?? 'pending';
-                }
-            } catch (Exception $e) {
-                // Silent catch
-            }
+            $childIds[] = $childId;
         }
     }
-    unset($post);
+    $coppaMap = $a->getLatestParentalConsentsForChildIds($childIds);
+    foreach ($posts as $key => $val) {
+        $posts[$key]->coppa_status = null;
+        $childId = null;
+        if (isset($val->child) && is_object($val->child)) {
+            $childId = $val->child->id ?? null;
+        } elseif (isset($val->child) && !is_object($val->child)) {
+            $childId = $val->child;
+        }
+        if ($childId !== null) {
+            $posts[$key]->coppa_status = $coppaMap[(string)$childId] ?? null;
+        }
+    }
 }
 
 echo json_encode($posts);

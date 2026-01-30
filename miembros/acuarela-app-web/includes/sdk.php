@@ -69,8 +69,41 @@ class Acuarela
         $this->daycareInfo = $this->getDaycareInfo($id);
     }
 
+    /** TTL del cache Strapi (solo GET) en segundos (1 hora) */
+    private $strapiCacheTTL = 3600;
+
     function queryStrapi($url, $body = "", $method = "GET")
     {
+        $method = strtoupper($method);
+        $useCache = ($method === 'GET' && (empty($body) || (is_string($body) && trim($body) === '')));
+        // No cachear Social (posts), Privacidad (dsar-requests, ferpa-requests) ni Inspección (checkins, checkouts): contenido muy dinámico
+        if ($useCache) {
+            $pathPart = (strpos($url, '?') !== false) ? substr($url, 0, strpos($url, '?')) : $url;
+            $noCachePaths = ['posts', 'dsar-requests', 'ferpa-requests', 'checkins', 'checkouts'];
+            foreach ($noCachePaths as $p) {
+                if ($pathPart === $p || strpos($pathPart, $p . '/') === 0) {
+                    $useCache = false;
+                    break;
+                }
+            }
+        }
+        $cacheDir = __DIR__ . '/../cache/strapi/';
+        $cacheFile = null;
+        if ($useCache) {
+            if (!is_dir($cacheDir)) {
+                @mkdir($cacheDir, 0755, true);
+            }
+            $cacheKey = md5($url);
+            $cacheFile = $cacheDir . $cacheKey . '.json';
+            if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < $this->strapiCacheTTL) {
+                $cached = file_get_contents($cacheFile);
+                $decoded = json_decode($cached);
+                if ($decoded !== null) {
+                    return $decoded;
+                }
+            }
+        }
+
         $endpoint = $this->domain . $url;
         $curl = curl_init();
 
@@ -111,8 +144,28 @@ class Acuarela
         $response = curl_exec($curl);
         curl_close($curl);
 
-        return json_decode($response);
+        $decoded = json_decode($response);
+        if ($useCache && $cacheFile !== null && $decoded !== null) {
+            @file_put_contents($cacheFile, $response);
+        }
+        return $decoded;
     }
+
+    /**
+     * Invalida la caché Strapi para una URL (p. ej. al registrar check-in/check-out en Asistencia).
+     * Así la siguiente petición GET a esa URL obtiene datos frescos.
+     * @param string $url Misma URL que se usa en queryStrapi (ej: "children/?daycare=123")
+     */
+    function invalidateStrapiCache($url)
+    {
+        $cacheDir = __DIR__ . '/../cache/strapi/';
+        $cacheKey = md5($url);
+        $cacheFile = $cacheDir . $cacheKey . '.json';
+        if (file_exists($cacheFile)) {
+            @unlink($cacheFile);
+        }
+    }
+
     // Función para obtener la URL de la imagen más pequeña disponible
     function getSmallestImageUrl($image)
     {
@@ -129,12 +182,20 @@ class Acuarela
         // Si no hay formatos, devuelve la URL principal
         return 'https://acuarelacore.com/api/' . $image->url;
     }
-    function getPostsDaycares($daycare = null)
+    /**
+     * Posts del daycare con paginación (15 por página).
+     * @param string|null $daycare
+     * @param int $page Página (1-based desde JS: page=1 es la primera).
+     */
+    function getPostsDaycares($daycare = null, $page = 1)
     {
         if (is_null($daycare)) {
             $daycare = $this->daycareID;
         }
-        $resp = $this->queryStrapi("posts?daycareId=$daycare");
+        $limit = 15;
+        $page = max(1, (int)$page);
+        $start = ($page - 1) * $limit;
+        $resp = $this->queryStrapi("posts?daycareId=$daycare&_start=$start&_limit=$limit");
         return $resp;
     }
     function getTasks($daycare = null)
@@ -148,6 +209,9 @@ class Acuarela
     function createTask($data)
     {
         $resp = $this->queryStrapi("tasks", $data, "POST");
+        if ($this->daycareID) {
+            $this->invalidateStrapiCache("tasks?daycare=" . $this->daycareID);
+        }
         return $resp;
     }
     function setReactionPost($data)
@@ -522,6 +586,38 @@ class Acuarela
             return $respInscripcionComplete;
         }
     }
+    /**
+     * Obtiene el último estado COPPA por niño en una sola petición (evita N+1).
+     * Strapi v3: field_in=id1&field_in=id2 (repetir parámetro por cada valor).
+     * @param array $childIds Lista de IDs de niños
+     * @return array Map child_id => consent_status (granted|pending|revoked)
+     */
+    function getLatestParentalConsentsForChildIds($childIds)
+    {
+        $map = [];
+        $childIds = array_unique(array_filter(array_map('strval', $childIds)));
+        if (empty($childIds)) {
+            return $map;
+        }
+        // Strapi v3: id_in=3&id_in=6&id_in=8 (doc: Find multiple restaurant with id 3, 6, 8)
+        $parts = [];
+        foreach (array_values($childIds) as $id) {
+            $parts[] = 'child_id_in=' . urlencode($id);
+        }
+        $query = implode('&', $parts) . '&_sort=createdAt:desc&_limit=500';
+        $consents = $this->queryStrapi("parental-consents?" . $query);
+        if (!is_array($consents)) {
+            return $map;
+        }
+        foreach ($consents as $c) {
+            $cid = isset($c->child_id) ? (is_object($c->child_id) ? ($c->child_id->id ?? null) : $c->child_id) : null;
+            if ($cid !== null && !isset($map[(string)$cid])) {
+                $map[(string)$cid] = $c->consent_status ?? 'pending';
+            }
+        }
+        return $map;
+    }
+
     function getChildren($id = "", $daycare = null)
     {
         if (is_null($daycare)) {
@@ -603,16 +699,23 @@ class Acuarela
         }
         $data["daycare"] = $daycare;
         $resp = $this->queryStrapi("groups", $data, 'POST');
+        $this->invalidateStrapiCache("groupsNew/$daycare");
         return $resp;
     }
     function editGroup($id, $data)
     {
         $resp = $this->queryStrapi("groups/$id", $data, 'PUT');
+        if ($this->daycareID) {
+            $this->invalidateStrapiCache("groupsNew/" . $this->daycareID);
+        }
         return $resp;
     }
     function createActivity($data)
     {
         $resp = $this->queryStrapi("groups/activity", $data, 'POST');
+        if ($this->daycareID) {
+            $this->invalidateStrapiCache("groupsNew/" . $this->daycareID);
+        }
         return $resp;
     }
 

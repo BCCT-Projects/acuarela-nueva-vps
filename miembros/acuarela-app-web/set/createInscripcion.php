@@ -34,6 +34,11 @@ $data = json_encode($dataObj);
 // Si es borrador, lo dejamos pasar normal sin flujo COPPA
 if (isset($dataObj['status']) && $dataObj['status'] == 'Borrador') {
     $inscripcion = $a->postInscripcion($data);
+    $daycareId = $a->daycareID ?? ($dataObj['daycare'] ?? null);
+    if ($daycareId) {
+        $a->invalidateStrapiCache("inscripciones?daycare=" . $daycareId);
+        $a->invalidateStrapiCache("children/?daycare=" . $daycareId);
+    }
     echo json_encode($inscripcion);
     exit;
 }
@@ -144,6 +149,12 @@ if ($childId) {
             "parents" => $respInscripcion->parents ?? [],  // Para que se envíen las invitaciones
             "kid" => $respInscripcion->kid ?? null
         ];
+    }
+
+    $daycareId = $a->daycareID ?? ($dataObj['daycare'] ?? null);
+    if ($daycareId) {
+        $a->invalidateStrapiCache("inscripciones?daycare=" . $daycareId);
+        $a->invalidateStrapiCache("children/?daycare=" . $daycareId);
     }
 
     $jsonOutput = json_encode($finalResponse);

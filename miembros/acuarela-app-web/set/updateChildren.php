@@ -11,5 +11,9 @@ if (isset($data['data'])) {
 }
 
 $posts = $a->updateChildren($data['id'], json_encode($data['data']));
+if ($a->daycareID) {
+    $a->invalidateStrapiCache("children/?daycare=" . $a->daycareID);
+    $a->invalidateStrapiCache("inscripciones?daycare=" . $a->daycareID);
+}
 echo json_encode($posts);
 ?>

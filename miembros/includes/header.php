@@ -6,58 +6,6 @@ if (isset($external)) {
     include 'includes/config.php';
 }
 
-$states = array(
-    "Alabama",
-    "Alaska",
-    "Arizona",
-    "Arkansas",
-    "California",
-    "Colorado",
-    "Connecticut",
-    "Delaware",
-    "Florida",
-    "Georgia",
-    "Hawaii",
-    "Idaho",
-    "Illinois",
-    "Indiana",
-    "Iowa",
-    "Kansas",
-    "Kentucky",
-    "Louisiana",
-    "Maine",
-    "Maryland",
-    "Massachusetts",
-    "Michigan",
-    "Minnesota",
-    "Mississippi",
-    "Missouri",
-    "Montana",
-    "Nebraska",
-    "Nevada",
-    "New Hampshire",
-    "New Jersey",
-    "New Mexico",
-    "New York",
-    "North Carolina",
-    "North Dakota",
-    "Ohio",
-    "Oklahoma",
-    "Oregon",
-    "Pennsylvania",
-    "Rhode Island",
-    "South Carolina",
-    "South Dakota",
-    "Tennessee",
-    "Texas",
-    "Utah",
-    "Vermont",
-    "Virginia",
-    "Washington",
-    "West Virginia",
-    "Wisconsin",
-    "Wyoming"
-);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -103,21 +51,6 @@ $states = array(
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WDN6LBJ"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
  End Google Tag Manager (noscript) -->
-    <script>
-        let idioma = "";
-        let curriculumID = <?= isset($_GET["idcurriculum"]) && !empty($_GET["idcurriculum"]) ? "'" . addslashes($_GET["idcurriculum"]) . "'" : "''" ?>;
-        /*if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then((registration) => {
-                        console.log('Service Worker registrado con éxito:', registration);
-                    })
-                    .catch((error) => {
-                        console.log('Error al registrar el Service Worker:', error);
-                    });
-            });
-        }*/
-    </script>
     <?php if (isset($_SESSION["user"])): ?>
         <script>
             // TEMPORALMENTE DESACTIVADO - Service Worker causaba problemas con CSP
