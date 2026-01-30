@@ -2,8 +2,11 @@
 
 $curl = curl_init();
 
+$id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+if (!$id) { die("ID required"); }
+
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://acuarelacore.com/api/movements/'. $_GET['id'],
+  CURLOPT_URL => 'https://acuarelacore.com/api/movements/'. $id,
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_ENCODING => '',
   CURLOPT_MAXREDIRS => 10,

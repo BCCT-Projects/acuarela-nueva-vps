@@ -1,7 +1,16 @@
 <?php 
 include 'includes/config.php';
-$getParent = $a->getParent($_GET['idParent']);
-$getMovement = $a->getMovement($_GET['movement']);
+// Validate and Sanitize Inputs
+$idParent = filter_input(INPUT_GET, 'idParent', FILTER_SANITIZE_STRING);
+$movementId = filter_input(INPUT_GET, 'movement', FILTER_SANITIZE_STRING);
+$merchantId = filter_input(INPUT_GET, 'merchantID', FILTER_SANITIZE_STRING);
+
+if (!$idParent || !$movementId || !$merchantId) {
+    die("Invalid request parameters.");
+}
+
+$getParent = $a->getParent($idParent);
+$getMovement = $a->getMovement($movementId);
 ?>
 <!DOCTYPE html>
 <html>
@@ -60,7 +69,7 @@ $getMovement = $a->getMovement($_GET['movement']);
 
   <body>
     <!-- Include the PayPal JavaScript SDK; replace "test" with your own sandbox Business account app client ID -->
-    <script src="https://www.paypal.com/sdk/js?&client-id=AX68Wit8QMjbeWEL1p0HXMEJNaD2zBNahV_km33_CMS-0tfD6RlZneLwbav6qJmw9Yoyv6cs_NdZmby6&merchant-id=<?=$_GET['merchantID']?>&currency=USD"></script>
+    <script src="https://www.paypal.com/sdk/js?&client-id=AX68Wit8QMjbeWEL1p0HXMEJNaD2zBNahV_km33_CMS-0tfD6RlZneLwbav6qJmw9Yoyv6cs_NdZmby6&merchant-id=<?= htmlspecialchars($merchantId, ENT_QUOTES, 'UTF-8') ?>&currency=USD"></script>
     <main>
   <img src="img/logo.svg" alt="logo" class="logo">
   <div class="data">
