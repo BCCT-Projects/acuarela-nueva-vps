@@ -3,6 +3,7 @@ error_reporting(0);
 ob_start();
 include '../includes/config.php';
 require_once __DIR__ . '/../cron/AuditLogger.php';
+require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
 
 $logger = new AuditLogger();
 
@@ -54,6 +55,7 @@ if (isset($userLogin->id)) {
         'user_id' => $userLogin->id,
         'message' => 'Credentials verified, 2FA code sent'
     ]);
+    SecurityAuditLogger::log('auth_mfa_challenge', SecurityAuditLogger::SEVERITY_INFO, ['email' => $email], $userLogin->id);
 
     // Enviar correo con el código
     // Usamos el template 'portal-miembros-2fa' (deberás crearlo en Mandrill o usar uno genérico por ahora)
@@ -82,6 +84,7 @@ if (isset($userLogin->id)) {
             'email' => $email,
             'error' => 'Failed to send 2FA email: ' . $e->getMessage()
         ]);
+        SecurityAuditLogger::log('system_mail_error', SecurityAuditLogger::SEVERITY_ERROR, ['email' => $email, 'error' => $e->getMessage()]);
 
         // Retornar error más descriptivo
         ob_clean();
@@ -99,6 +102,7 @@ $logger->log('LOGIN_FAILED', [
     'email' => $email,
     'reason' => 'Invalid credentials or user not found'
 ]);
+SecurityAuditLogger::log('auth_login_failed', SecurityAuditLogger::SEVERITY_WARN, ['email' => $email, 'reason' => 'Invalid credentials']);
 ob_clean();
 echo json_encode(['status' => 'error', 'message' => 'Email o contraseña incorrectos']);
 

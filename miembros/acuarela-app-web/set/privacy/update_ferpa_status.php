@@ -6,6 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 include "../../includes/sdk.php";
 // AuditLogger está en 'miembros/cron', fuera de 'acuarela-app-web'
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
+require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
 
 $a = new Acuarela();
 $logger = new AuditLogger();
@@ -55,10 +56,12 @@ if ($update) {
     }
 
     // Auditoría
-    $logger->log('FERPA_STATUS_CHANGE', [
-        'request_id' => $id,
         'new_status' => $status,
         'admin_id' => $_SESSION['user']->acuarelauser->id ?? 'system'
+    ]);
+    SecurityAuditLogger::log('ferpa_status_change', SecurityAuditLogger::SEVERITY_INFO, [
+        'request_id' => $id,
+        'new_status' => $status
     ]);
 
     // 3. Notificación (Opcional, similar a DSAR)

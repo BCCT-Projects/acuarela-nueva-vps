@@ -9,6 +9,7 @@ ini_set('log_errors', 1);
 require_once __DIR__ . "/../../includes/sdk.php";
 // AuditLogger está en 'miembros/cron', fuera de 'acuarela-app-web'
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
+require_once __DIR__ . '/../../includes/SecurityAuditLogger.php';
 require_once __DIR__ . '/../../includes/env.php';
 
 $a = new Acuarela();
@@ -265,13 +266,14 @@ if (!$newRequest || !isset($newRequest->id)) {
 
 // 6. Auditoría Local
 $event = ($requestType === 'correction') ? 'ferpa_correction_requested' : 'ferpa_access_requested';
-$logger->log($event, [
-    'request_id' => $newRequest->id,
-    'request_type' => $requestType,
-    'requester_id' => $userId,
-    'child_id' => $childId ?: null,
     'record_type' => $recordType ?: null,
     'record_ref' => $recordRef ?: null,
+]);
+SecurityAuditLogger::log($event, SecurityAuditLogger::SEVERITY_INFO, [
+    'request_id' => $newRequest->id,
+    'request_type' => $requestType,
+    'child_id' => $childId ?: null,
+    'record_type' => $recordType ?: null
 ]);
 
 // Determinar nombre del estudiante para el correo (si aplica)

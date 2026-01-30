@@ -3,6 +3,7 @@
 
 // Include version helper
 require_once __DIR__ . '/get_coppa_version.php';
+require_once __DIR__ . '/../../../includes/SecurityAuditLogger.php';
 
 /**
  * Función helper para iniciar el proceso de consentimiento parental.
@@ -101,6 +102,11 @@ function initiateCoppaConsent($childId, $parentEmail, $parentName, $childName, $
             $mandrillKey, // API Key
             "Acuarela" // From Name
         );
+        SecurityAuditLogger::log('parental_consent_requested', SecurityAuditLogger::SEVERITY_INFO, [
+            'child_id' => $childId,
+            'parent_email' => $parentEmail,
+            'policy_version' => $coppaVersion
+        ]);
         error_log("Correo enviado. Resultado: " . json_encode($emailResult));
     } catch (Exception $e) {
         error_log("Mandrill Error in initiateCoppaConsent: " . $e->getMessage());

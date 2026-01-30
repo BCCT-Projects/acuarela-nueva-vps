@@ -8,6 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . "/../../includes/sdk.php";
 require_once __DIR__ . "/../../includes/env.php";
+require_once __DIR__ . "/../../includes/SecurityAuditLogger.php";
 require_once __DIR__ . '/../../../cron/AuditLogger.php';
 
 header('Content-Type: application/json');
@@ -71,12 +72,10 @@ try {
 
         $a->updateFerpaRequest($id, $updateData);
 
-        $logger->log('ferpa_correction_denied', [
-            'request_id' => $id,
-            'admin_id' => $adminId,
             'record_type' => $recordType,
             'record_ref' => $recordRef,
         ]);
+        SecurityAuditLogger::log('ferpa_correction_rejected', SecurityAuditLogger::SEVERITY_WARN, ['request_id' => $id]);
 
         echo json_encode(['success' => true, 'message' => 'Solicitud de corrección rechazada']);
         exit;
@@ -111,12 +110,10 @@ try {
     ]);
 
     // 6) Auditoría
-    $logger->log('ferpa_correction_approved', [
-        'request_id' => $id,
-        'admin_id' => $adminId,
         'record_type' => $recordType,
         'record_ref' => $recordRef,
     ]);
+    SecurityAuditLogger::log('ferpa_correction_approved', SecurityAuditLogger::SEVERITY_INFO, ['request_id' => $id]);
 
     // 7) Notificación al padre (igual filosofía que update_ferpa_status)
     $requesterEmail = null;

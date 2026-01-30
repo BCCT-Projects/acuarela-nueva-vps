@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "../includes/sdk.php";
+require_once __DIR__ . "/../../includes/SecurityAuditLogger.php";
 
 $a = new Acuarela();
 
@@ -57,6 +58,7 @@ foreach ($files['tmp_name'] as $index => $tmpName) {
     if ($files['size'][$index] > $MAX_FILE_SIZE) {
         $msg = 'File ' . $files['name'][$index] . ' exceeds limit of 5MB.';
         error_log("[SECURITY] Upload rejected (Size): " . $files['name'][$index] . " Size:" . $files['size'][$index] . " IP:" . $_SERVER['REMOTE_ADDR']);
+        SecurityAuditLogger::log('file_upload_rejected', SecurityAuditLogger::SEVERITY_WARN, ['reason' => 'SIZE_LIMIT', 'file_name' => $files['name'][$index], 'size' => $files['size'][$index]]);
         http_response_code(400);
         echo json_encode(['error' => $msg]);
         exit;
@@ -69,6 +71,7 @@ foreach ($files['tmp_name'] as $index => $tmpName) {
     if (!array_key_exists($realMime, $ALLOWED_MIME_TYPES)) {
         $msg = 'Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, WebP) o documentos PDF.';
         error_log("[SECURITY] Upload rejected (MIME): " . $files['name'][$index] . " Detected: $realMime IP:" . $_SERVER['REMOTE_ADDR']);
+        SecurityAuditLogger::log('file_upload_rejected', SecurityAuditLogger::SEVERITY_WARN, ['reason' => 'INVALID_MIME', 'file_name' => $files['name'][$index], 'mime' => $realMime]);
         http_response_code(400);
         echo json_encode(['error' => $msg]);
         exit;
@@ -90,9 +93,11 @@ foreach ($files['tmp_name'] as $index => $tmpName) {
     $uploadResponse = $a->uploadImage($fileData);
 
     if (isset($uploadResponse['id'])) {
+        SecurityAuditLogger::log('file_upload_success', SecurityAuditLogger::SEVERITY_INFO, ['file_id' => $uploadResponse['id'], 'file_name' => $safeFileName]);
         $uploadedResults[] = $uploadResponse;
     } else {
         error_log("[ERROR] SDK uploadImage failed for: $safeFileName");
+        SecurityAuditLogger::log('system_error', SecurityAuditLogger::SEVERITY_ERROR, ['context' => 'upload_sdk_failure', 'file_name' => $safeFileName]);
         http_response_code(500);
         echo json_encode(['error' => 'Error uploading to backend storage']);
         exit;
