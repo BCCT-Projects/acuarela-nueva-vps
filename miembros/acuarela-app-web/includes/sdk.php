@@ -761,6 +761,19 @@ class Acuarela
         $data->asistente = $this->userID;
         $data->token = $this->token;
         $resp = $this->queryStrapi("checkins", $data, "POST");
+        
+        // Invalidate attendance cache
+        if($this->daycareID) {
+             // Lista de asistencia general
+            $this->invalidateStrapiCache("children?daycare=" . $this->daycareID); 
+            // Si la vista de asistencia usa otra query específica, agregarla aquí.
+            // Por ejemplo si hay un endpoint de 'attendance'.
+            // También invalidar el detalle del niño si se muestra el estado
+             if (isset($data->child)) {
+                $childId = is_object($data->child) ? $data->child->id : $data->child;
+                $this->invalidateStrapiCache("children/$childId");
+             }
+        }
         return $resp;
     }
 
@@ -769,6 +782,15 @@ class Acuarela
         $data->asistente = $this->userID;
         $data->token = $this->token;
         $resp = $this->queryStrapi("checkouts", $data, "POST");
+        
+        // Invalidate attendance cache
+        if($this->daycareID) {
+            $this->invalidateStrapiCache("children?daycare=" . $this->daycareID);
+             if (isset($data->child)) {
+                $childId = is_object($data->child) ? $data->child->id : $data->child;
+                $this->invalidateStrapiCache("children/$childId");
+             }
+        }
         return $resp;
     }
     function transformMergeVars($vars)

@@ -67,9 +67,7 @@ if ($update) {
     }
 
     // Auditoría
-        'new_status' => $status,
-        'admin_id' => $_SESSION['user']->acuarelauser->id ?? 'system'
-    ]);
+
     SecurityAuditLogger::log('ferpa_status_change', SecurityAuditLogger::SEVERITY_INFO, [
         'request_id' => $id,
         'new_status' => $status
