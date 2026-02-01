@@ -76,9 +76,7 @@ try {
 
         $a->updateFerpaRequest($id, $updateData);
 
-            'record_type' => $recordType,
-            'record_ref' => $recordRef,
-        ]);
+
         SecurityAuditLogger::log('ferpa_correction_rejected', SecurityAuditLogger::SEVERITY_WARN, ['request_id' => $id]);
 
         echo json_encode(['success' => true, 'message' => 'Solicitud de corrección rechazada']);
@@ -114,9 +112,7 @@ try {
     ]);
 
     // 6) Auditoría
-        'record_type' => $recordType,
-        'record_ref' => $recordRef,
-    ]);
+
     SecurityAuditLogger::log('ferpa_correction_approved', SecurityAuditLogger::SEVERITY_INFO, ['request_id' => $id]);
 
     // 7) Notificación al padre (igual filosofía que update_ferpa_status)
