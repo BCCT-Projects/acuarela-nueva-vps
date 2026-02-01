@@ -20,10 +20,12 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser)) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Login required']));
 }
-$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
+$userObj = $_SESSION['user'] ?? $_SESSION['userAll'] ?? null;
+$userRole = $userObj->acuarelauser->rols[0]->rol ?? '';
+error_log("DEBUG ROLE DEBUG: " . $userRole);
 if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
     http_response_code(403);
-    die(json_encode(['success' => false, 'message' => 'No autorizado']));
+    die(json_encode(['success' => false, 'message' => 'No autorizado. Rol actual: ' . $userRole]));
 }
 
 $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_STRING);
