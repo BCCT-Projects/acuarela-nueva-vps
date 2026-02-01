@@ -256,7 +256,7 @@ if ($activeDaycare) {
     // Inicializar filtro/paginación al cargar
     document.addEventListener('DOMContentLoaded', function () {
         filterTable('all');
-    }
+    });
 
     // ----- Filtrado + Paginación (Cliente) -----
     function filterTable(filterType) {
