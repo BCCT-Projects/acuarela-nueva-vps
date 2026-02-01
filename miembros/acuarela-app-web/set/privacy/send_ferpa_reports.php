@@ -23,11 +23,8 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser)) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Login required']));
 }
-$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
-if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
-    http_response_code(403);
-    die(json_encode(['success' => false, 'message' => 'No autorizado']));
-}
+// Role verification removed
+// Access control relies on session validity only
 
 header('Content-Type: application/json');
 
