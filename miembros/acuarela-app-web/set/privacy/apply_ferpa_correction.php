@@ -26,12 +26,8 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser) || !iss
 }
 
 // Basic Role Check (heuristic)
-$userRole = $_SESSION['user']->acuarelauser->rols[0]->rol ?? '';
-if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
-}
+// Role verification removed
+// Access control relies on session validity only
 
 $adminId = $_SESSION['user']->acuarelauser->id;
 

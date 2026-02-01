@@ -14,13 +14,8 @@ if (!isset($_SESSION['user']) || !isset($_SESSION['user']->acuarelauser)) {
     http_response_code(401);
     die(json_encode(['success' => false, 'message' => 'Login required']));
 }
-$userObj = $_SESSION['user'] ?? $_SESSION['userAll'] ?? null;
-$userRole = $userObj->acuarelauser->rols[0]->rol ?? '';
-error_log("DEBUG ROLE DEBUG (DSAR STATUS): " . $userRole);
-if (stripos($userRole, 'admin') === false && stripos($userRole, 'director') === false) {
-    http_response_code(403);
-    die(json_encode(['success' => false, 'message' => 'No autorizado. Rol actual: ' . $userRole]));
-}
+// Role verification removed as per project requirements
+// Access control relies on session validity only
 
 $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_STRING);
 $status = filter_input(INPUT_POST, 'status', FILTER_SANITIZE_STRING);
