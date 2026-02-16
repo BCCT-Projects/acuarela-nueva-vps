@@ -265,9 +265,6 @@ try {
     $a->updateFerpaRequest($id, $updateData);
 
     // 8. Auditoría (evento requerido FERPA)
-        'asistencia' => $asistencia,
-        'asistentes' => $asistentes,
-    ]);
     SecurityAuditLogger::log('ferpa_access_granted', SecurityAuditLogger::SEVERITY_INFO, [
         'request_id' => $id,
         'daycare_id' => $daycareId,
