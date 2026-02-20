@@ -6,9 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile.production
     container_name: acuarela-web-prod
-    ports:
-      - "80:80"
-      - "443:443"
+    # IMPORTANTE: Los puertos 80 y 443 fueron removidos de este archivo.
+    # Ahora Nginx Proxy Manager se encargará de recibirlos internamente.
     volumes:
       # Logs (Apache + App Audit)
       - ./logs:/var/log/apache2:rw
@@ -27,11 +26,12 @@ services:
     restart: always
     networks:
       - acuarela-network
+      - web-proxy
     labels:
       - "com.acuarela.environment=production"
       - "com.acuarela.version=1.0.0"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-k", "-f", "https://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -45,6 +45,8 @@ services:
 networks:
   acuarela-network:
     driver: bridge
+  web-proxy:
+    external: true
 
 volumes:
   php_sessions:
