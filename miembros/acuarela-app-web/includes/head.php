@@ -37,6 +37,7 @@ if (!$foundDaycare && !empty($daycares) && isset($daycares[0])) {
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
   <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
   <link rel="stylesheet" href="css/acuarela_theme.css?v=3.0" />
   <link rel="stylesheet" href="css/styles.css?v=3.0" />
   <link rel="shortcut icon" href="img/favicon.png" />
