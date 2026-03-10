@@ -144,7 +144,10 @@ echo '</script>';
             <!-- <a href="/miembros/acuarela-app-web/visitas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 7 ? 'active':''?>"><i class="acuarela acuarela-Familia"></i>Visitas</a> -->
             <a href="/miembros/acuarela-app-web/privacy_requests" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 10 ? 'active':''?>"><i class="acuarela acuarela-Candado"></i><span>Privacidad</span></a>
             <hr />
-            <a href="/miembros/acuarela-app-web/configuracion" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 8 ? 'active':''?>"><span data-translate="26">Configuración</span></a>
+            <a href="/miembros/acuarela-app-web/configuracion" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 8 ? 'active':''?>"><i class="acuarela acuarela-Configuracion"></i><span data-translate="26">Configuración</span></a>
+            <?php if (isset($classBody) && $classBody == 'social'): ?>
+                <a href="javascript:;" id="btn-tutorial-social"><i class="acuarela acuarela-Informacion"></i><span>Tutorial</span></a>
+            <?php endif; ?>
 
     </nav>
 </aside>
