@@ -1,39 +1,91 @@
 <?php
+/**
+ * Crea un precio dinámico en Stripe para un pago
+ *
+ * Variables de entorno requeridas en .env:
+ * - STRIPE_SECRET_KEY: API key secreta de Stripe
+ * - STRIPE_PAYMENT_PRODUCT_ID: ID del producto en Stripe (opcional, tiene default)
+ */
+
+require_once __DIR__ . "/../includes/env.php";
+
+header('Content-Type: application/json');
 
 $price = filter_input(INPUT_GET, 'price', FILTER_VALIDATE_INT);
 
-if (!$price) {
+if (!$price || $price <= 0) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid or missing price']);
     exit;
 }
 
-$curl = curl_init();
+// Obtener configuración desde variables de entorno
+$stripeSecretKey = Env::get('STRIPE_SECRET_KEY');
+$productId = Env::get('STRIPE_PAYMENT_PRODUCT_ID');
 
-$postFields = http_build_query([
-    'currency' => 'usd',
-    'unit_amount' => $price,
-    'product' => 'prod_SBV7HsrQ041w1d'
-]);
+if (!$stripeSecretKey) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Stripe configuration missing: STRIPE_SECRET_KEY']);
+    exit;
+}
 
-curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://api.stripe.com/v1/prices',
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 0,
-  CURLOPT_FOLLOWLOCATION => true,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => 'POST',
-  CURLOPT_POSTFIELDS => $postFields,
-  CURLOPT_HTTPHEADER => array(
-    'Content-Type: application/x-www-form-urlencoded',
-    'Authorization: Basic c2tfdGVzdF9KYUl2UWt3dG5ueFBNNmlRdk5rNGQ1cE06',
-    'Cookie: __stripe_orig_props=%7B%22referrer%22%3A%22%22%2C%22landing%22%3A%22https%3A%2F%2Fconnect.stripe.com%2Foauth%2Ftoken%22%7D; machine_identifier=0FXpLjSpMr3Bs9TLr4WamiG5Tqf9cAJsmDqVUU1RoxvF2tVtWz%2BbCOieS58gb1JcTuI%3D; private_machine_identifier=Ji0fuiTWsbsOhxrsLIHEbCHub%2Frs%2BPdVMil8Y7XzuWKnkvxsYnFSaFitD%2FA71zjqEzo%3D; stripe.csrf=OYTGzVGESkbclt9AI7irdF3kBIcHiaafHc0UxNjzMyP05QONoMxUg8qZi6ABtlQeYNhhCOkYbtikbXgDxXAKRzw-AYTZVJyjxoTKser7pzHxx1xCbwP-r0cykh3JTEYi9mho75XLUg%3D%3D'
-  ),
-));
+if (!$productId) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Stripe configuration missing: STRIPE_PAYMENT_PRODUCT_ID. Create a product first using s/createproduct.php']);
+    exit;
+}
 
-$response = curl_exec($curl);
+try {
+    $curl = curl_init();
 
-curl_close($curl);
-echo $response;
+    $postFields = http_build_query([
+        'currency' => 'usd',
+        'unit_amount' => $price,
+        'product' => $productId
+    ]);
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://api.stripe.com/v1/prices',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => $postFields,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization: Bearer ' . $stripeSecretKey
+        ]
+    ]);
+
+    $response = curl_exec($curl);
+    $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($curlError) {
+        error_log("Stripe API cURL Error (createPrices): " . $curlError);
+        http_response_code(500);
+        echo json_encode(['error' => 'Error connecting to Stripe: ' . $curlError]);
+        exit;
+    }
+
+    $responseData = json_decode($response, true);
+
+    if ($httpCode >= 400) {
+        error_log("Stripe API Error (createPrices): " . $response);
+        http_response_code($httpCode);
+        echo json_encode(['error' => $responseData['error']['message'] ?? 'Unknown Stripe error']);
+        exit;
+    }
+
+    echo $response;
+
+} catch (Exception $e) {
+    error_log("Error creating price: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Error interno del servidor']);
+}

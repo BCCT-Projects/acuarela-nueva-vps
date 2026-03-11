@@ -5490,27 +5490,24 @@ async function handleAddMovement(event) {
 
     const result = await response.json();
     document.querySelector("#addInvoiceForm button").innerHTML = "Agregar";
-    // Process each category asynchronously
+    // Monto del pago en centavos (sin calcular comisiones - eso lo hace el backend)
     let price = document.querySelector("#amount").value * 100;
-    let commission = price * 0.029 + 30;
-    let tax = price - commission - 50;
-    let finalAmount = Math.round(tax); // o Math.floor() si quieres truncar
     try {
       const requestOptions = {
         method: "GET",
         redirect: "follow",
       };
 
-      // Paso 2: Crear precios
+      // Paso 2: Crear precio en Stripe
       const pricesResponse = await fetch(
         `s/createPrices/?price=${price}`,
         requestOptions
       );
       const prices = await pricesResponse.json();
 
-      // Paso 3: Crear enlace de pago
+      // Paso 3: Crear enlace de pago (el backend maneja application_fee automáticamente)
       const paymentLinkResponse = await fetch(
-        `s/createPaymentLink/?id=${prices.id}&tax=${finalAmount}`,
+        `s/createPaymentLink/?id=${prices.id}&amount=${price}`,
         requestOptions
       );
       const result = await paymentLinkResponse.json();

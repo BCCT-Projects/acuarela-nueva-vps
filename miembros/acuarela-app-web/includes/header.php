@@ -5,10 +5,16 @@
 $suscripciones = isset($a->daycareInfo) && isset($a->daycareInfo->suscriptions) ? $a->daycareInfo->suscriptions : [];
 // Crear un array con los IDs de las suscripciones
 $suscripcionIds = [];
+$isProUser = false;
+$validProIdsContext = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"]; // IDs de los planes anual y mensual
+
 if (is_array($suscripciones) || is_object($suscripciones)) {
     foreach ($suscripciones as $suscripcion) {
         if (isset($suscripcion->service->id)) {
             $suscripcionIds[] = $suscripcion->service->id;
+            if (in_array($suscripcion->service->id, $validProIdsContext)) {
+                $isProUser = true;
+            }
         }
     }
 }
@@ -98,9 +104,16 @@ echo '</script>';
             <div class="profile__txt">
                 <h2><?= $_SESSION["userAll"]->name ?>     <?= $_SESSION["userAll"]->lastname ?></h2>
                 <p><?= $_SESSION["userAll"]->acuarelauser->rols[0]->rol ?></p>
-                <p>Daycare: <strong
+                <p style="margin-bottom: 5px;">Daycare: <strong
                         id="daycareName"><?= isset($foundDaycare) && isset($foundDaycare->name) ? $foundDaycare->name : (isset($_SESSION["user"]->daycares[0]) && isset($_SESSION["user"]->daycares[0]->name) ? $_SESSION["user"]->daycares[0]->name : 'No disponible') ?></strong>
                 </p>
+                <div style="margin-top: 8px;">
+                    <?php if (isset($isProUser) && $isProUser): ?>
+                        <span style="background-color: #00A099; color: white; padding: 4px 18px; border-radius: 8px; font-size: 1rem; font-weight: 900; display: inline-block; letter-spacing: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">PRO</span>
+                    <?php else: ?>
+                        <span style="background-color: #98A2B7; color: white; padding: 4px 18px; border-radius: 8px; font-size: 1rem; font-weight: 900; display: inline-block; letter-spacing: 1px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">LITE</span>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
         <nav>
@@ -138,7 +151,7 @@ echo '</script>';
                     class="<?= isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active' : '' ?>"><i
                         class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span></a>
             <?php } else { ?>
-                <a href="javascript:;" id="lightbox-finanzas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active':''?>"><i class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span> <div class="badge">PRO</div></a>
+                <a href="javascript:;" id="lightbox-finanzas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active':''?>"><i class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span></a>
             <?php } ?>
             <a href="/miembros/acuarela-app-web/inspeccion" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 6 ? 'active':''?>"><i class="acuarela acuarela-Pago"></i><span data-translate="85">Inspección</span></a>
             <!-- <a href="/miembros/acuarela-app-web/visitas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 7 ? 'active':''?>"><i class="acuarela acuarela-Familia"></i>Visitas</a> -->
