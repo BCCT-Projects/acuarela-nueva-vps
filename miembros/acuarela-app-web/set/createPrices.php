@@ -1,6 +1,15 @@
 <?php
 /**
- * Crea un precio dinámico en Stripe para un pago
+ * @deprecated Este archivo ya no se usa.
+ *
+ * Se ha reemplazado por el uso de price_data en createPaymentLink.php
+ * que crea precios "al vuelo" sin contaminar el catálogo de Stripe.
+ *
+ * ANTES: Se creaba un precio permanente en Stripe (contaminaba el catálogo)
+ * AHORA: Se usa price_data para crear precios dinámicos en una sola llamada
+ *
+ * Este archivo se mantiene solo como referencia histórica.
+ * No eliminar por si se necesita revertir en el futuro.
  *
  * Variables de entorno requeridas en .env:
  * - STRIPE_SECRET_KEY: API key secreta de Stripe

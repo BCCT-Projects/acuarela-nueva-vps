@@ -1,6 +1,6 @@
 <?php
 /**
- * Crea una sesión de Checkout en Stripe con application_fee
+ * Crea una sesión de Checkout en Stripe con application_fee usando price_data
  *
  * Este archivo implementa el cobro de comisiones usando Stripe Connect
  * de la forma correcta:
@@ -8,8 +8,10 @@
  * - Acuarela recibe su comisión automáticamente (application_fee)
  * - Stripe cobra su comisión aparte
  *
- * IMPORTANTE: Usamos Checkout Session en lugar de Payment Links porque
- * Payment Links NO soportan application_fee directamente.
+ * IMPORTANTE:
+ * - Usamos Checkout Session en lugar de Payment Links porque Payment Links NO soportan application_fee directamente.
+ * - Usamos price_data en lugar de price para crear precios "al vuelo" sin contaminar el catálogo de Stripe.
+ *   Esto es ideal para facturas con montos arbitrarios y dinámicos (cada pago es diferente).
  *
  * Variables de entorno requeridas en .env:
  * - STRIPE_SECRET_KEY: API key secreta de Stripe
@@ -17,19 +19,18 @@
  * - APP_URL: URL base de la aplicación para callbacks
  */
 
-session_start();
+require_once __DIR__ . "/../includes/config.php";
 require_once __DIR__ . "/../includes/env.php";
-include "../includes/sdk.php";
 
 header('Content-Type: application/json');
 
-// Obtener parámetros
-$priceId = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS);
+// Obtener parámetros - ahora recibimos concepto y monto directamente (no priceId)
+$concept = filter_input(INPUT_GET, 'concept', FILTER_SANITIZE_SPECIAL_CHARS); // Concepto del pago
 $amount = filter_input(INPUT_GET, 'amount', FILTER_VALIDATE_INT); // Monto en centavos
 
-if (!$priceId || $amount === false || $amount <= 0) {
+if (!$concept || $amount === false || $amount <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid or missing parameters (id, amount)']);
+    echo json_encode(['error' => 'Invalid or missing parameters (concept, amount)']);
     exit;
 }
 
@@ -43,9 +44,15 @@ if (!$stripeSecretKey) {
     exit;
 }
 
-// Obtener el idStripe del daycare actual y verificar tipo de cuenta
-$a = new Acuarela();
+// $a ya está definido por config.php
 $daycareInfo = $a->daycareInfo;
+
+// Validar que el daycareID esté disponible
+if (empty($a->daycareID) || empty($daycareInfo)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'No hay un daycare activo seleccionado']);
+    exit;
+}
 
 // Determinar si el usuario es PRO (sin comisión) o LITE (con comisión)
 // IDs de los planes PRO: anual y mensual
@@ -62,10 +69,19 @@ if (is_array($suscripciones) || is_object($suscripciones)) {
     }
 }
 
-// Aplicar comisión solo a usuarios LITE
-// PRO: $0.00 (sin comisión)
-// LITE: $0.50 (comisión por transacción)
-$applicationFee = $isProUser ? 0 : (int) Env::get('STRIPE_APPLICATION_FEE', 50);
+// Calcular comisión total
+// PRO: Solo comisión de Stripe (2.9% + 30 centavos)
+// LITE: Comisión de Acuarela ($0.50) + comisión de Stripe (2.9% + 30 centavos)
+//
+// Fórmula: application_fee = comisión_acuarela + (monto * 0.029 + 30)
+// - Stripe cobra: 2.9% + 30 centavos por transacción
+// - Acuarela cobra: 50 centavos adicionales (solo LITE)
+$acuarelaFee = $isProUser ? 0 : (int)Env::get('STRIPE_APPLICATION_FEE', 50); // $0.50 para LITE, $0 para PRO
+$stripeFee = round($amount * 0.029) + 30; // 2.9% + 30 centavos
+$applicationFee = $acuarelaFee + $stripeFee;
+
+// Log para debug (opcional, puede eliminarse en producción)
+error_log("Fee calculation - Amount: $amount, Acuarela: $acuarelaFee, Stripe: $stripeFee, Total: $applicationFee, IsPRO: " . ($isProUser ? 'Yes' : 'No'));
 
 if (!isset($daycareInfo->paypal->client_id) || empty($daycareInfo->paypal->client_id)) {
     http_response_code(400);
@@ -84,12 +100,19 @@ try {
     // - Se crea en la plataforma (sin Stripe-Account header)
     // - payment_intent_data.application_fee_amount: comisión para la plataforma
     // - payment_intent_data.transfer_data.destination: cuenta conectada que recibe el pago
+    // - price_data: crea el precio al vuelo sin guardarlo en el catálogo de Stripe
     $params = [
         'mode' => 'payment',
         'line_items' => [
             [
-                'price' => $priceId,
-                'quantity' => 1
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => 'usd',
+                    'unit_amount' => $amount,
+                    'product_data' => [
+                        'name' => $concept
+                    ]
+                ]
             ]
         ],
         'payment_intent_data' => [
@@ -147,7 +170,8 @@ try {
     // Retornar la respuesta de Stripe (incluye url para el checkout)
     echo $response;
 
-} catch (Exception $e) {
+}
+catch (Exception $e) {
     error_log("Error creating checkout session: " . $e->getMessage());
     http_response_code(500);
     echo json_encode(['error' => 'Error interno del servidor']);

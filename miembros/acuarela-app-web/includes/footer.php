@@ -103,7 +103,7 @@
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 <script src="js/validator.js?v=3.0"></script>
 <script src="js/utils.js?v=3.0"></script>
-<script src="js/main.js?v=3.1"></script>
+<script src="js/main.js?v=3.4"></script>
 <script src="js/translate.js?v=3.0"></script>
 <script src="js/tutorial.js"></script>
 </body>
