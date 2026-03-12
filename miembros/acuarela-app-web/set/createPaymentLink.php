@@ -98,8 +98,8 @@ try {
                 'destination' => $idStripe
             ]
         ],
-        'success_url' => $appUrl . '/miembros/acuarela-app-web/finanzas?payment=success&session_id={CHECKOUT_SESSION_ID}',
-        'cancel_url' => $appUrl . '/miembros/acuarela-app-web/finanzas?payment=cancelled',
+        'success_url' => $appUrl . '/finanzas?payment=success&session_id={CHECKOUT_SESSION_ID}',
+        'cancel_url' => $appUrl . '/finanzas?payment=cancelled',
         'allow_promotion_codes' => 'false',
         'billing_address_collection' => 'required'
     ];

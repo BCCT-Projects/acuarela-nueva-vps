@@ -42,8 +42,8 @@ try {
     // Crear enlace de onboarding
     $account_link = $stripe->accountLinks->create([
         'account' => $connectedAccountId,
-        'return_url' => "{$appUrl}/miembros/acuarela-app-web/return-to-app.php?id={$connectedAccountId}",
-        'refresh_url' => "{$appUrl}/miembros/acuarela-app-web/marketplace/",
+        'return_url' => "{$appUrl}/return-to-app.php?id={$connectedAccountId}",
+        'refresh_url' => "{$appUrl}/marketplace/",
         'type' => 'account_onboarding',
     ]);
 
