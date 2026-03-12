@@ -5436,144 +5436,105 @@ function handleAddCategories(event, type) {
     });
 }
 
-function createInvoice() {
-  document.querySelector("#addInvoiceForm .content").style.display = "none";
-  document.querySelector("#addInvoiceForm .advert").style.display = "block";
-  let name = document.querySelector("#addInvoiceForm #payer_name").value;
-  let amount = document.querySelector("#addInvoiceForm #amount").value;
-  document.querySelector(".advert span.name").innerHTML = name;
-  document.querySelector(".advert span.amount").innerHTML = amount;
+// Función para copiar el link de pago al portapapeles
+function copyPaymentLink() {
+  const linkInput = document.querySelector("#generatedPaymentLink");
+  linkInput.select();
+  document.execCommand("copy");
+  Toastify({
+    text: "Link copiado al portapapeles",
+    duration: 3000,
+    gravity: "top",
+    position: "right",
+    backgroundColor: "#3fb072",
+  }).showToast();
 }
-const sendPendingNotification = (linkDePago) => {
-  let amount = document.querySelector("#addInvoiceForm #amount").value;
-  let payEm = document.querySelector("#addInvoiceForm #payer_email").value;
-  const myHeaders = new Headers();
 
-  const formdata = new FormData();
-  formdata.append("email", `${payEm}`);
-  formdata.append("link", `${linkDePago}`);
-  formdata.append("amount", `${amount}`);
-
-  const requestOptions = {
-    method: "POST",
-    headers: myHeaders,
-    body: formdata,
-    redirect: "follow",
-  };
-
-  fetch(
-    "https://bilingualchildcaretraining.com/s/pendingMovementsEmail/",
-    requestOptions
-  )
-    .then((response) => response.json())
-    .then((result) => {
-      return true;
-    })
-    .catch((error) => {
-      return false;
-    });
-};
+// Función para resetear el formulario de factura
+function resetInvoiceForm() {
+  document.querySelector("#addInvoiceForm .content").style.display = "block";
+  document.querySelector("#addInvoiceForm .payment-result").style.display = "none";
+  document.querySelector("#addInvoiceForm").reset();
+}
 async function handleAddMovement(event) {
-  document.querySelector("#addInvoiceForm button").innerHTML = "Guardando...";
-  event.preventDefault(); // Prevent the form from reloading the page
+  const submitBtn = document.querySelector("#addInvoiceForm button[type='submit']");
+  const originalText = submitBtn.innerHTML;
+  submitBtn.innerHTML = "Generando link...";
+  submitBtn.disabled = true;
+  event.preventDefault();
 
-  // Function to send each category to the server
   const formdata = new FormData();
-  formdata.append("name", document.querySelector("#name").value); // Assuming `category` is the name
-  formdata.append("payer_name", document.querySelector("#payer_name").value); // Replace "gasto" with dynamic type if needed
-  formdata.append("date", document.querySelector("#date").value); // Replace "gasto" with dynamic type if needed
-  formdata.append("amount", document.querySelector("#amount").value); // Replace "gasto" with dynamic type if needed
+  formdata.append("name", document.querySelector("#name").value);
+  formdata.append("date", document.querySelector("#date").value);
+  formdata.append("amount", document.querySelector("#amount").value);
+
   try {
+    // Paso 1: Crear el registro del pago pendiente
     const response = await fetch("s/createPayLink/", {
       method: "POST",
       body: formdata,
     });
 
     if (!response.ok) {
-      throw new Error(`Error al enviar la categoría: ${category}`);
+      throw new Error("Error al crear el registro de pago");
     }
 
     const result = await response.json();
-    document.querySelector("#addInvoiceForm button").innerHTML = "Agregar";
-    // Monto del pago en centavos (sin calcular comisiones - eso lo hace el backend)
-    let price = document.querySelector("#amount").value * 100;
-    try {
-      const requestOptions = {
-        method: "GET",
-        redirect: "follow",
-      };
 
-      // Paso 2: Crear precio en Stripe
-      const pricesResponse = await fetch(
-        `s/createPrices/?price=${price}`,
-        requestOptions
-      );
-      const prices = await pricesResponse.json();
+    // Monto del pago en centavos
+    let price = parseFloat(document.querySelector("#amount").value) * 100;
 
-      // Paso 3: Crear enlace de pago (el backend maneja application_fee automáticamente)
-      const paymentLinkResponse = await fetch(
-        `s/createPaymentLink/?id=${prices.id}&amount=${price}`,
-        requestOptions
-      );
-      const result = await paymentLinkResponse.json();
+    // Paso 2: Crear precio en Stripe
+    const pricesResponse = await fetch(`s/createPrices/?price=${price}`, {
+      method: "GET",
+      redirect: "follow",
+    });
+    const prices = await pricesResponse.json();
 
-      // Mostrar el resultado en la interfaz
-      sendPendingNotification(result.url);
-      console.log("Enlace de pago creado:", result);
-    } catch (error) {
-      console.error("Error al crear el enlace de pago:", error);
-    }
-    document.querySelector("#addInvoiceForm .content").style.display = "block";
-    document.querySelector("#addInvoiceForm .advert").style.display = "none";
-    fadeOut(document.querySelector("#lightbox-newInvoice"));
+    // Paso 3: Crear enlace de pago
+    const paymentLinkResponse = await fetch(
+      `s/createPaymentLink/?id=${prices.id}&amount=${price}`,
+      { method: "GET", redirect: "follow" }
+    );
+    const paymentResult = await paymentLinkResponse.json();
+
+    // Mostrar el link de pago en la interfaz
+    const paymentLink = paymentResult.url;
+    document.querySelector("#generatedPaymentLink").value = paymentLink;
+    document.querySelector("#openPaymentLink").href = paymentLink;
+
+    // Cambiar vista
+    document.querySelector("#addInvoiceForm .content").style.display = "none";
+    document.querySelector("#addInvoiceForm .payment-result").style.display = "block";
+
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+
+    Toastify({
+      text: "Link de pago generado exitosamente",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#3fb072",
+    }).showToast();
+
+    console.log("Enlace de pago creado:", paymentLink);
   } catch (error) {
-    console.error(`Error Movement:`, error);
-    throw error; // To ensure Promise.all catches this error
+    console.error("Error al crear el enlace de pago:", error);
+    submitBtn.innerHTML = originalText;
+    submitBtn.disabled = false;
+    Toastify({
+      text: "Error al generar el link de pago",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#eb5d5e",
+    }).showToast();
   }
 }
-const getChildrenPagos = async () => {
-  try {
-    const response = await fetch(`g/getChildren/`);
-    const res = await response.json();
-    const children = res.response;
-
-    const payerNameSelect = document.querySelector("#payer_name");
-
-    // Limpiar opciones previas por si se ejecuta más de una vez
-    payerNameSelect.innerHTML = "";
-
-    children.forEach((kid) => {
-      const principal = kid.acuarelausers.find((user) => user.is_principal);
-      if (principal) {
-        const option = document.createElement("option");
-        option.value = principal.id;
-        option.dataset.name = principal.name;
-        option.dataset.email = principal.mail;
-        option.textContent = kid.name;
-        payerNameSelect.appendChild(option);
-      }
-    });
-
-    // Solo un listener, fuera del bucle
-    payerNameSelect.addEventListener("change", (e) => {
-      const selectedOption = e.target.selectedOptions[0];
-      document.querySelector("#payer").value =
-        selectedOption.dataset.name || "";
-      document.querySelector("#payer_email").value =
-        selectedOption.dataset.email || "";
-    });
-
-    fadeOut(preloader);
-  } catch (error) {
-    console.error("Error fetching children:", error);
-  }
-};
 
 // Pop up crear publicación
 document.addEventListener("DOMContentLoaded", () => {
-  if (document.querySelector("#payer_name")) {
-    getChildrenPagos();
-  }
   // Obtener los elementos del DOM
   const postModal = document.getElementById("postModal");
   const openModalButton = document.getElementById("openModalButton");
@@ -6046,11 +6007,6 @@ document.addEventListener("DOMContentLoaded", () => {
   getGrupos();
   getInfoNewGroup();
   getInfoNewAsistente();
-  if (document.querySelector("#createInvoice")) {
-    document
-      .querySelector("#createInvoice")
-      .addEventListener("click", createInvoice);
-  }
 });
 const organizeTasks = (tasks) => {
   const today = new Date().toISOString().split("T")[0]; // Obtiene la fecha actual en formato YYYY-MM-DD
