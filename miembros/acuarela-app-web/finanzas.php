@@ -10,6 +10,22 @@ $text = array("0" => "PAGO RECHAZADO", "1" => "PAGO APROBADO", "2" => "PAGO PEND
 $color = array("0" => "#eb5d5e", "1" => "#3fb072", "2" => "#f5aa16");
 $categories = $a->getCategories();
 
+// Verificar tipo de cuenta para mostrar información de comisiones
+$validProIdsFinanzas = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"];
+$isProUserFinanzas = false;
+$suscripcionesFinanzas = isset($a->daycareInfo->suscriptions) ? $a->daycareInfo->suscriptions : [];
+if (is_array($suscripcionesFinanzas) || is_object($suscripcionesFinanzas)) {
+    foreach ($suscripcionesFinanzas as $suscripcion) {
+        if (isset($suscripcion->service->id) && in_array($suscripcion->service->id, $validProIdsFinanzas)) {
+            $isProUserFinanzas = true;
+            break;
+        }
+    }
+}
+
+// Verificar si el daycare tiene cuenta Stripe vinculada
+$hasStripeAccount = isset($a->daycareInfo->idStripe) && !empty($a->daycareInfo->idStripe);
+
 $gastosCat = [];
 $ingresosCat = [];
 
@@ -57,6 +73,67 @@ $balance = $ingresosTotal - $gastosTotal;
     $action = '';
     include "templates/sectionHeader.php";
     ?>
+
+    <?php if (!$hasStripeAccount): ?>
+        <!-- Modal para vincular cuenta Stripe -->
+        <div id="modal-stripe-required" class="lightbox" style="display: flex; opacity: 1; visibility: visible; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; justify-content: center; align-items: center;">
+            <div class="lightbox-content" style="background: white; border-radius: 16px; padding: 0; max-width: 480px; width: 90%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+                <!-- Header con gradiente -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+                    <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                        <i class="acuarela acuarela-Pago" style="font-size: 36px; color: white;"></i>
+                    </div>
+                    <h2 style="color: white; margin: 20px 0 10px 0; font-size: 1.8rem;">Activa los Pagos Electrónicos</h2>
+                    <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 1.2rem;">Para usar Finanzas necesitas vincular tu cuenta de Stripe</p>
+                </div>
+                <!-- Contenido -->
+                <div style="padding: 25px;">
+                    <div style="background: #f8fafc; border-radius: 12px; padding: 22px; margin-bottom: 20px;">
+                        <h4 style="margin: 0 0 18px 0; color: #1e293b; font-size: 1.25rem;">¿Qué necesitas?</h4>
+                        <ul style="margin: 0; padding: 0; list-style: none;">
+                            <li style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; color: #475569; font-size: 1.1rem;">
+                                <span style="color: #667eea; font-size: 1.2rem;">✓</span> Cuenta bancaria de tu daycare
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px; color: #475569; font-size: 1.1rem;">
+                                <span style="color: #667eea; font-size: 1.2rem;">✓</span> Información fiscal del negocio
+                            </li>
+                            <li style="display: flex; align-items: center; gap: 12px; color: #475569; font-size: 1.1rem;">
+                                <span style="color: #667eea; font-size: 1.2rem;">✓</span> 5 minutos para completar el registro
+                            </li>
+                        </ul>
+                    </div>
+                    <?php if (!$isProUserFinanzas): ?>
+                    <div style="background: #fffbeb; border-left: 4px solid #f5aa16; padding: 16px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
+                        <p style="margin: 0; color: #92400e; font-size: 1.1rem; line-height: 1.6;">
+                            <strong>Cuenta LITE:</strong> Se aplicará una comisión de $0.50 USD por cada pago recibido.
+                            <a href="/miembros/acuarela-app-web/configuracion#planes" style="color: #d97706; text-decoration: underline;">Actualiza a PRO</a> para no tener comisiones.
+                        </p>
+                    </div>
+                    <?php endif; ?>
+                    <div style="display: flex; gap: 12px;">
+                        <a href="/miembros/acuarela-app-web/configuracion#metodos" class="btn btn-action-primary enfasis" style="flex: 1; text-align: center; padding: 16px; font-size: 1.1rem;">
+                            <i class="acuarela acuarela-Configuracion"></i> Configurar pagos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php else: ?>
+        <?php if ($isProUserFinanzas): ?>
+            <!-- Usuario PRO - Sin comisión - Banner compacto -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; margin-bottom: 20px; border-radius: 8px; background: #f0fdfa; border-left: 4px solid #00A099;">
+                <i class="acuarela acuarela-Verificado" style="font-size: 22px; color: #00A099;"></i>
+                <span style="color: #115e59; font-size: 1rem;"><strong>Cuenta PRO:</strong> Sin comisiones de Acuarela en tus pagos</span>
+            </div>
+        <?php else: ?>
+            <!-- Usuario LITE - Con comisión - Banner compacto -->
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; margin-bottom: 20px; border-radius: 8px; background: #fffbeb; border-left: 4px solid #f5aa16;">
+                <i class="acuarela acuarela-Informacion" style="font-size: 22px; color: #d97706;"></i>
+                <span style="color: #92400e; font-size: 1rem;"><strong>Cuenta LITE:</strong> Comisión de $0.50 USD por pago</span>
+                <a href="/miembros/acuarela-app-web/configuracion#planes" style="margin-left: auto; color: #d97706; font-size: 0.95rem; text-decoration: underline; font-weight: 600;">Actualizar a PRO</a>
+            </div>
+        <?php endif; ?>
+
     <div class="navtabs">
         <div class="navtab active" data-target="reporte">Reporte contable</div>
         <div class="navtab" data-target="ingresos">Ingresos</div>
@@ -474,6 +551,7 @@ $balance = $ingresosTotal - $gastosTotal;
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
 </main>
 <?php include "includes/footer.php" ?>

@@ -1,4 +1,18 @@
-<?php $classBody ="newasistente"; include "includes/header.php"; ?>
+<?php $classBody ="newasistente"; include "includes/header.php"; 
+// Bloqueo si alcanzó el límite en LITE
+$asistentesArray = $a->getAsistentes();
+$totalAsistentes = 0;
+if(isset($asistentesArray->response)) {
+    $totalAsistentes = count($asistentesArray->response);
+} else if (is_array($asistentesArray)) {
+    $totalAsistentes = count($asistentesArray);
+}
+
+if (!$isProUser && $totalAsistentes >= 2) {
+    echo "<script>alert('Has alcanzado el límite de 2 asistentes en tu plan LITE. Actualiza a PRO para agregar más.'); window.location.href='/miembros/acuarela-app-web/asistentes';</script>";
+    exit;
+}
+?>
 <main>
     <form action="s/addAsistente/" id="createAsistente" method="POST">
         <?php

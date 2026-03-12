@@ -73,7 +73,7 @@
                         </p>
                     </div>
                 </div>
-                <? } ?>
+                <?php } ?>
             </div>
         </section>
     </main>

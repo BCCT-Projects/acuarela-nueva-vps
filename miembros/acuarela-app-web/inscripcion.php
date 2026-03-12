@@ -1,7 +1,23 @@
 <?php
 $classBody = "inscripcion";
 include "includes/header.php";
+
+$inscripcionesInfo = $a->getInscripciones();
+$totalInscripciones = 0;
+if(isset($inscripcionesInfo->response)) {
+    $totalInscripciones = count($inscripcionesInfo->response);
+} else if (is_array($inscripcionesInfo)) {
+    $totalInscripciones = count($inscripcionesInfo);
+}
+
 $inscripcion_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+
+// Bloqueo si alcanzó el límite en LITE y no se encuentra editando
+if (!$isProUser && !$inscripcion_id && $totalInscripciones >= 16) {
+    echo "<script>alert('Has alcanzado el límite de 16 niñxs en tu plan LITE. Actualiza a PRO para agregar ilimitados.'); window.location.href='/miembros/acuarela-app-web/inscripciones';</script>";
+    exit;
+}
+
 $inscripcion = $inscripcion_id ? $a->getInscripciones($inscripcion_id) : "";
 ?>
 <main>

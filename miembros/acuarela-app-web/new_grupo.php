@@ -1,4 +1,18 @@
-<?php $classBody ="newgroup"; include "includes/header.php"; ?>
+<?php $classBody ="newgroup"; include "includes/header.php"; 
+// Bloqueo si alcanzó el límite en LITE
+$gruposArray = $a->getGrupos();
+$totalGrupos = 0;
+if(isset($gruposArray->response)) {
+    $totalGrupos = count($gruposArray->response);
+} else if (is_array($gruposArray)) {
+    $totalGrupos = count($gruposArray);
+}
+
+if (!$isProUser && $totalGrupos >= 3) {
+    echo "<script>alert('Has alcanzado el límite de 3 grupos en tu plan LITE. Actualiza a PRO para crear más.'); window.location.href='/miembros/acuarela-app-web/grupos';</script>";
+    exit;
+}
+?>
 <main >
     <form action="s/createGroup/" method="POST" id="createGroup">
         <?php
