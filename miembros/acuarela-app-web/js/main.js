@@ -1642,31 +1642,23 @@ function validarSuscripcion() {
 }
 
 // Al hacer clic en el botón de finanzas
+// Finanzas ahora disponible para todos los usuarios (LITE con comisión, PRO sin comisión)
 const finanzas_lightbox = document.getElementById("lightbox-finanzas");
 if (finanzas_lightbox) {
   finanzas_lightbox.addEventListener("click", function (event) {
-    if (validarSuscripcion()) {
-      // Si el ID es correcto, redirigir a la página de finanzas
-      window.location.href = "/miembros/acuarela-app-web/finanzas";
-    } else {
-      // Si no, mostrar el lightbox
-      showLightboxFinanzas();
-    }
+    // Todos los usuarios tienen acceso a finanzas
+    // LITE: con comisión de $0.50 por transacción
+    // PRO: sin comisión
+    window.location.href = "/miembros/acuarela-app-web/finanzas";
   });
 }
 
 // Validar acceso al cargar la página directamente
+// Finanzas ahora disponible para todos los usuarios (LITE con comisión, PRO sin comisión)
+// Se eliminó el bloqueo que vaciaba la página y mostraba el modal de "necesitas PRO"
 document.addEventListener("DOMContentLoaded", function () {
-  const mainFinanzas = document.getElementById("Finanzas");
-
-  if (window.location.href.includes("/miembros/acuarela-app-web/finanzas")) {
-    if (!validarSuscripcion()) {
-      if (mainFinanzas) {
-        mainFinanzas.innerHTML = ""; // Limpiar el contenido de <main id="Finanzas">
-      }
-      showLightboxFinanzas();
-    }
-  }
+  // Ya no se valida la suscripción para acceder a finanzas
+  // El banner informativo de comisión se muestra en finanzas.php
 });
 
 //================> APARTADO EMERGENCIA <===================
@@ -3531,6 +3523,19 @@ if (tabs.length > 0) {
 
   window.addEventListener("resize", updateUnderline);
   updateUnderline();
+
+  // Handle URL hash to activate specific tab on page load
+  function activateTabFromHash() {
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      const targetTab = document.querySelector(`.navtab[data-target="${hash}"]`);
+      if (targetTab) {
+        targetTab.click();
+      }
+    }
+  }
+  activateTabFromHash();
+  window.addEventListener("hashchange", activateTabFromHash);
 }
 
 if (document.querySelector(".actividadescontainer")) {
@@ -5883,16 +5888,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-  const mainFinanzas = document.getElementById("Finanzas");
-
-  if (window.location.href.includes("/miembros/acuarela-app-web/finanzas")) {
-    if (!validarSuscripcion()) {
-      if (mainFinanzas) {
-        mainFinanzas.innerHTML = ""; // Limpiar el contenido de <main id="Finanzas">
-      }
-      showLightboxFinanzas();
-    }
-  }
+  // Finanzas ahora disponible para todos (LITE con comisión, PRO sin comisión)
+  // Se eliminó el bloqueo de acceso
   if (
     document.querySelector(".message") &&
     !localStorage.getItem("noMoreMessage")

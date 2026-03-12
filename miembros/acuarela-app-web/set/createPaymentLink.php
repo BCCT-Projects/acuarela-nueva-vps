@@ -35,7 +35,6 @@ if (!$priceId || $amount === false || $amount <= 0) {
 
 // Obtener configuración desde variables de entorno
 $stripeSecretKey = Env::get('STRIPE_SECRET_KEY');
-$applicationFee = (int) Env::get('STRIPE_APPLICATION_FEE', 50); // Default: 50 centavos = $0.50
 $appUrl = Env::get('APP_URL', 'https://bilingualchildcaretraining.com');
 
 if (!$stripeSecretKey) {
@@ -44,9 +43,29 @@ if (!$stripeSecretKey) {
     exit;
 }
 
-// Obtener el idStripe del daycare actual
+// Obtener el idStripe del daycare actual y verificar tipo de cuenta
 $a = new Acuarela();
 $daycareInfo = $a->daycareInfo;
+
+// Determinar si el usuario es PRO (sin comisión) o LITE (con comisión)
+// IDs de los planes PRO: anual y mensual
+$validProIds = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"];
+$isProUser = false;
+
+$suscripciones = isset($daycareInfo->suscriptions) ? $daycareInfo->suscriptions : [];
+if (is_array($suscripciones) || is_object($suscripciones)) {
+    foreach ($suscripciones as $suscripcion) {
+        if (isset($suscripcion->service->id) && in_array($suscripcion->service->id, $validProIds)) {
+            $isProUser = true;
+            break;
+        }
+    }
+}
+
+// Aplicar comisión solo a usuarios LITE
+// PRO: $0.00 (sin comisión)
+// LITE: $0.50 (comisión por transacción)
+$applicationFee = $isProUser ? 0 : (int) Env::get('STRIPE_APPLICATION_FEE', 50);
 
 if (!isset($daycareInfo->idStripe) || empty($daycareInfo->idStripe)) {
     http_response_code(400);

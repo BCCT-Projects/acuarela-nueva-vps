@@ -1,7 +1,7 @@
 # Implementación de Stripe Connect - Módulo de Finanzas
 
 **Fecha:** Marzo 2026
-**Versión:** 2.0
+**Versión:** 2.3
 **Estado:** Implementado
 
 ---
@@ -9,21 +9,22 @@
 ## Tabla de Contenidos
 
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
-2. [Estado Anterior (Problemas)](#estado-anterior-problemas)
-3. [Estado Actual (Solución)](#estado-actual-solución)
-4. [Arquitectura del Sistema](#arquitectura-del-sistema)
-5. [Variables de Entorno](#variables-de-entorno)
-6. [Flujo de Pagos](#flujo-de-pagos)
-7. [Archivos Modificados](#archivos-modificados)
-8. [Guía de Configuración](#guía-de-configuración)
-9. [Guía de Pruebas](#guía-de-pruebas)
-10. [Troubleshooting](#troubleshooting)
+2. [Modelo de Comisiones LITE vs PRO](#modelo-de-comisiones-lite-vs-pro)
+3. [Estado Anterior (Problemas)](#estado-anterior-problemas)
+4. [Estado Actual (Solución)](#estado-actual-solución)
+5. [Arquitectura del Sistema](#arquitectura-del-sistema)
+6. [Variables de Entorno](#variables-de-entorno)
+7. [Flujo de Pagos](#flujo-de-pagos)
+8. [Archivos Modificados](#archivos-modificados)
+9. [Guía de Configuración](#guía-de-configuración)
+10. [Guía de Pruebas](#guía-de-pruebas)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Resumen Ejecutivo
 
-Se implementó una solución correcta de Stripe Connect con `application_fee` para que Acuarela pueda cobrar automáticamente su comisión de $0.50 USD por cada transacción procesada a través de la plataforma.
+Se implementó una solución correcta de Stripe Connect con `application_fee` para que Acuarela pueda cobrar automáticamente su comisión por cada transacción procesada a través de la plataforma.
 
 ### Cambios Principales
 
@@ -32,6 +33,81 @@ Se implementó una solución correcta de Stripe Connect con `application_fee` pa
 - ✅ Variables de entorno configurables
 - ✅ Uso de Checkout Session (en lugar de Payment Links)
 - ✅ Documentación completa
+- ✅ **Nuevo:** Modelo de comisiones diferenciado LITE vs PRO
+
+---
+
+## Modelo de Comisiones LITE vs PRO
+
+### Resumen
+
+| Tipo de Cuenta | Acceso a Finanzas | Comisión por Transacción |
+|----------------|-------------------|--------------------------|
+| **LITE** (Gratis) | ✅ Sí | $0.50 USD |
+| **PRO** (Pagada) | ✅ Sí | $0.00 USD (Sin comisión) |
+
+### IDs de Planes PRO
+
+```php
+$validProIds = [
+    "66df29c33f91241d635ae818",  // Plan PRO Anual
+    "66dfcce23f91241d635ae934"   // Plan PRO Mensual
+];
+```
+
+### Cómo Funciona
+
+1. **Verificación de Cuenta**: El sistema verifica las suscripciones del daycare en `createPaymentLink.php`
+2. **Aplicación de Comisión**:
+   - Si el usuario tiene plan PRO → `application_fee_amount = 0`
+   - Si el usuario es LITE → `application_fee_amount = 50` ($0.50)
+
+### Ejemplo de Distribución
+
+#### Usuario LITE - Pago de $100
+
+```
+Padre paga: $100.00
+    │
+    ├─▶ Stripe retiene: $3.20 (2.9% + $0.30)
+    │
+    ├─▶ Acuarela recibe: $0.50 (application_fee)
+    │
+    └─▶ Daycare recibe: $96.30
+```
+
+#### Usuario PRO - Pago de $100
+
+```
+Padre paga: $100.00
+    │
+    ├─▶ Stripe retiene: $3.20 (2.9% + $0.30)
+    │
+    ├─▶ Acuarela recibe: $0.00 (sin comisión)
+    │
+    └─▶ Daycare recibe: $96.80 (más dinero)
+```
+
+### Código de Verificación
+
+```php
+// Determinar si el usuario es PRO
+$validProIds = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"];
+$isProUser = false;
+
+$suscripciones = isset($daycareInfo->suscriptions) ? $daycareInfo->suscriptions : [];
+if (is_array($suscripciones) || is_object($suscripciones)) {
+    foreach ($suscripciones as $suscripcion) {
+        if (isset($suscripcion->service->id) && in_array($suscripcion->service->id, $validProIds)) {
+            $isProUser = true;
+            break;
+        }
+    }
+}
+
+// Aplicar comisión según tipo de cuenta
+$applicationFee = $isProUser ? 0 : (int) Env::get('STRIPE_APPLICATION_FEE', 50);
+```
 
 ---
 
@@ -361,17 +437,19 @@ APP_URL=https://bilingualchildcaretraining.com
 
 | Archivo | Cambios |
 |---------|---------|
-| `set/createPaymentLink.php` | Reescrito: usa Checkout Session, application_fee, idStripe dinámico |
+| `set/createPaymentLink.php` | Reescrito: usa Checkout Session, application_fee, idStripe dinámico, comisión solo para LITE |
 | `set/createPrices.php` | Actualizado: usa variables de entorno, validaciones |
 | `set/createproduct.php` | Actualizado: usa variables de entorno, documentación |
 | `marketplace/account.php` | Actualizado: usa variables de entorno, tipo express |
 | `marketplace/account_link.php` | Actualizado: usa variables de entorno, APP_URL dinámico |
+| `includes/header.php` | Acceso a Finanzas habilitado para todos los usuarios (LITE y PRO) |
+| `finanzas.php` | Agregado banner informativo según tipo de cuenta (LITE con comisión, PRO sin comisión) |
 
 ### Archivos JavaScript
 
 | Archivo | Cambios |
 |---------|---------|
-| `js/main.js` | Eliminado cálculo manual de comisiones, usa `amount` completo |
+| `js/main.js` | Eliminado cálculo manual de comisiones, usa `amount` completo. **Eliminado bloqueo de acceso a finanzas para usuarios LITE** - ahora todos pueden acceder (LITE con comisión, PRO sin comisión) |
 
 ### Archivos de Configuración
 
@@ -608,6 +686,9 @@ Payment: $100.00
 
 | Fecha | Versión | Cambios |
 |-------|---------|---------|
+| Mar 2026 | 2.3 | Eliminado bloqueo de acceso a finanzas en js/main.js para usuarios LITE. Ahora todos tienen acceso (LITE con comisión, PRO sin comisión) |
+| Mar 2026 | 2.2 | Agregado mensaje informativo en Finanzas según tipo de cuenta (LITE/PRO) |
+| Mar 2026 | 2.1 | Modelo de comisiones LITE vs PRO. Comisión solo para usuarios LITE ($0.50), PRO sin comisión. |
 | Mar 2026 | 2.0 | Implementación completa con application_fee |
 | - | 1.0 | Versión inicial (con problemas) |
 

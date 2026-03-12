@@ -136,23 +136,13 @@ echo '</script>';
                 class="<?= isset($_GET['activeTab']) && $_GET['activeTab'] == 9 ? 'active' : '' ?>"><i
                     class="acuarela acuarela-Checklist"></i><span data-translate="193">Administrador de tareas</span></a>
             <?php
-            $validIds = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"];
-
-            $result = [];
-            if (is_array($suscripciones) || is_object($suscripciones)) {
-                $result = array_filter($suscripciones, function ($suscripcion) use ($validIds) {
-                    return isset($suscripcion->service->id) && in_array($suscripcion->service->id, $validIds);
-                });
-            }
-
-            $foundSubscription = reset($result);
-            if ($foundSubscription) { ?>
-                <a href="/miembros/acuarela-app-web/finanzas"
-                    class="<?= isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active' : '' ?>"><i
-                        class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span></a>
-            <?php } else { ?>
-                <a href="javascript:;" id="lightbox-finanzas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active':''?>"><i class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span></a>
-            <?php } ?>
+            // Finanzas ahora disponible para todos los usuarios
+            // LITE: con comisión de $0.50 por transacción
+            // PRO: sin comisión
+            ?>
+            <a href="/miembros/acuarela-app-web/finanzas"
+                class="<?= isset($_GET['activeTab']) && $_GET['activeTab'] == 5 ? 'active' : '' ?>"><i
+                    class="acuarela acuarela-Finanzas"></i><span data-translate="53">Finanzas</span></a>
             <a href="/miembros/acuarela-app-web/inspeccion" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 6 ? 'active':''?>"><i class="acuarela acuarela-Pago"></i><span data-translate="85">Inspección</span></a>
             <!-- <a href="/miembros/acuarela-app-web/visitas" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 7 ? 'active':''?>"><i class="acuarela acuarela-Familia"></i>Visitas</a> -->
             <a href="/miembros/acuarela-app-web/privacy_requests" class="<?=isset($_GET['activeTab']) && $_GET['activeTab'] == 10 ? 'active':''?>"><i class="acuarela acuarela-Candado"></i><span>Privacidad</span></a>
