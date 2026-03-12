@@ -116,16 +116,16 @@
       <?php }else{ ?>
       <!-- Cuenta Stripe ya vinculada -->
       <div style="max-width: 550px; margin: 0 auto; padding: 10px;">
-        <div style="background: linear-gradient(135deg, #00A099 0%, #007a75 100%); border-radius: 16px; overflow: hidden;">
-          <div style="padding: 30px; text-align: center;">
-            <div style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto;">
-              <i class="acuarela acuarela-Verificado" style="font-size: 28px; color: white;"></i>
+        <div style="background: linear-gradient(135deg, #00A099 0%, #007a75 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0, 160, 153, 0.4);">
+          <div style="padding: 40px; text-align: center;">
+            <div style="background: rgba(255,255,255,0.25); border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);">
+              <i class="acuarela acuarela-Verificado" style="font-size: 34px; color: white;"></i>
             </div>
-            <img src="img/stripeLogo.png?v=1" alt="Stripe" style="height: 30px; filter: brightness(0) invert(1); margin-bottom: 10px;" />
-            <h3 style="color: white; margin: 0 0 8px 0; font-size: 1.2rem;">¡Todo listo!</h3>
-            <p style="color: rgba(255,255,255,0.9); margin: 0 0 20px 0; font-size: 0.9rem;">Tu cuenta de Stripe está vinculada correctamente</p>
-            <a href="/miembros/acuarela-app-web/finanzas" class="btn btn-action-primary enfasis btn-big" style="background: white; color: #00A099;">
-              <i class="acuarela acuarela-Finanzas"></i> Ir a Finanzas
+            <img src="img/stripeLogo.png?v=1" alt="Stripe" style="height: 38px; filter: brightness(0) invert(1); margin-bottom: 25px;" />
+            <h3 style="color: white; margin: 0 0 12px 0; font-size: 1.6rem; font-weight: bold;">¡Todo listo!</h3>
+            <p style="color: rgba(255,255,255,0.95); margin: 0 0 30px 0; font-size: 1.1rem; line-height: 1.5;">Tu cuenta de Stripe está vinculada correctamente y lista para operar.</p>
+            <a href="/miembros/acuarela-app-web/finanzas" class="btn btn-action-primary enfasis btn-big" style="background: white; color: #00A099; padding: 16px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: none; text-decoration: none;">
+              <i class="acuarela acuarela-Finanzas" style="font-size: 22px;"></i> Ir a Finanzas
             </a>
           </div>
         </div>

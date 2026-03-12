@@ -122,15 +122,15 @@ $balance = $ingresosTotal - $gastosTotal;
         <?php if ($isProUserFinanzas): ?>
             <!-- Usuario PRO - Sin comisión - Banner compacto -->
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; margin-bottom: 20px; border-radius: 8px; background: #f0fdfa; border-left: 4px solid #00A099;">
-                <i class="acuarela acuarela-Verificado" style="font-size: 22px; color: #00A099;"></i>
-                <span style="color: #115e59; font-size: 1rem;"><strong>Cuenta PRO:</strong> Sin comisiones de Acuarela en tus pagos</span>
+                <i class="acuarela acuarela-Verificado" style="font-size: 26px; color: #00A099;"></i>
+                <span style="color: #115e59; font-size: 1.25rem;"><strong>Cuenta PRO:</strong> Sin comisiones de Acuarela en tus pagos</span>
             </div>
         <?php else: ?>
             <!-- Usuario LITE - Con comisión - Banner compacto -->
             <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; margin-bottom: 20px; border-radius: 8px; background: #fffbeb; border-left: 4px solid #f5aa16;">
-                <i class="acuarela acuarela-Informacion" style="font-size: 22px; color: #d97706;"></i>
-                <span style="color: #92400e; font-size: 1rem;"><strong>Cuenta LITE:</strong> Comisión de $0.50 USD por pago</span>
-                <a href="/miembros/acuarela-app-web/configuracion#planes" style="margin-left: auto; color: #d97706; font-size: 0.95rem; text-decoration: underline; font-weight: 600;">Actualizar a PRO</a>
+                <i class="acuarela acuarela-Informacion" style="font-size: 26px; color: #d97706;"></i>
+                <span style="color: #92400e; font-size: 1.25rem;"><strong>Cuenta LITE:</strong> Comisión de $0.50 USD por pago</span>
+                <a href="/miembros/acuarela-app-web/configuracion#planes" style="margin-left: auto; color: #d97706; font-size: 1.15rem; text-decoration: underline; font-weight: 600;">Actualizar a PRO</a>
             </div>
         <?php endif; ?>
 
@@ -489,49 +489,46 @@ $balance = $ingresosTotal - $gastosTotal;
             <div id="lightbox-newInvoice" class="lightbox">
                 <div class="lightbox-content">
                     <form id="addInvoiceForm" onsubmit="handleAddMovement(event)">
-                        <h3>Nueva Factura</h3>
+                        <h3>Nueva Solicitud de Pago</h3>
                         <div class="content">
                             <span>
                                 <i class="acuarela acuarela-Pago"></i>
                                 <label for="name">Concepto de pago</label>
-                                <input type="text" name="name" id="name" />
-                            </span>
-                            <span>
-                                <i class="acuarela acuarela-Usuario"></i>
-                                <label for="payer_name">¿Quién realiza el pago?</label>
-                                <select name="payer_name" id="payer_name">
-                                    <option value="">Seleccionar un niñx</option>
-                                </select>
-                                <input type="hidden" name="payer" id="payer">
-                                <input type="hidden" name="payer_email" id="payer_email">
+                                <input type="text" name="name" id="name" placeholder="Ej: Matrícula enero 2024" required />
                             </span>
                             <span>
                                 <i class="acuarela acuarela-Evento"></i>
-                                <label for="date">Fecha</label>
-                                <input type="date" name="date" id="date" />
+                                <label for="date">Fecha límite</label>
+                                <input type="date" name="date" id="date" required />
                             </span>
                             <span>
                                 <i class="acuarela acuarela-Ingresos"></i>
-                                <label for="amount">Valor a pagar</label>
-                                <input type="text" name="amount" id="amount" />
+                                <label for="amount">Valor a pagar (USD)</label>
+                                <input type="number" step="0.01" min="0.01" name="amount" id="amount" placeholder="0.00" required />
                             </span>
-                            <button type="button" id="createInvoice" class="btn btn-action-primary enfasis btn-big">Crear pago</button>
+                            <button type="submit" id="createInvoice" class="btn btn-action-primary enfasis btn-big">Generar link de pago</button>
                         </div>
-                        <div class="advert" style="display:none;">
-                            <h3>Vas a generar un cobro por concepto de <span class="amount"></span>
-                                USD al padre de <span class="name"></span></h3>
-                            <p>¿Deseas confirmar este cobro?</p>
-                            <a href="" target="_blank" class="paymentLink"></a>
-                            <div class="flex-btn">
-                                <button type="submit" class="btn btn-action-primary enfasis btn-big">Si,
-                                    confirmar</button>
-                                <button type="button" onclick="fadeOut(document.querySelector('#lightbox-newInvoice'))" class="btn btn-action-primary enfasis btn-big danger">No,
-                                    cancelar</button>
+                        <div class="payment-result" style="display:none;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <i class="acuarela acuarela-Verificado" style="font-size: 48px; color: #3fb072;"></i>
+                                <h3 style="margin-top: 10px;">Link de pago generado</h3>
+                            </div>
+                            <p style="margin-bottom: 15px; color: #a0aec0;">Comparte este link con quien deba realizar el pago:</p>
+                            <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                                <input type="text" id="generatedPaymentLink" readonly style="flex: 1; background: transparent; border: none; color: #00A099; font-size: 14px; outline: none;" />
+                                <button type="button" onclick="copyPaymentLink()" style="background: #00A099; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                    <i class="acuarela acuarela-Copiar" style="font-size: 16px;"></i>
+                                    Copiar
+                                </button>
+                            </div>
+                            <div class="flex-btn" style="gap: 10px;">
+                                <button type="button" onclick="fadeOut(document.querySelector('#lightbox-newInvoice')); resetInvoiceForm();" class="btn btn-action-primary enfasis btn-big">Cerrar</button>
+                                <a id="openPaymentLink" href="" target="_blank" class="btn btn-action-secondary enfasis btn-big" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Abrir link</a>
                             </div>
                         </div>
                     </form>
                     <button id="activities-close-button"
-                        onclick="fadeOut(document.querySelector('#lightbox-newInvoice'))" class="lightbox-button">
+                        onclick="fadeOut(document.querySelector('#lightbox-newInvoice')); resetInvoiceForm();" class="lightbox-button">
                         <!-- SVG content as provided -->
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="16" cy="16" r="15.5" stroke="#E1E4E9" />
