@@ -24,7 +24,7 @@ if (is_array($suscripcionesFinanzas) || is_object($suscripcionesFinanzas)) {
 }
 
 // Verificar si el daycare tiene cuenta Stripe vinculada
-$hasStripeAccount = isset($a->daycareInfo->idStripe) && !empty($a->daycareInfo->idStripe);
+$hasStripeAccount = isset($a->daycareInfo->paypal->client_id) && !empty($a->daycareInfo->paypal->client_id);
 
 $gastosCat = [];
 $ingresosCat = [];

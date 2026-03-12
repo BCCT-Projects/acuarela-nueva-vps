@@ -67,13 +67,13 @@ if (is_array($suscripciones) || is_object($suscripciones)) {
 // LITE: $0.50 (comisión por transacción)
 $applicationFee = $isProUser ? 0 : (int) Env::get('STRIPE_APPLICATION_FEE', 50);
 
-if (!isset($daycareInfo->idStripe) || empty($daycareInfo->idStripe)) {
+if (!isset($daycareInfo->paypal->client_id) || empty($daycareInfo->paypal->client_id)) {
     http_response_code(400);
     echo json_encode(['error' => 'Daycare no tiene cuenta Stripe vinculada. Configure los pagos en Configuración.']);
     exit;
 }
 
-$idStripe = $daycareInfo->idStripe;
+$idStripe = $daycareInfo->paypal->client_id;
 
 try {
     // Crear Checkout Session con application_fee

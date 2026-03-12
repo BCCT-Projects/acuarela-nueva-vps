@@ -41,8 +41,8 @@ if (!$stripeAccountId) {
         if (empty($a->daycareID)) {
             $error = "No se pudo determinar el Daycare ID";
         } else {
-            // Guardar el idStripe
-            $data = ['idStripe' => $stripeAccountId];
+            // Guardar el idStripe en la estructura del componente paypal
+            $data = ['paypal' => ['client_id' => $stripeAccountId, 'isset' => true]];
             $result = $a->updateDaycareInfo($data);
 
             if ($result && (isset($result->id) || isset($result->response) || isset($result->data))) {

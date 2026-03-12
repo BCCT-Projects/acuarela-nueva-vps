@@ -1,6 +1,6 @@
 <?php $classBody = "stripeConfig";
 include "includes/header.php";
-$a->updateDaycareInfo(['idStripe'=>$_GET["stripeid"]]);
+$a->updateDaycareInfo(['paypal' => ['client_id' => $_GET["stripeid"], 'isset' => true]]);
 ?>
 <main>
   <div class="content">

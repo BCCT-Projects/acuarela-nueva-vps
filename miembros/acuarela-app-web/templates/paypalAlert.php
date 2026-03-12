@@ -1,5 +1,5 @@
-<?php 
- if(!isset($a->daycareInfo->idStripe) || $a->daycareInfo->idStripe == ""){
+ <?php 
+ if(!isset($a->daycareInfo->paypal->client_id) || empty($a->daycareInfo->paypal->client_id)){
 
 if($foundSubscription){
 ?>

@@ -52,7 +52,7 @@
       </div>
     </div>
     <div id="metodos" class="tab-content">
-      <?php if(!isset($a->daycareInfo) || !isset($a->daycareInfo->idStripe) || $a->daycareInfo->idStripe == ""){ ?>
+      <?php if(!isset($a->daycareInfo) || !isset($a->daycareInfo->paypal->client_id) || empty($a->daycareInfo->paypal->client_id)){ ?>
       <!-- Sin cuenta Stripe vinculada - Diseño mejorado -->
       <div style="max-width: 550px; margin: 0 auto; padding: 10px;">
         <!-- Card principal con gradiente -->
