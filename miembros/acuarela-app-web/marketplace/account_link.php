@@ -32,6 +32,7 @@ try {
     $json = file_get_contents('php://input');
     $data = json_decode($json);
     $connectedAccountId = $data->account ?? null;
+    $daycareId = $data->daycare ?? null;
 
     if (!$connectedAccountId) {
         http_response_code(400);
@@ -39,11 +40,18 @@ try {
         exit;
     }
 
+    // Construir URL de retorno con daycare ID si está disponible
+    // Esto permite guardar el idStripe incluso si la sesión PHP se pierde
+    $returnUrl = "{$appUrl}/return-to-app.php?id={$connectedAccountId}";
+    if ($daycareId) {
+        $returnUrl .= "&daycare={$daycareId}";
+    }
+
     // Crear enlace de onboarding
     $account_link = $stripe->accountLinks->create([
         'account' => $connectedAccountId,
-        'return_url' => "{$appUrl}/return-to-app.php?id={$connectedAccountId}",
-        'refresh_url' => "{$appUrl}/marketplace/",
+        'return_url' => $returnUrl,
+        'refresh_url' => "{$appUrl}/configuracion#metodos",
         'type' => 'account_onboarding',
     ]);
 
