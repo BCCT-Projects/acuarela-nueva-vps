@@ -5450,11 +5450,54 @@ function copyPaymentLink() {
   }).showToast();
 }
 
+// Función genérica para copiar cualquier texto al portapapeles
+function copyToClipboard(text, button) {
+  navigator.clipboard.writeText(text).then(() => {
+    // Cambiar temporalmente el texto del botón
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="acuarela acuarela-Verificado"></i> ¡Copiado!';
+    button.disabled = true;
+
+    Toastify({
+      text: "Link copiado al portapapeles",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#3fb072",
+    }).showToast();
+
+    // Restaurar el botón después de 2 segundos
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }, 2000);
+  }).catch(err => {
+    console.error("Error al copiar: ", err);
+    Toastify({
+      text: "Error al copiar el link",
+      duration: 3000,
+      gravity: "top",
+      position: "right",
+      backgroundColor: "#eb5d5e",
+    }).showToast();
+  });
+}
+
 // Función para resetear el formulario de factura
 function resetInvoiceForm() {
   document.querySelector("#addInvoiceForm .content").style.display = "block";
   document.querySelector("#addInvoiceForm .payment-result").style.display = "none";
   document.querySelector("#addInvoiceForm").reset();
+}
+
+// Función para cerrar el modal y pago y recargar la página
+function closePaymentModalAndReload() {
+  fadeOut(document.querySelector('#lightbox-newInvoice'));
+  document.querySelector("#addInvoiceForm .content").style.display = "block";
+  document.querySelector("#addInvoiceForm .payment-result").style.display = "none";
+  document.querySelector("#addInvoiceForm").reset();
+  // Recargar la página para ver el nuevo pago en la lista
+  window.location.reload();
 }
 async function handleAddMovement(event) {
   const submitBtn = document.querySelector("#addInvoiceForm button[type='submit']");
@@ -5463,43 +5506,101 @@ async function handleAddMovement(event) {
   submitBtn.disabled = true;
   event.preventDefault();
 
-  const formdata = new FormData();
-  formdata.append("name", document.querySelector("#name").value);
-  formdata.append("date", document.querySelector("#date").value);
-  formdata.append("amount", document.querySelector("#amount").value);
+  const name = document.querySelector("#name").value;
+  const date = document.querySelector("#date").value;
+  const amount = document.querySelector("#amount").value;
 
   try {
-    // Paso 1: Crear el registro del pago pendiente
+    // Monto del pago en centavos
+    let price = parseFloat(amount) * 100;
+
+    // Crear enlace de pago en Stripe usando price_data (una sola llamada)
+    // El precio se crea "al vuelo" sin guardar en el catálogo de Stripe
+    submitBtn.innerHTML = "Generando link de pago...";
+    const paymentLinkResponse = await fetch(
+      `s/createPaymentLink/?concept=${encodeURIComponent(name)}&amount=${price}`,
+      { method: "GET", redirect: "follow" }
+    );
+    const paymentResult = await paymentLinkResponse.json();
+
+    if (!paymentResult.url) {
+      throw new Error(paymentResult.error || "Error al generar el link de pago");
+    }
+
+    const paymentLink = paymentResult.url;
+    console.log("Link de Stripe generado:", paymentLink);
+
+    // Calcular comisiones para mostrar al usuario
+    const amountCents = price;
+    const stripeFee = Math.round(amountCents * 0.029) + 30; // 2.9% + 30 centavos
+    const acuarelaFeeLITE = 50; // $0.50 para usuarios LITE
+    const totalFee = acuarelaFeeLITE + stripeFee;
+    const netAmount = amountCents - totalFee;
+
+    // Actualizar información de comisiones en el modal (si existe el elemento)
+    const feeInfoEl = document.querySelector("#fee-breakdown");
+    if (feeInfoEl) {
+      const amountUsd = (amountCents / 100).toFixed(2);
+      const stripeFeeUsd = (stripeFee / 100).toFixed(2);
+      const totalFeeUsd = (totalFee / 100).toFixed(2);
+      const netAmountUsd = (netAmount / 100).toFixed(2);
+
+      feeInfoEl.innerHTML = `
+        <div style="background: #1e293b; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #a0aec0;">Monto del pago:</span>
+            <span style="color: white; font-weight: 600;">$${amountUsd} USD</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #a0aec0;">Comisión Stripe (2.9% + $0.30):</span>
+            <span style="color: #f5aa16;">-$${stripeFeeUsd} USD</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #a0aec0;">Comisión Acuarela:</span>
+            <span style="color: #f5aa16;">-$0.50 USD</span>
+          </div>
+          <hr style="border-color: #374151; margin: 10px 0;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #00A099; font-weight: 600;">El daycare recibirá:</span>
+            <span style="color: #00A099; font-weight: 600;">$${netAmountUsd} USD</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Guardar en la base de datos con el link en extra_info
+    submitBtn.innerHTML = "Guardando registro...";
+    const formdata = new FormData();
+    formdata.append("name", name);
+    formdata.append("date", date);
+    formdata.append("amount", amount);
+    formdata.append("payment_link", paymentLink);
+
     const response = await fetch("s/createPayLink/", {
       method: "POST",
       body: formdata,
     });
 
-    if (!response.ok) {
-      throw new Error("Error al crear el registro de pago");
+    const result = await response.json();
+    console.log("Respuesta de createPayLink:", result);
+
+    // Mostrar debug en consola siempre
+    if (result.debug) {
+      console.log("=== DEBUG INFO ===");
+      console.log("Session activeDaycare:", result.debug.session_activeDaycare);
+      console.log("Session user exists:", result.debug.session_user_exists);
+      console.log("SDK daycareID:", result.debug.sdk_daycareID);
+      console.log("Data sent:", result.debug.data_to_save);
+      console.log("==================");
     }
 
-    const result = await response.json();
-
-    // Monto del pago en centavos
-    let price = parseFloat(document.querySelector("#amount").value) * 100;
-
-    // Paso 2: Crear precio en Stripe
-    const pricesResponse = await fetch(`s/createPrices/?price=${price}`, {
-      method: "GET",
-      redirect: "follow",
-    });
-    const prices = await pricesResponse.json();
-
-    // Paso 3: Crear enlace de pago
-    const paymentLinkResponse = await fetch(
-      `s/createPaymentLink/?id=${prices.id}&amount=${price}`,
-      { method: "GET", redirect: "follow" }
-    );
-    const paymentResult = await paymentLinkResponse.json();
+    if (!response.ok || result.error) {
+      const errorMsg = result.error || "Error al guardar el registro en la base de datos";
+      const debugInfo = result.debug ? `\n\nDebug: ${JSON.stringify(result.debug, null, 2)}` : "";
+      throw new Error(errorMsg + debugInfo);
+    }
 
     // Mostrar el link de pago en la interfaz
-    const paymentLink = paymentResult.url;
     document.querySelector("#generatedPaymentLink").value = paymentLink;
     document.querySelector("#openPaymentLink").href = paymentLink;
 
@@ -5511,20 +5612,20 @@ async function handleAddMovement(event) {
     submitBtn.disabled = false;
 
     Toastify({
-      text: "Link de pago generado exitosamente",
+      text: "Link de pago generado y guardado exitosamente",
       duration: 3000,
       gravity: "top",
       position: "right",
       backgroundColor: "#3fb072",
     }).showToast();
 
-    console.log("Enlace de pago creado:", paymentLink);
+    console.log("Pago creado exitosamente:", paymentLink);
   } catch (error) {
     console.error("Error al crear el enlace de pago:", error);
     submitBtn.innerHTML = originalText;
     submitBtn.disabled = false;
     Toastify({
-      text: "Error al generar el link de pago",
+      text: "Error: " + error.message,
       duration: 3000,
       gravity: "top",
       position: "right",

@@ -478,6 +478,22 @@ $balance = $ingresosTotal - $gastosTotal;
                                         $
                                         <?= $pendiente->amount ?>
                                     </span></td>
+                                <td>
+                                    <?php if (!empty($pendiente->extra_info)): ?>
+                                    <div class="payment-link-actions" style="display: flex; gap: 8px;">
+                                        <button type="button" class="btn btn-action-secondary" style="padding: 6px 12px; font-size: 12px;"
+                                            onclick="copyToClipboard('<?= htmlspecialchars($pendiente->extra_info, ENT_QUOTES) ?>', this)"
+                                            title="Copiar link de pago">
+                                            <i class="acuarela acuarela-Copiar"></i> Copiar
+                                        </button>
+                                        <a href="<?= htmlspecialchars($pendiente->extra_info, ENT_QUOTES) ?>" target="_blank"
+                                            class="btn btn-action-primary" style="padding: 6px 12px; font-size: 12px; text-decoration: none;"
+                                            title="Abrir página de pago">
+                                            <i class="acuarela acuarela-Pago"></i> Pagar
+                                        </a>
+                                    </div>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php } ?>
                     <?php
@@ -506,6 +522,22 @@ $balance = $ingresosTotal - $gastosTotal;
                                 <label for="amount">Valor a pagar (USD)</label>
                                 <input type="number" step="0.01" min="0.01" name="amount" id="amount" placeholder="0.00" required />
                             </span>
+                            <?php if (!$isProUserFinanzas): ?>
+                            <div style="background: #fffbeb; border-left: 4px solid #f5aa16; padding: 12px; border-radius: 0 8px 8px 0; margin-bottom: 15px;">
+                                <p style="margin: 0; color: #92400e; font-size: 13px; line-height: 1.5;">
+                                    <strong>Comisiones:</strong> Se aplicarán cargos por el procesamiento del pago.<br>
+                                    • Comisión de Stripe: 2.9% + $0.30 USD<br>
+                                    • Comisión de Acuarela (LITE): $0.50 USD<br>
+                                    <a href="/miembros/acuarela-app-web/configuracion#planes" style="color: #d97706; text-decoration: underline;">Actualiza a PRO</a> para eliminar la comisión de Acuarela.
+                                </p>
+                            </div>
+                            <?php else: ?>
+                            <div style="background: #f0fdfa; border-left: 4px solid #00A099; padding: 12px; border-radius: 0 8px 8px 0; margin-bottom: 15px;">
+                                <p style="margin: 0; color: #115e59; font-size: 13px; line-height: 1.5;">
+                                    <strong>Cuenta PRO:</strong> Solo se aplica la comisión de Stripe (2.9% + $0.30 USD). Sin comisión de Acuarela.
+                                </p>
+                            </div>
+                            <?php endif; ?>
                             <button type="submit" id="createInvoice" class="btn btn-action-primary enfasis btn-big">Generar link de pago</button>
                         </div>
                         <div class="payment-result" style="display:none;">
@@ -513,6 +545,8 @@ $balance = $ingresosTotal - $gastosTotal;
                                 <i class="acuarela acuarela-Verificado" style="font-size: 48px; color: #3fb072;"></i>
                                 <h3 style="margin-top: 10px;">Link de pago generado</h3>
                             </div>
+                            <!-- Desglose de comisiones -->
+                            <div id="fee-breakdown"></div>
                             <p style="margin-bottom: 15px; color: #a0aec0;">Comparte este link con quien deba realizar el pago:</p>
                             <div style="background: #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
                                 <input type="text" id="generatedPaymentLink" readonly style="flex: 1; background: transparent; border: none; color: #00A099; font-size: 14px; outline: none;" />
@@ -522,7 +556,7 @@ $balance = $ingresosTotal - $gastosTotal;
                                 </button>
                             </div>
                             <div class="flex-btn" style="gap: 10px;">
-                                <button type="button" onclick="fadeOut(document.querySelector('#lightbox-newInvoice')); resetInvoiceForm();" class="btn btn-action-primary enfasis btn-big">Cerrar</button>
+                                <button type="button" onclick="closePaymentModalAndReload()" class="btn btn-action-primary enfasis btn-big">Cerrar</button>
                                 <a id="openPaymentLink" href="" target="_blank" class="btn btn-action-secondary enfasis btn-big" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Abrir link</a>
                             </div>
                         </div>

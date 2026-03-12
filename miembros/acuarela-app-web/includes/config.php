@@ -1,4 +1,4 @@
-<?php 
+<?php
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
@@ -15,4 +15,22 @@
     }
     include "sdk.php";
     $a = new Acuarela();
+
+    // Si no hay activeDaycare en sesión pero el usuario tiene daycares, establecer el primero
+    // Esto es necesario para los archivos en /set/ que no cargan head.php
+    if ((!isset($_SESSION['activeDaycare']) || empty($_SESSION['activeDaycare'])) && isset($_SESSION["user"]->daycares)) {
+        $daycares = $_SESSION["user"]->daycares;
+        if (!empty($daycares)) {
+            // Si solo hay un daycare, establecerlo automáticamente
+            if (count($daycares) == 1) {
+                $_SESSION['activeDaycare'] = $daycares[0]->id;
+                $a->setDaycare($daycares[0]->id);
+            } else {
+                // Si hay múltiples daycares, usar el primero por defecto
+                // (el usuario debería haber seleccionado uno en la UI)
+                $_SESSION['activeDaycare'] = $daycares[0]->id;
+                $a->setDaycare($daycares[0]->id);
+            }
+        }
+    }
 ?>
