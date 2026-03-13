@@ -5530,11 +5530,13 @@ async function handleAddMovement(event) {
     const paymentLink = paymentResult.url;
     console.log("Link de Stripe generado:", paymentLink);
 
-    // Calcular comisiones para mostrar al usuario
+    // Obtener comisiones dinámicas del servidor o calcular fallbacks confiables
     const amountCents = price;
-    const stripeFee = Math.round(amountCents * 0.029) + 30; // 2.9% + 30 centavos
-    const acuarelaFeeLITE = 50; // $0.50 para usuarios LITE
-    const totalFee = acuarelaFeeLITE + stripeFee;
+    const stripeFee = paymentResult.stripe_fee !== undefined ? paymentResult.stripe_fee : (Math.round(amountCents * 0.029) + 30);
+    const acuarelaFee = paymentResult.acuarela_fee !== undefined ? paymentResult.acuarela_fee : 50;
+    const isPro = paymentResult.is_pro || acuarelaFee === 0;
+    
+    const totalFee = acuarelaFee + stripeFee;
     const netAmount = amountCents - totalFee;
 
     // Actualizar información de comisiones en el modal (si existe el elemento)
@@ -5542,8 +5544,13 @@ async function handleAddMovement(event) {
     if (feeInfoEl) {
       const amountUsd = (amountCents / 100).toFixed(2);
       const stripeFeeUsd = (stripeFee / 100).toFixed(2);
-      const totalFeeUsd = (totalFee / 100).toFixed(2);
+      const acuarelaFeeUsd = (acuarelaFee / 100).toFixed(2);
       const netAmountUsd = (netAmount / 100).toFixed(2);
+
+      // Si es PRO, mostramos el logro en verde, de lo contrario en naranja
+      const acuarelaColor = isPro ? "#10b981" : "#f5aa16";
+      const acuarelaLabel = isPro ? "Comisión Acuarela (PRO):" : "Comisión Acuarela LITE:";
+      const acuarelaSign = isPro ? "" : "-";
 
       feeInfoEl.innerHTML = `
         <div style="background: #1e293b; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 13px;">
@@ -5556,8 +5563,8 @@ async function handleAddMovement(event) {
             <span style="color: #f5aa16;">-$${stripeFeeUsd} USD</span>
           </div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-            <span style="color: #a0aec0;">Comisión Acuarela:</span>
-            <span style="color: #f5aa16;">-$0.50 USD</span>
+            <span style="color: #a0aec0;">${acuarelaLabel}</span>
+            <span style="color: ${acuarelaColor}; font-weight: ${isPro ? '600' : 'normal'};">${acuarelaSign}$${acuarelaFeeUsd} USD</span>
           </div>
           <hr style="border-color: #374151; margin: 10px 0;">
           <div style="display: flex; justify-content: space-between;">

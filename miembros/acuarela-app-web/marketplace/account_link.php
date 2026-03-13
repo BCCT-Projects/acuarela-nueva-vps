@@ -16,7 +16,12 @@ require_once __DIR__ . '/../includes/env.php';
 header('Content-Type: application/json');
 
 $stripeSecretKey = Env::get('STRIPE_SECRET_KEY');
-$appUrl = Env::get('APP_URL', 'https://bilingualchildcaretraining.com');
+
+// Determinar el protocolo (HTTP o HTTPS) y el dominio actual de forma dinámica
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+$protocol = $isHttps ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$appUrl = "{$protocol}://{$host}/miembros/acuarela-app-web";
 
 if (!$stripeSecretKey) {
     http_response_code(500);
@@ -51,7 +56,7 @@ try {
     $account_link = $stripe->accountLinks->create([
         'account' => $connectedAccountId,
         'return_url' => $returnUrl,
-        'refresh_url' => "{$appUrl}/configuracion#metodos",
+        'refresh_url' => "{$appUrl}/configuracion.php#metodos",
         'type' => 'account_onboarding',
     ]);
 
