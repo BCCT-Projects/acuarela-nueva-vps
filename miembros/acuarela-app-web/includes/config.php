@@ -1,5 +1,8 @@
 <?php
     if (session_status() === PHP_SESSION_NONE) {
+        $lifetime = 28800; // 8 horas en segundos
+        ini_set('session.gc_maxlifetime', $lifetime);
+        session_set_cookie_params($lifetime, '/');
         session_start();
     }
     // Verificar si hay una sesión de usuario iniciada (compatible con ambos sistemas)

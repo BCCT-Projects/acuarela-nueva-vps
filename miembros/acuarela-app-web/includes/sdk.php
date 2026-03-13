@@ -79,7 +79,7 @@ class Acuarela
         // No cachear Social (posts), Privacidad (dsar-requests, ferpa-requests) ni Inspección (checkins, checkouts): contenido muy dinámico
         if ($useCache) {
             $pathPart = (strpos($url, '?') !== false) ? substr($url, 0, strpos($url, '?')) : $url;
-            $noCachePaths = ['posts', 'dsar-requests', 'ferpa-requests', 'checkins', 'checkouts', 'children', 'parental-consents', 'movements'];
+            $noCachePaths = ['posts', 'dsar-requests', 'ferpa-requests', 'checkins', 'checkouts', 'children', 'parental-consents', 'movements', 'daycares'];
             foreach ($noCachePaths as $p) {
                 if ($pathPart === $p || strpos($pathPart, $p . '/') === 0) {
                     $useCache = false;

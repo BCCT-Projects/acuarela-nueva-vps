@@ -273,12 +273,8 @@ $daycareId = $a->daycareID ?? null;
                 connectedAccountId = data.account;
                 showDebug('Account ID: ' + connectedAccountId);
 
-                // Mostrar éxito
-                statusLoading.classList.add('hidden');
-                statusSuccess.classList.remove('hidden');
-                accountIdDisplay.textContent = 'ID: ' + connectedAccountId;
-                accountIdDisplay.classList.remove('hidden');
-                addInfoButton.classList.remove('hidden');
+                // Autoguardado e inmediatamente solicitar el link de onboarding sin pausas
+                getOnboardingLink();
 
             } catch (error) {
                 showDebug('Error: ' + error.message);

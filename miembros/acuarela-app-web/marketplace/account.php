@@ -11,6 +11,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../includes/env.php';
+require_once __DIR__ . '/../includes/config.php'; // Agregado para usar el SDK $a y sesión
 
 header('Content-Type: application/json');
 
@@ -40,6 +41,13 @@ try {
             'created_at' => date('Y-m-d H:i:s')
         ]
     ]);
+
+    // Guardar inmediatamente en la base de datos de Strapi
+    if (isset($a) && !empty($a->daycareID)) {
+        $updateData = ['paypal' => ['client_id' => $account->id, 'isset' => true]];
+        $a->updateDaycareInfo($updateData);
+        $a->invalidateStrapiCache("daycares/{$a->daycareID}");
+    }
 
     echo json_encode([
         'account' => $account->id
