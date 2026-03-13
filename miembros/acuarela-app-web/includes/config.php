@@ -2,7 +2,14 @@
     if (session_status() === PHP_SESSION_NONE) {
         $lifetime = 28800; // 8 horas en segundos
         ini_set('session.gc_maxlifetime', $lifetime);
-        session_set_cookie_params($lifetime, '/');
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+        session_set_cookie_params([
+            'lifetime' => $lifetime,
+            'path' => '/',
+            'secure' => $isHttps, // Proxy-aware HTTPS
+            'httponly' => true,
+            'samesite' => 'Lax' // Previene pérdida de sesión en redirecciones cruzadas
+        ]);
         session_start();
     }
     // Verificar si hay una sesión de usuario iniciada (compatible con ambos sistemas)

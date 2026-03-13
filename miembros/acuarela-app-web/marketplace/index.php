@@ -6,10 +6,8 @@
  * Incluye el daycare ID en las peticiones para asegurar que se guarde correctamente
  */
 
-// Iniciar sesión si no está activa
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Incluir config que maneja la sesión con parámetros correctos (8h, SameSite=Lax)
+require_once __DIR__ . '/../includes/config.php';
 
 // Verificar si hay sesión de usuario
 $hasSession = isset($_SESSION["userLogged"]) || isset($_SESSION["user"]);
@@ -19,9 +17,6 @@ if (!$hasSession) {
     header("Location: /miembros/");
     exit;
 }
-
-// Incluir config para obtener el daycare ID
-require_once __DIR__ . '/../includes/config.php';
 
 // Obtener el daycare ID actual
 $daycareId = $a->daycareID ?? null;

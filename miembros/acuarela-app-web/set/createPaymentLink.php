@@ -36,7 +36,12 @@ if (!$concept || $amount === false || $amount <= 0) {
 
 // Obtener configuración desde variables de entorno
 $stripeSecretKey = Env::get('STRIPE_SECRET_KEY');
-$appUrl = Env::get('APP_URL', 'https://bilingualchildcaretraining.com');
+
+// Construir la URL de la app dinámicamente para evitar redirecciones a dominios incorrectos
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+$protocol = $isHttps ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$appUrl = "{$protocol}://{$host}/miembros/acuarela-app-web";
 
 if (!$stripeSecretKey) {
     http_response_code(500);
@@ -167,8 +172,13 @@ try {
         exit;
     }
 
-    // Retornar la respuesta de Stripe (incluye url para el checkout)
-    echo $response;
+    // Añadir comisiones al resultado para que el frontend las muestre correctamente
+    $responseData['acuarela_fee'] = $acuarelaFee;
+    $responseData['stripe_fee'] = $stripeFee;
+    $responseData['is_pro'] = $isProUser;
+
+    // Retornar la respuesta enriquecida
+    echo json_encode($responseData);
 
 }
 catch (Exception $e) {
