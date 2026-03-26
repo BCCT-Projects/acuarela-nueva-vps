@@ -4,195 +4,177 @@
 
 **Acuarela** es una plataforma SaaS para gestión de daycares (guarderías bilingual). Permite administrar inscripciones, asistencia, grupos, finanzas, inspecciones y más. La aplicación es multi-tenant, donde cada usuario puede tener acceso a múltiples daycares.
 
-## Stack Tecnológico
+---
 
-### Backend
-- **PHP 8.2** (sin framework moderno, código procedural con clases aisladas)
-- **Apache** con mod_rewrite, headers, expires
-- **Composer** para gestión de dependencias
-- **SDK propio** (`includes/sdk.php`) para comunicación con API externa
+## Estructura de Proyectos
 
-### Frontend
-- **JavaScript Vanilla** (sin framework)
-- **jQuery** para manipulación DOM
-- **CSS nativo** (sin preprocesadores)
-- Librerías CDN: Toastify, Splide, Fancybox, Driver.js, Chart.js
-
-### Servicios Externos
-- **AcuarelaCore API**: `https://acuarelacore.com/api/` - API principal
-- **Stripe**: Pagos y suscripciones (SDK en `marketplace/stripe/`)
-- **Mandrill/Mailchimp**: Envío de emails
-- **OpenAI**: Generación de contenido con IA
-- **Zoho CRM**: Gestión de clientes
-- **WordPress**: CMS para contenido estático
-
-### Infraestructura
-- **Docker** con PHP 8.2 + Apache
-- **GitHub Actions** para CI/CD
-- Deploy automático: `dev` → crea PR → `main` → producción
-
-## Estructura de Directorios
+El workspace contiene 3 proyectos relacionados:
 
 ```
-acuarela-nueva-vps/
-├── .github/workflows/          # CI/CD con GitHub Actions
-├── .env                        # Variables de entorno (NO commitear)
-├── .env.example.txt            # Template de variables de entorno
-├── docker-compose.yml          # Desarrollo local
-├── docker-compose.production.yml
-├── Dockerfile                  # PHP 8.2 + Apache
-├── apache-config.conf          # Configuración Apache
-├── admin/                      # WordPress Admin
-├── landing-daycare/            # Landing page independiente
-├── miembros/                   # Aplicación principal
-│   ├── index.php               # Login
-│   ├── cerrar-sesion.php       # Logout
-│   └── acuarela-app-web/       # App principal (área de miembros)
-│       ├── includes/
-│       │   ├── config.php      # Configuración y sesión
-│       │   ├── head.php        # <head> HTML
-│       │   ├── header.php      # Header + navegación
-│       │   ├── footer.php      # Footer
-│       │   └── sdk.php         # SDK para API AcuarelaCore
-│       ├── js/
-│       │   └── main.js         # JavaScript principal (~6000 líneas)
-│       ├── css/
-│       │   ├── styles.css      # Estilos principales
-│       │   └── acuarela_theme.css
-│       ├── img/                # Imágenes estáticas
-│       ├── templates/          # Templates parciales
-│       └── marketplace/        # Integración Stripe
-├── cache/                      # Sistema de caché
-├── logs/                       # Logs de aplicación
-├── certs/                      # Certificados SSL
-└── uploads/                    # Archivos subidos
+Proyecto-acuarela/
+├── acuarela-nueva-vps/     # 🔴 LEGACY - Proyecto actual en producción
+├── acuarela-v2/           # 🟢 NUEVO - Modernización (Next.js + NestJS)
+└── acuarela-superadmin/    # 🔵 STRAPI 3 - Referencia de datos y API
 ```
 
-## Patrones de Código
+### 1. acuarela-nueva-vps/ (Legacy - PHP)
+Proyecto actual en producción. **Solo mantenimiento**, no nuevas features.
 
-### PHP
-- **Sesiones**: Siempre verificar `session_status()` antes de `session_start()`
-- **Autenticación**: Verificar `$_SESSION["userLogged"]` o `$_SESSION["user"]`
-- **SDK**: Usar `$a = new Acuarela()` para interactuar con la API
-- **Includes**: Usar `__DIR__` para rutas relativas
+**Stack:**
+- PHP 8.2 procedural + Apache
+- JavaScript vanilla + jQuery
+- API externa: AcuarelaCore (Strapi 3)
+- Docker + GitHub Actions
 
-```php
-// Ejemplo de página típica
-<?php include __DIR__ . "/includes/config.php"; ?>
-<?php include __DIR__ . "/includes/head.php"; ?>
-<?php include __DIR__ . "/includes/header.php"; ?>
-<!-- Contenido -->
-<?php include __DIR__ . "/includes/footer.php"; ?>
-```
+**Uso:** Referencia para comportamiento actual, diseño visual, flujos de usuario.
 
-### JavaScript
-- Variables globales inyectadas desde PHP: `userMainT`, `daycareActiveId`, `daycares`
-- Usar Toastify para notificaciones
-- AJAX con fetch API o jQuery
+### 2. acuarela 2.0/ (Nuevo - Modernización)
+Proyecto nuevo donde se desarrolla la versión modernizada.
 
-### CSS
-- Clases BEM donde sea posible
-- Iconos con fuente propia: `class="acuarela acuarela-[Nombre]"`
-- Tema oscuro por defecto
+**Stack:**
+- **Backend**: NestJS + TypeORM + PostgreSQL
+- **Frontend**: Next.js 15 (App Router) + shadcn/ui + Tailwind CSS
+- **Infraestructura**: Docker
+
+**Uso:** Todo el desarrollo nuevo va aquí.
+
+### 3. acuarela-superadmin/ (Strapi 3)
+Backend actual con MongoDB. **Referencia para datos y API**.
+
+**Uso:**
+- Estructura de modelos de datos
+- Endpoints de API existentes
+- Lógica de negocio a replicar
+
+---
+
+## Plan de Modernización
+
+Ver detalle completo en: `acuarela-nueva-vps/spec/plan.md`
+
+### Fases
+
+| Fase | Descripción | Estado |
+|------|-------------|--------|
+| 1 | Fundación (NestJS + Next.js + Docker) | 🔄 En progreso |
+| 2 | Página Institucional | ⏳ Pendiente |
+| 3 | Autenticación (bridge con legacy) | ⏳ Pendiente |
+| 4 | Dashboard + Widgets | ⏳ Pendiente |
+| 5 | Configuración | ⏳ Pendiente |
+| 6 | Inscripciones | ⏳ Pendiente |
+| 7 | Asistencia | ⏳ Pendiente |
+| 8 | Grupos | ⏳ Pendiente |
+| 9 | Finanzas (simplificado) | ⏳ Pendiente |
+| 10 | Inspección | ⏳ Pendiente |
+| 11 | Social (chat, imágenes) | ⏳ Pendiente |
+
+### Estrategia de Migración
+
+**Sin migración de datos tradicional.** El portal legacy actúa como "registration authority":
+
+1. Usuario entra al portal legacy (PHP)
+2. Legacy autentica y solicita contraseña (primera vez)
+3. Legacy envía datos al nuevo sistema vía API
+4. Nuevo sistema crea usuario + daycare
+5. Autologin SSO redirige a la nueva plataforma
+
+---
+
+## Identidad Visual
+
+### Paleta de Colores
+
+| Color | Variable | Código | Uso |
+|-------|----------|--------|-----|
+| 🌊 Cielo | `--cielo` | `#0cb5c3` | Primario |
+| 🍉 Sandía | `--sandia` | `#eb5d5e` | Acento/Danger |
+| 🐤 Pollito | `--pollito` | `#f5aa16` | Warning |
+| 💜 Morita | `--morita` | `#8773ae` | Especial |
+| 🌿 Verde | `--secundario1` | `#3fb072` | Success |
+| 🧠 Naranja | `--secundario2` | `#f0862f` | Info |
+| 🌸 Rosa | `--secundario3` | `#e45e9e` | Acento |
+
+### Tipografía
+- **Principal**: Raleway (Google Fonts)
+- **Iconos**: Lucide (shadcn) + fuente propia acuarela
+
+### Estilo
+- Bordes redondeados (0.75rem)
+- Colores pasteles, diseño amigable
+- Sidebar colapsable (257px expandido)
+
+---
+
+## Módulos Principales
+
+| Módulo | Descripción | Complejidad |
+|--------|-------------|-------------|
+| Social | Muro, posts, comentarios, chat | Alta |
+| Inscripciones | CRUD niños, padres, consentimientos | Media |
+| Asistencia | Check-in/out, reportes | Media |
+| Grupos | Clases, asignaciones | Baja |
+| Finanzas | Ingresos/gastos manuales, gráficos | Media |
+| Inspección | Formularios, checklist | Media |
+| Configuración | Daycares, usuarios, roles | Baja |
+
+---
 
 ## Modelo de Suscripción
 
 - **LITE**: Funcionalidad básica (gratuito)
-- **PRO**: Acceso completo (IDs: `66df29c33f91241d635ae818` anual, `66dfcce23f91241d635ae934` mensual)
+- **PRO**: Acceso completo
 
-Verificar con:
-```php
-$validProIds = ["66df29c33f91241d635ae818", "66dfcce23f91241d635ae934"];
-$isProUser = // verificar si tiene suscripción con estos IDs
+---
+
+## Flujo de Autologin (Legacy → Nuevo)
+
+```
+┌─────────────────┐                    ┌─────────────────┐
+│  Portal Legacy  │                    │   Acuarela v2   │
+│    (PHP)        │                    │ (NestJS+Next)   │
+└────────┬────────┘                    └────────┬────────┘
+         │                                      │
+         │  1. Usuario se autentica             │
+         │  2. Primera vez? → solicita pass     │
+         │                                      │
+         │  3. POST /api/legacy/register        │
+         │─────────────────────────────────────▶│
+         │     {email, password, user, daycare} │
+         │                                      │
+         │                        4. Crea registros
+         │                        5. Genera token SSO
+         │                                      │
+         │  6. Redirect con token SSO           │
+         │◀─────────────────────────────────────│
+         │                                      │
+         │  7. Usuario accede con autologin     │
+         │─────────────────────────────────────▶│
 ```
 
-## URLs y Rutas
-
-- **Base de la app**: `/miembros/acuarela-app-web/`
-- **Login**: `/miembros/`
-- **Logout**: `/miembros/cerrar-sesion`
-- **Cambiar daycare**: `/miembros/acuarela-app-web/cambiar-daycare`
-- Las URLs amigables se manejan con `.htaccess`
-
-## Variables de Entorno (.env)
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-OPENAI_API_KEY=
-ZOHO_CLIENT_ID=
-ZOHO_CLIENT_SECRET=
-MANDRILL_API_KEY=
-STRIPE_SECRET_KEY=
-ACUAREACT_APP_ENDPOINT=https://acuarelacore.com/api/
-DATA_ENCRYPTION_KEY=
-RECAPTCHA_SITE_KEY=
-RECAPTCHA_SECRET_KEY=
-APP_URL=
-```
-
-## Flujo de Git
-
-1. **Rama `dev`**: Desarrollo activo
-   - Push a `dev` → Crea/actualiza PR automáticamente
-2. **Rama `main`**: Producción
-   - Merge PR → Deploy automático a producción
-
-### Comandos útiles
-```bash
-# Desarrollo local con Docker
-docker-compose up -d
-
-# Acceder al contenedor
-docker exec -it acuarela-web bash
-
-# Instalar dependencias
-composer install --no-dev --optimize-autoloader
-```
+---
 
 ## Convenciones de Código
 
 ### Nomenclatura
-- **Archivos PHP**: snake_case.php
+- **Archivos**: kebab-case (frontend), camelCase (backend)
 - **Clases**: PascalCase
-- **Funciones/Variables**: camelCase en JS, snake_case en PHP
+- **Funciones/Variables**: camelCase
 - **Constantes**: UPPER_SNAKE_CASE
 
 ### Idioma
-- Código y comentarios: **Inglés**
-- UI y contenido: **Español** (con soporte multiidioma)
-- Usar atributos `data-translate` para traducciones
+- **Código y comentarios**: Inglés
+- **UI y contenido**: Español (con soporte multiidioma)
 
-### Sesiones PHP
-```php
-// Siempre usar este patrón
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-```
+### Git
+- Rama `dev`: Desarrollo activo
+- Rama `main`: Producción
+- Commits en español
 
-## Módulos Principales
-
-| Módulo | URL | Descripción |
-|--------|-----|-------------|
-| Social | `/miembros/acuarela-app-web/` | Muro social |
-| Inscripciones | `/inscripciones` | Gestión de niños |
-| Asistencia | `/asistencia` | Control de asistencia |
-| Asistentes | `/asistentes` | Gestión de personal |
-| Grupos | `/grupos` | Clases y grupos |
-| Finanzas | `/finanzas` | Solo PRO |
-| Inspección | `/inspeccion` | Reportes |
-| Configuración | `/configuracion` | Ajustes |
+---
 
 ## Notas Importantes
 
-1. **No commitear** `.env`, `logs/`, `cache/`, `uploads/`
-2. **SDK**: La clase `Acuarela` en `sdk.php` maneja toda la comunicación con la API externa
-3. **Multi-daycare**: Los usuarios pueden cambiar entre daycares; usar `$a->daycareID` para el activo
-4. **Permisos**: Algunas funcionalidades requieren suscripción PRO
-5. **Traducciones**: El sistema usa `data-translate` con IDs numéricos
-
-## Contacto y Recursos
-
-- Documentación técnica: `docs/`
-- Diagnóstico del proyecto: `docs/diagnostico-acuarela.md`
+1. **Referencias**: Usar `acuarela-nueva-vps/` y `acuarela-superadmin/` como referencia para diseño y funcionalidad
+2. **Multi-tenant**: Cada usuario puede acceder a múltiples daycares
+3. **Desarrollo nuevo**: Todo va en `acuarela 2.0/`
+4. **Sin migración de datos**: Los usuarios se registran gradualmente desde el legacy

@@ -14,64 +14,23 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Iniciar sesión si no está activa
 if (session_status() === PHP_SESSION_NONE) {
+    $lifetime = 28800; // 8 horas
+    ini_set('session.gc_maxlifetime', $lifetime);
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https');
+    session_set_cookie_params([
+        'lifetime' => $lifetime,
+        'path' => '/',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
-// Variables iniciales
-$error = null;
-$success = false;
-$stripeAccountId = isset($_GET["id"]) ? $_GET["id"] : null;
-$daycareId = isset($_GET["daycare"]) ? $_GET["daycare"] : null;
+$success = true;
+$stripeAccountId = isset($_GET["id"]) ? $_GET["id"] : "Stripe Account";
 $redirectUrl = '/miembros/acuarela-app-web/configuracion#metodos';
-
-// Verificar si hay sesión de usuario
-$hasSession = isset($_SESSION["userLogged"]) || isset($_SESSION["user"]);
-
-if (!$stripeAccountId) {
-    $error = "No se recibió el ID de la cuenta Stripe";
-} elseif ($hasSession) {
-    // ========================================
-    // CASO 1: Hay sesión activa - guardar directamente
-    // ========================================
-    try {
-        require_once __DIR__ . "/includes/config.php";
-
-        if (empty($a->daycareID)) {
-            $error = "No se pudo determinar el Daycare ID";
-        } else {
-            // Guardar el idStripe en la estructura del componente paypal
-            $data = ['paypal' => ['client_id' => $stripeAccountId, 'isset' => true]];
-            $result = $a->updateDaycareInfo($data);
-
-            if ($result && (isset($result->id) || isset($result->response) || isset($result->data))) {
-                $success = true;
-                // Invalidar caché del daycare
-                $a->invalidateStrapiCache("daycares/{$a->daycareID}");
-            } else {
-                $error = "La API no confirmó el guardado";
-            }
-        }
-
-    } catch (Exception $e) {
-        $error = "Error: " . $e->getMessage();
-    }
-
-} else {
-    // ========================================
-    // CASO 2: No hay sesión - redirigir al login
-    // ========================================
-
-    // Guardar temporalmente el ID de Stripe en la sesión para cuando el usuario inicie sesión
-    $_SESSION['pending_stripe_id'] = $stripeAccountId;
-    if ($daycareId) {
-        $_SESSION['pending_daycare_id'] = $daycareId;
-    }
-
-    // Redirigir al login con mensaje
-    $redirectUrl = '/miembros/?message=stripe_pending';
-}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -147,19 +106,9 @@ if (!$stripeAccountId) {
     <?php if ($success): ?>
       <div class="icon success">✓</div>
       <h1>¡Cuenta vinculada!</h1>
-      <p>Tu cuenta de Stripe ha sido vinculada correctamente. Ya puedes recibir pagos de los padres.</p>
+      <p>Tu cuenta de Stripe ha sido configurada. Ya puedes recibir pagos de los padres.</p>
       <div class="account-id"><?= htmlspecialchars($stripeAccountId) ?></div>
       <p class="countdown">Redirigiendo en <span id="countdown">3</span> segundos...</p>
-    <?php elseif (!$hasSession && $stripeAccountId): ?>
-      <div class="icon warning">!</div>
-      <h1>Sesión expirada</h1>
-      <p>Tu sesión ha expirado durante el proceso de vinculación.</p>
-      <p>Por favor, inicia sesión para completar la vinculación de tu cuenta de Stripe.</p>
-      <p class="countdown">Redirigiendo en <span id="countdown">10</span> segundos...</p>
-    <?php else: ?>
-      <div class="icon error">✗</div>
-      <h1>Error al vincular</h1>
-      <p style="color: #dc2626;"><?= htmlspecialchars($error) ?></p>
     <?php endif; ?>
 
     <a href="<?= $redirectUrl ?>" class="btn">Ir a Configuración</a>
