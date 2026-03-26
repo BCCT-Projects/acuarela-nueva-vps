@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__zai-mcp-server__ui_to_artifact",
+      "Bash(grep -E \"\\\\.\\(php|sql\\)$\")",
+      "Bash(xargs grep:*)",
+      "Read(//f/Codigos/BCCT/Proyecto-acuarela/**)",
+      "Read(//mnt/c/f/Codigos/BCCT/Proyecto-acuarela/**)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3001/api/health)",
+      "Bash(node -e \"const m = require\\(''mandrill-api/mandrill''\\); console.log\\(''Keys:'', Object.keys\\(m\\)\\); console.log\\(''Type:'', typeof m\\); console.log\\(''Default:'', typeof m.default\\);\")",
+      "Bash(docker exec:*)",
+      "Bash(curl -s http://localhost:3001/api/consents/policy/active)",
+      "Bash(curl -s -X POST http://localhost:3001/api/consents/request-revocation -H \"Content-Type: application/json\" -d '{\"\"parentEmail\"\":\"\"manuelelalejo123@gmail.com\"\",\"\"childName\"\":\"\"Manuel\"\"}')",
+      "Read(//f/Codigos/BCCT/**)",
+      "Bash(find f:CodigosBCCT -name *families* -type d)",
+      "Bash(ls -la \"f:\\\\Codigos\\\\BCCT\\\\Proyecto-acuarela\\\\acuarela-families\\\\app\\\\\\(tabs\\)\")",
+      "Bash(pnpm add:*)",
+      "Bash(ls -la \"f:/Codigos/BCCT/Proyecto-acuarela/acuarela-v2/frontend/app/\\(dashboard\\)/\")",
+      "Bash(pnpm tsc:*)",
+      "Bash(npx tsc:*)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(curl -s http://localhost:3001/api/pickup-codes)",
+      "Bash(curl -v http://localhost:3001/api/pickup-codes)",
+      "Bash(ping -n 6 127.0.0.1)"
+    ],
+    "additionalDirectories": [
+      "f:\\Codigos\\BCCT\\Proyecto-acuarela\\acuarela-v2\\backend\\src\\pickup-codes"
+    ]
+  }
+}
